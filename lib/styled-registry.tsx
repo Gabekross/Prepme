@@ -8,8 +8,9 @@ export default function StyledComponentsRegistry({ children }: { children: React
 
   useServerInsertedHTML(() => {
     const styles = sheet.getStyleElement();
-    // @ts-expect-error runtime ok
-    sheet.instance.clearTag();
+  // @ts-ignore runtime ok
+  sheet.instance.clearTag();
+
     return <>{styles}</>;
   });
 
