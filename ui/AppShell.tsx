@@ -6,6 +6,7 @@ import Link from "next/link";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { useAppTheme } from "@/ui/ThemeClient";
 import { usePathname } from "next/navigation";
+import { LocalAttemptStorage } from "@/src/exam-engine/core/storage";
 
 
 const Shell = styled.div`
@@ -129,7 +130,7 @@ const MenuPanel = styled.div`
   position: absolute;
   right: 0;
   top: 46px;
-  width: 210px;
+  width: 230px;
   border-radius: 16px;
   border: 1px solid ${(p) => p.theme.cardBorder};
   background: ${(p) => p.theme.cardBg};
@@ -155,19 +156,20 @@ const MenuItem = styled(Link)`
   }
 `;
 
-const MenuAction = styled.button`
+const MenuAction = styled.button<{ $danger?: boolean }>`
   text-decoration: none;
   color: ${(p) => p.theme.text};
   border-radius: 12px;
   padding: 10px 10px;
   border: 1px solid ${(p) => p.theme.cardBorder};
-  background: ${(p) => p.theme.buttonBg};
+  background: ${(p) => (p.$danger ? "rgba(239,68,68,0.14)" : p.theme.buttonBg)};
   font-size: 13px;
   font-weight: 800;
   cursor: pointer;
+  text-align: left;
 
   &:hover {
-    background: ${(p) => p.theme.buttonHover};
+    background: ${(p) => (p.$danger ? "rgba(239,68,68,0.20)" : p.theme.buttonHover)};
   }
 `;
 
@@ -177,11 +179,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const [signedIn, setSignedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+
   const pathname = usePathname();
-  const inSession = /^\/bank\/[^/]+\/(practice|exam)/.test(pathname);
+
+  const inPractice = /^\/bank\/[^/]+\/practice/.test(pathname);
+  const inExam = /^\/bank\/[^/]+\/exam/.test(pathname);
+  const inSession = inPractice || inExam;
 
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Extract bank slug from route if present
+  const bankSlugMatch = pathname.match(/^\/bank\/([^/]+)\/(practice|exam)/);
+  const bankSlug = bankSlugMatch?.[1] ?? null;
 
   async function refresh() {
     const { data } = await sb.auth.getUser();
@@ -204,42 +213,89 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Close menu when route changes
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
   async function signOut() {
     await sb.auth.signOut();
   }
+
+  function restartPractice() {
+    if (!bankSlug) return;
+
+    const ok = window.confirm(
+      "Restart practice?\n\nThis will start a brand-new shuffled attempt and clear your current progress."
+    );
+    if (!ok) return;
+
+    window.dispatchEvent(new CustomEvent("practice:restart", { detail: { bankSlug } }));
+    setMenuOpen(false);
+  }
+
+async function exitExam() {
+  const ok = window.confirm(
+    "Exit exam simulation?\n\nIf you exit now, your current exam progress will be cleared and you will start fresh next time."
+  );
+  if (!ok) return;
+
+  // Clear the latest saved exam attempt for this bank so it doesn't resume
+  if (bankSlug) {
+    const ns = `${bankSlug}__exam`;
+    const s = new LocalAttemptStorage(ns);
+    if (s.clearLatest) await s.clearLatest();
+  }
+
+  // Go back to exams
+  window.location.href = bankSlug ? `/bank/${bankSlug}` : "/";
+
+}
+
 
   return (
     <Shell>
       <Topbar>
         <TopbarInner>
           <Brand href="/">Exam Platform</Brand>
+
           <Nav>
-  {!inSession ? (
-    <>
-      <NavLink href="/">Exams</NavLink>
-      {isAdmin ? <NavLink href="/admin/questions">Admin</NavLink> : null}
-      {!signedIn ? <NavLink href="/login">Login</NavLink> : <NavButton onClick={signOut}>Logout</NavButton>}
-      <ThemePill onClick={toggle}>{themeName === "dark" ? "☾ Dark" : "☀ Light"}</ThemePill>
-    </>
-  ) : (
-    <MenuWrap>
-      <MenuButton onClick={() => setMenuOpen((v) => !v)} aria-label="Menu">⋯</MenuButton>
-      {menuOpen ? (
-        <MenuPanel>
-          <MenuItem href="/" onClick={() => setMenuOpen(false)}>Back to Exams</MenuItem>
-          <MenuAction
-            onClick={() => {
-              toggle();
-              setMenuOpen(false);
-            }}
-          >
-            Toggle Theme
-          </MenuAction>
-        </MenuPanel>
-      ) : null}
-    </MenuWrap>
-  )}
-</Nav>
+            {!inSession ? (
+              <>
+                <NavLink href="/">Exams</NavLink>
+                {isAdmin ? <NavLink href="/admin/questions">Admin</NavLink> : null}
+                {!signedIn ? <NavLink href="/login">Login</NavLink> : <NavButton onClick={signOut}>Logout</NavButton>}
+                <ThemePill onClick={toggle}>{themeName === "dark" ? "☾ Dark" : "☀ Light"}</ThemePill>
+              </>
+            ) : (
+              <MenuWrap>
+                <MenuButton onClick={() => setMenuOpen((v) => !v)} aria-label="Menu">
+                  ⋯
+                </MenuButton>
+
+                {menuOpen ? (
+                  <MenuPanel>
+                    <MenuItem href="/" onClick={() => setMenuOpen(false)}>
+                      Back to Exams
+                    </MenuItem>
+
+                    <MenuAction
+                      onClick={() => {
+                        toggle();
+                        setMenuOpen(false);
+                      }}
+                    >
+                      Toggle Theme
+                    </MenuAction>
+
+                    {inPractice ? <MenuAction onClick={restartPractice}>Restart (New Shuffle)</MenuAction> : null}
+
+                    {inExam ? <MenuAction $danger onClick={exitExam}>Exit</MenuAction> : null}
+                  </MenuPanel>
+                ) : null}
+              </MenuWrap>
+            )}
+          </Nav>
         </TopbarInner>
       </Topbar>
 

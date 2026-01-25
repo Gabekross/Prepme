@@ -8,7 +8,6 @@ import { QuestionRenderer } from "./QuestionRenderer";
 import { scoreAttempt } from "../core/scoring";
 import { LocalAttemptStorage } from "../core/storage";
 
-
 const Grid = styled.div`
   display: grid;
   gap: 16px;
@@ -180,6 +179,11 @@ const CounterPill = styled.div`
   font-weight: 900;
 `;
 
+const RightCol = styled.div`
+  display: grid;
+  gap: 16px;
+`;
+
 const ExplanationCard = styled.div`
   background: ${(p) => p.theme.cardBg};
   border: 1px solid ${(p) => p.theme.cardBorder};
@@ -202,12 +206,6 @@ const ExplanationBody = styled.div`
   white-space: pre-wrap;
 `;
 
-
-
-
-
-/* keep your styled components as-is (Grid, Card, Title, Subtle, etc.) */
-
 function isAnswered(question: Question | null, response: Response): boolean {
   if (!question) return false;
 
@@ -223,7 +221,11 @@ function isAnswered(question: Question | null, response: Response): boolean {
     case "hotspot":
       return response?.type === "hotspot" && !!response.selectedRegionId;
     case "fill_blank":
-      return response?.type === "fill_blank" && response.values && Object.values(response.values).some((v) => String(v ?? "").trim().length > 0);
+      return (
+        response?.type === "fill_blank" &&
+        response.values &&
+        Object.values(response.values).some((v) => String(v ?? "").trim().length > 0)
+      );
     default:
       return false;
   }
@@ -238,25 +240,22 @@ export function EngineRunner(props: {
   mode: "practice" | "exam";
   allowDomainFilter?: boolean;
   storageNamespace: string;
-  /** Optional: where to go when exiting (defaults to "/") */
-  exitHref?: string;
 }) {
-  const { title, subtitle, questions, scenarios, blueprint, mode, storageNamespace, exitHref } = props;
+  const { title, subtitle, questions, scenarios, blueprint, mode, storageNamespace } = props;
 
   const engine = useExamSession();
 
-  // Practice-only reveal state
+  // practice-only reveal state
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
-
   // practice-only: submitted per question (unlocks Learn more)
   const [submittedQ, setSubmittedQ] = useState<Record<string, boolean>>({});
-// practice-only: explanation visibility per question
+  // practice-only: explanation visibility per question
   const [showExplain, setShowExplain] = useState<Record<string, boolean>>({});
-
-
 
   useEffect(() => {
     setRevealed({});
+    setSubmittedQ({});
+    setShowExplain({});
     engine.initIfNeeded({
       bank: questions,
       defaultBlueprint: blueprint,
@@ -276,10 +275,52 @@ export function EngineRunner(props: {
 
   const currentId = current?.id ?? null;
 
+  // Close explanation whenever question changes
+  useEffect(() => {
+    if (!currentId) return;
+    setShowExplain((prev) => ({ ...prev, [currentId]: false }));
+  }, [currentId]);
+
+  // ✅ Listen for restart event from AppShell menu (practice only)
+  useEffect(() => {
+    if (mode !== "practice") return;
+
+    async function handler(e: any) {
+      const evtSlug = e?.detail?.bankSlug as string | undefined;
+      if (!evtSlug) return;
+
+      // namespace format: `${bankSlug}__practice`
+      if (!storageNamespace.startsWith(`${evtSlug}__practice`)) return;
+
+      // full reset
+      setRevealed({});
+      setSubmittedQ({});
+      setShowExplain({});
+
+      const s = new LocalAttemptStorage(storageNamespace);
+      if (s.clearLatest) await s.clearLatest();
+
+      if ((engine as any).hardRestart) {
+        await (engine as any).hardRestart({
+          bank: questions,
+          blueprint,
+          mode,
+          reshuffleQuestions: true,
+          storageNamespace,
+        });
+      } else {
+        await engine.startNewAttempt({ reshuffleQuestions: true });
+      }
+    }
+
+    window.addEventListener("practice:restart", handler as any);
+    return () => window.removeEventListener("practice:restart", handler as any);
+  }, [mode, storageNamespace, questions, blueprint, engine]);
+
   const total = engine.attempt?.questionOrder?.length ?? questions.length;
   const index = engine.attempt ? engine.attempt.currentIndex : 0;
   const x = total ? Math.min(total, index + 1) : 0;
-  const isLast = engine.attempt ? index >= (engine.attempt.questionOrder.length - 1) : false;
+  const isLast = engine.attempt ? index >= engine.attempt.questionOrder.length - 1 : false;
 
   const domain = engine.filters.domain as Domain | "all";
 
@@ -290,13 +331,6 @@ export function EngineRunner(props: {
     return scoreAttempt(engine.attempt, qs);
   }, [engine.attempt, engine.bank]);
 
-  useEffect(() => {
-    if (!currentId) return;
-    // close explanation whenever question changes
-     setShowExplain((prev) => ({ ...prev, [currentId]: false }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentId]);
-
   const currentResponse = current ? engine.getResponse(current.id) : (null as any);
   const answered = isAnswered(current, currentResponse);
 
@@ -306,7 +340,7 @@ export function EngineRunner(props: {
       ? !!engine.attempt?.submittedAt
       : !!engine.attempt?.submittedAt || (currentId ? !!revealed[currentId] : false);
 
-  // Primary button label/behavior
+  // Primary label/behavior
   const primaryLabel = useMemo(() => {
     if (!engine.attempt) return "Next";
 
@@ -317,7 +351,7 @@ export function EngineRunner(props: {
       return "Next question";
     }
 
-    // exam mode
+    // exam strict
     return isLast ? "Done" : "Next question";
   }, [engine.attempt, mode, answered, currentId, revealed, isLast]);
 
@@ -326,7 +360,6 @@ export function EngineRunner(props: {
 
     if (mode === "practice") {
       const isRevealed = !!(currentId && revealed[currentId]);
-      // require an answer before submitting/revealing
       if (!isRevealed && !answered) return true;
       return false;
     }
@@ -340,65 +373,27 @@ export function EngineRunner(props: {
     if (mode === "practice") {
       const isRevealed = !!(currentId && revealed[currentId]);
 
-      // Submit answer => reveal current only
-      // if (!isRevealed) {
-      //   if (!currentId) return;
-      //   setRevealed((prev) => ({ ...prev, [currentId]: true }));
-      //   return;
-      // }
+      // Submit answer => reveal current only + unlock Learn more
+      if (!isRevealed) {
+        if (!currentId) return;
+        setRevealed((prev) => ({ ...prev, [currentId]: true }));
+        setSubmittedQ((prev) => ({ ...prev, [currentId]: true }));
+        setShowExplain((prev) => ({ ...prev, [currentId]: false }));
+        return;
+      }
 
-          if (!isRevealed) {
-            if (!currentId) return;
-            setRevealed((prev) => ({ ...prev, [currentId]: true }));
-            setSubmittedQ((prev) => ({ ...prev, [currentId]: true })); // ✅ unlock Learn more
-            setShowExplain((prev) => ({ ...prev, [currentId]: false })); // ensure explanation is closed
-            return;
-          }
-
-
-      // Revealed => next or done
+      // Next question/done
       if (isLast) return;
       engine.next();
       return;
     }
 
-    // Exam mode => next or done submits attempt
+    // exam strict: next or done submits attempt
     if (isLast) {
       engine.submitAttempt();
       return;
     }
     engine.next();
-  }
-
-
-
-  async function restartAndReshuffle() {
-  // Real restart:
-  // - clears current attempt persistence for this bank+mode
-  // - starts a fresh attempt with reshuffle
-  setRevealed({});
-  setSubmittedQ({});
-  setShowExplain({});
-
-  const s = new LocalAttemptStorage(storageNamespace);
-  if (s.clearLatest) await s.clearLatest(); // your storage has this in the quota-safe version
-
-  await engine.hardRestart({
-  bank: questions,
-  blueprint,
-  mode,
-  reshuffleQuestions: true,
-  storageNamespace,
-});
-
-}
-
-  function exitExam() {
-    const ok = window.confirm(
-      "Exit exam simulation?\n\nYour current progress may be lost unless it was saved. Click OK to exit, or Cancel to continue."
-    );
-    if (!ok) return;
-    window.location.href = exitHref ?? "/";
   }
 
   return (
@@ -425,15 +420,7 @@ export function EngineRunner(props: {
 
           <Divider />
 
-          {/* ✅ Hide Flag + Reshuffle for now, restart does reshuffle */}
-          <ButtonRow>
-            <Button onClick={restartAndReshuffle}>Restart (New Shuffle)</Button>
-            <Button onClick={() => engine.retryIncorrectOnly()}>Retry incorrect</Button>
-
-            {/* ✅ Exam mode exit */}
-            {mode === "exam" ? <Button onClick={exitExam}>Exit</Button> : null}
-          </ButtonRow>
-
+          {/* Main nav: no Restart/Exit here — menu handles it */}
           <ButtonRow>
             <Button onClick={() => engine.prev()} disabled={!engine.attempt || engine.attempt.currentIndex <= 0}>
               Previous
@@ -443,24 +430,26 @@ export function EngineRunner(props: {
               {primaryLabel}
             </Button>
 
-            {/* Keep full attempt submission visible (esp. exam mode) */}
-            <Button onClick={() => engine.submitAttempt()} disabled={!engine.attempt}>
-              Submit Attempt
-            </Button>
+            {/* Exam strict: allow submit anytime */}
+            {mode === "exam" ? (
+              <Button onClick={() => engine.submitAttempt()} disabled={!engine.attempt}>
+                Submit Exam
+              </Button>
+            ) : null}
           </ButtonRow>
 
+          {/* Learn more appears only after submitting current answer in practice */}
           {mode === "practice" && currentId && submittedQ[currentId] ? (
-          <ButtonRow>
-            <Button
-              onClick={() => {
-                setShowExplain((prev) => ({ ...prev, [currentId]: !prev[currentId] }));
-              }}
-            >
-              {showExplain[currentId] ? "Hide" : "Learn more"}
-            </Button>
-          </ButtonRow>
+            <ButtonRow>
+              <Button
+                onClick={() => {
+                  setShowExplain((prev) => ({ ...prev, [currentId]: !prev[currentId] }));
+                }}
+              >
+                {showExplain[currentId] ? "Hide" : "Learn more"}
+              </Button>
+            </ButtonRow>
           ) : null}
-
 
           {result ? (
             <>
@@ -480,35 +469,34 @@ export function EngineRunner(props: {
         </Row>
       </Card>
 
-      <div style={{ display: "grid", gap: 16 }}>
-  <Card>
-    {current ? (
-      <QuestionRenderer
-        question={current}
-        scenario={current.scenarioId ? scenarios.find((s) => s.id === current.scenarioId) : undefined}
-        response={engine.getResponse(current.id)}
-        optionOrder={engine.getOptionOrder(current.id)}
-        onChange={(r) => engine.setResponse(current.id, r)}
-        showCorrect={showCorrect}
-      />
-    ) : (
-      <Subtle>Loading…</Subtle>
-    )}
-  </Card>
+      <RightCol>
+        <Card>
+          {current ? (
+            <QuestionRenderer
+              question={current}
+              scenario={current.scenarioId ? scenarios.find((s) => s.id === current.scenarioId) : undefined}
+              response={engine.getResponse(current.id)}
+              optionOrder={engine.getOptionOrder(current.id)}
+              onChange={(r) => engine.setResponse(current.id, r)}
+              showCorrect={showCorrect}
+            />
+          ) : (
+            <Subtle>Loading…</Subtle>
+          )}
+        </Card>
 
-  {/* ✅ Explanation card (practice only, only if Learn more toggled) */}
-  {mode === "practice" && current && currentId && showExplain[currentId] ? (
-    <ExplanationCard>
-      <ExplanationTitle>Explanation</ExplanationTitle>
-      <ExplanationBody>
-        {current.explanation?.trim()
-          ? current.explanation
-          : "No explanation has been provided for this question yet."}
-      </ExplanationBody>
-    </ExplanationCard>
-  ) : null}
-</div>
-
+        {/* Explanation card (practice only, Learn more toggled) */}
+        {mode === "practice" && current && currentId && showExplain[currentId] ? (
+          <ExplanationCard>
+            <ExplanationTitle>Explanation</ExplanationTitle>
+            <ExplanationBody>
+              {current.explanation?.trim()
+                ? current.explanation
+                : "No explanation has been provided for this question yet."}
+            </ExplanationBody>
+          </ExplanationCard>
+        ) : null}
+      </RightCol>
     </Grid>
   );
 }
