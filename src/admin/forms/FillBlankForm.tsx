@@ -1,0 +1,260 @@
+"use client";
+
+import React, { useMemo } from "react";
+import styled from "styled-components";
+import { pretty, safeParse } from "./utils";
+import { nextId } from "./dndUtils";
+
+type Blank = { id: string; placeholder?: string };
+
+const Wrap = styled.div`
+  display: grid;
+  gap: 12px;
+`;
+
+const Title = styled.div`
+  font-weight: 900;
+  font-size: 13px;
+  opacity: 0.9;
+`;
+
+const Row = styled.div`
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  gap: 10px;
+  align-items: center;
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const Label = styled.div`
+  font-size: 12px;
+  opacity: 0.85;
+`;
+
+const Input = styled.input`
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.92);
+  padding: 10px 12px;
+  outline: none;
+`;
+
+const Select = styled.select`
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(11,16,32,0.35);
+  color: rgba(255,255,255,0.92);
+  padding: 10px 12px;
+  outline: none;
+`;
+
+const Button = styled.button<{ $danger?: boolean }>`
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: ${(p) => (p.$danger ? "rgba(239,68,68,0.18)" : "rgba(255,255,255,0.08)")};
+  color: rgba(255,255,255,0.92);
+  padding: 10px 12px;
+  cursor: pointer;
+  font-weight: 900;
+
+  &:hover {
+    background: ${(p) => (p.$danger ? "rgba(239,68,68,0.24)" : "rgba(255,255,255,0.10)")};
+  }
+`;
+
+const Box = styled.div`
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.03);
+  border-radius: 16px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+`;
+
+const Hint = styled.div`
+  font-size: 12px;
+  opacity: 0.82;
+  line-height: 1.35;
+`;
+
+export default function FillBlankForm(props: {
+  payloadJson: string;
+  answerKeyJson: string;
+  onChange: (nextPayloadJson: string, nextAnswerKeyJson: string) => void;
+}) {
+  const payload = useMemo(
+    () =>
+      safeParse<{ inputMode?: "text" | "numeric"; blanks: Blank[] }>(props.payloadJson, {
+        inputMode: "text",
+        blanks: [],
+      }),
+    [props.payloadJson]
+  );
+
+  const key = useMemo(
+    () =>
+      safeParse<{ values: Record<string, string[]>; numericTolerance?: number; caseInsensitive?: boolean }>(
+        props.answerKeyJson,
+        { values: {}, caseInsensitive: true }
+      ),
+    [props.answerKeyJson]
+  );
+
+  const inputMode = payload.inputMode ?? "text";
+  const blanks = Array.isArray(payload.blanks) ? payload.blanks : [];
+  const values = key.values ?? {};
+
+  const numericTolerance = key.numericTolerance ?? 0;
+  const caseInsensitive = key.caseInsensitive ?? true;
+
+  function commit(nextPayload: any, nextKey: any) {
+    props.onChange(pretty(nextPayload), pretty(nextKey));
+  }
+
+  function addBlank() {
+    const id = nextId("b", blanks.map((b) => b.id));
+    const nextBlanks = [...blanks, { id, placeholder: `Blank ${id}` }];
+    const nextValues = { ...values, [id]: [""] };
+    commit({ inputMode, blanks: nextBlanks }, { values: nextValues, numericTolerance, caseInsensitive });
+  }
+
+  function removeBlank(id: string) {
+    const nextBlanks = blanks.filter((b) => b.id !== id);
+    const nextValues = { ...values };
+    delete nextValues[id];
+    commit({ inputMode, blanks: nextBlanks }, { values: nextValues, numericTolerance, caseInsensitive });
+  }
+
+  function updateBlank(id: string, patch: Partial<Blank>) {
+    const nextBlanks = blanks.map((b) => (b.id === id ? { ...b, ...patch } : b));
+    commit({ inputMode, blanks: nextBlanks }, { values, numericTolerance, caseInsensitive });
+  }
+
+  function updateAccepted(id: string, text: string) {
+    // comma separated list
+    const arr = text
+      .split(",")
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0);
+
+    commit(
+      { inputMode, blanks },
+      {
+        values: { ...values, [id]: arr.length ? arr : [""] },
+        numericTolerance,
+        caseInsensitive,
+      }
+    );
+  }
+
+  function setMode(nextMode: "text" | "numeric") {
+    // keep values as-is; tolerance only meaningful for numeric
+    const nextKey = {
+      values,
+      caseInsensitive,
+      numericTolerance: nextMode === "numeric" ? numericTolerance : undefined,
+    };
+    commit({ inputMode: nextMode, blanks }, nextKey);
+  }
+
+  function setTolerance(t: number) {
+    commit(
+      { inputMode, blanks },
+      {
+        values,
+        caseInsensitive,
+        numericTolerance: Math.max(0, Number.isFinite(t) ? t : 0),
+      }
+    );
+  }
+
+  function setCaseInsensitive(next: boolean) {
+    commit(
+      { inputMode, blanks },
+      {
+        values,
+        numericTolerance: inputMode === "numeric" ? numericTolerance : undefined,
+        caseInsensitive: next,
+      }
+    );
+  }
+
+  return (
+    <Wrap>
+      <Title>Fill Blank Builder</Title>
+
+      <Row>
+        <Label>Input mode</Label>
+        <Select value={inputMode} onChange={(e) => setMode(e.target.value as any)}>
+          <option value="text">text</option>
+          <option value="numeric">numeric</option>
+        </Select>
+        <Button onClick={addBlank}>Add blank</Button>
+      </Row>
+
+      {inputMode === "numeric" ? (
+        <Row>
+          <Label>Tolerance</Label>
+          <Input
+            type="number"
+            step="0.01"
+            value={String(numericTolerance)}
+            onChange={(e) => setTolerance(Number(e.target.value || "0"))}
+          />
+          <Hint>Accept answers within ± tolerance of correct values.</Hint>
+        </Row>
+      ) : (
+        <Row>
+          <Label>Case-insensitive</Label>
+          <Select value={caseInsensitive ? "yes" : "no"} onChange={(e) => setCaseInsensitive(e.target.value === "yes")}>
+            <option value="yes">yes</option>
+            <option value="no">no</option>
+          </Select>
+          <Hint>Controls matching for text blanks.</Hint>
+        </Row>
+      )}
+
+      <Box>
+        <Title>Blanks</Title>
+        {blanks.length === 0 ? <Hint>No blanks yet. Click “Add blank”.</Hint> : null}
+
+        {blanks.map((b) => {
+          const accepted = values[b.id] ?? [];
+          return (
+            <Box key={b.id}>
+              <Row>
+                <Label>{b.id}</Label>
+                <Input
+                  value={b.placeholder ?? ""}
+                  onChange={(e) => updateBlank(b.id, { placeholder: e.target.value })}
+                  placeholder="Placeholder"
+                />
+                <Button $danger onClick={() => removeBlank(b.id)} disabled={blanks.length <= 1}>
+                  Remove
+                </Button>
+              </Row>
+
+              <Row>
+                <Label>Accepted</Label>
+                <Input
+                  value={(accepted ?? []).filter(Boolean).join(", ")}
+                  onChange={(e) => updateAccepted(b.id, e.target.value)}
+                  placeholder={inputMode === "numeric" ? "e.g., 1.2, 1.20" : "e.g., collaborate, problem-solving"}
+                />
+                <div />
+              </Row>
+
+              <Hint>
+                Enter accepted answers as a comma-separated list. For numeric mode, tolerance applies.
+              </Hint>
+            </Box>
+          );
+        })}
+      </Box>
+    </Wrap>
+  );
+}
