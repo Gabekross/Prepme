@@ -65,6 +65,8 @@ type State = {
   isCurrentFlagged: boolean;
 
   submitAttempt: () => void;
+  goToIndex: (index: number) => void;
+
 };
 
 function makeStorage(namespace: string) {
@@ -347,6 +349,17 @@ export const useExamSession = create<State>((set, get) => ({
     const visibleSet = buildVisibleSet(get().questions);
     return findNextVisibleIndex(att, visibleSet, 1) !== null;
   },
+  
+  goToIndex: (index: number) => {
+  const att = get().attempt;
+  if (!att) return;
+
+  const i = Math.max(0, Math.min(index, att.questionOrder.length - 1));
+  const nextAttempt = { ...att, currentIndex: i };
+  set({ attempt: nextAttempt });
+  makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
+},
+
 
   prev: () => {
     const att = get().attempt;

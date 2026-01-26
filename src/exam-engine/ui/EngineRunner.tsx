@@ -206,6 +206,86 @@ const ExplanationBody = styled.div`
   white-space: pre-wrap;
 `;
 
+/** Exam review UI */
+const ReviewSummary = styled.div`
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+
+  @media (min-width: 520px) {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+`;
+
+const ReviewSummaryBox = styled.div`
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  background: ${(p) => (p.theme.name === "dark" ? "rgba(255,255,255,0.04)" : "#f8fafc")};
+  border-radius: 14px;
+  padding: 10px 12px;
+`;
+
+const ReviewSummaryLabel = styled.div`
+  font-size: 11px;
+  color: ${(p) => p.theme.muted};
+`;
+
+const ReviewSummaryValue = styled.div`
+  margin-top: 4px;
+  font-size: 16px;
+  font-weight: 950;
+  color: ${(p) => p.theme.text};
+`;
+
+const ReviewList = styled.div`
+  display: grid;
+  gap: 8px;
+`;
+
+const ReviewItem = styled.button<{ $ok?: boolean }>`
+  width: 100%;
+  text-align: left;
+  border-radius: 14px;
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  background: ${(p) => p.theme.buttonBg};
+  color: ${(p) => p.theme.text};
+  padding: 10px 12px;
+  cursor: pointer;
+  font-weight: 900;
+
+  &:hover {
+    background: ${(p) => p.theme.buttonHover};
+  }
+
+  box-shadow: ${(p) =>
+    p.$ok ? "0 0 0 2px rgba(34,197,94,0.14) inset" : "0 0 0 2px rgba(239,68,68,0.12) inset"};
+`;
+
+const ReviewMeta = styled.div`
+  margin-top: 4px;
+  font-size: 12px;
+  color: ${(p) => p.theme.muted};
+`;
+
+const BackRow = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+`;
+
+const ToggleRow = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: ${(p) => p.theme.text};
+  font-weight: 800;
+`;
+
+const ToggleBox = styled.input`
+  width: 18px;
+  height: 18px;
+`;
+
 function isAnswered(question: Question | null, response: Response): boolean {
   if (!question) return false;
 
@@ -247,15 +327,20 @@ export function EngineRunner(props: {
 
   // practice-only reveal state
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
-  // practice-only: submitted per question (unlocks Learn more)
   const [submittedQ, setSubmittedQ] = useState<Record<string, boolean>>({});
-  // practice-only: explanation visibility per question
   const [showExplain, setShowExplain] = useState<Record<string, boolean>>({});
+
+  // exam review
+  const [examView, setExamView] = useState<"take" | "review_list" | "review_question">("take");
+  const [incorrectOnly, setIncorrectOnly] = useState(false);
 
   useEffect(() => {
     setRevealed({});
     setSubmittedQ({});
     setShowExplain({});
+    setIncorrectOnly(false);
+    setExamView("take");
+
     engine.initIfNeeded({
       bank: questions,
       defaultBlueprint: blueprint,
@@ -275,7 +360,7 @@ export function EngineRunner(props: {
 
   const currentId = current?.id ?? null;
 
-  // Close explanation whenever question changes
+  // Close explanation whenever question changes (practice)
   useEffect(() => {
     if (!currentId) return;
     setShowExplain((prev) => ({ ...prev, [currentId]: false }));
@@ -289,10 +374,8 @@ export function EngineRunner(props: {
       const evtSlug = e?.detail?.bankSlug as string | undefined;
       if (!evtSlug) return;
 
-      // namespace format: `${bankSlug}__practice`
       if (!storageNamespace.startsWith(`${evtSlug}__practice`)) return;
 
-      // full reset
       setRevealed({});
       setSubmittedQ({});
       setShowExplain({});
@@ -330,6 +413,31 @@ export function EngineRunner(props: {
     const qs = engine.bank.filter((q) => engine.attempt!.questionOrder.includes(q.id));
     return scoreAttempt(engine.attempt, qs);
   }, [engine.attempt, engine.bank]);
+
+  // When exam is submitted, auto-open review list
+  useEffect(() => {
+    if (mode !== "exam") return;
+    if (engine.attempt?.submittedAt) setExamView("review_list");
+  }, [mode, engine.attempt?.submittedAt]);
+
+  const examPercent = useMemo(() => {
+    if (!result || result.maxScore === 0) return 0;
+    return Math.round((result.totalScore / result.maxScore) * 100);
+  }, [result]);
+
+  const reviewRows = useMemo(() => {
+    if (mode !== "exam") return [];
+    if (!result || !engine.attempt) return [];
+
+    const byId = new Map(result.scoreResults.map((r) => [r.questionId, r.isCorrect]));
+    const rows = engine.attempt.questionOrder.map((qid, idx) => ({
+      idx,
+      qid,
+      isCorrect: !!byId.get(qid),
+    }));
+
+    return incorrectOnly ? rows.filter((r) => !r.isCorrect) : rows;
+  }, [mode, result, engine.attempt, incorrectOnly]);
 
   const currentResponse = current ? engine.getResponse(current.id) : (null as any);
   const answered = isAnswered(current, currentResponse);
@@ -382,7 +490,6 @@ export function EngineRunner(props: {
         return;
       }
 
-      // Next question/done
       if (isLast) return;
       engine.next();
       return;
@@ -394,6 +501,18 @@ export function EngineRunner(props: {
       return;
     }
     engine.next();
+  }
+
+  function openReviewQuestion(idx: number) {
+    // Requires goToIndex in the store
+    const goTo = (engine as any).goToIndex as ((i: number) => void) | undefined;
+    if (goTo) {
+      goTo(idx);
+      setExamView("review_question");
+      return;
+    }
+    // fallback: at least switch view; current will remain whatever it is
+    setExamView("review_question");
   }
 
   return (
@@ -432,7 +551,13 @@ export function EngineRunner(props: {
 
             {/* Exam strict: allow submit anytime */}
             {mode === "exam" ? (
-              <Button onClick={() => engine.submitAttempt()} disabled={!engine.attempt}>
+              <Button
+                onClick={() => {
+                  engine.submitAttempt();
+                  setExamView("review_list");
+                }}
+                disabled={!engine.attempt}
+              >
                 Submit Exam
               </Button>
             ) : null}
@@ -441,17 +566,13 @@ export function EngineRunner(props: {
           {/* Learn more appears only after submitting current answer in practice */}
           {mode === "practice" && currentId && submittedQ[currentId] ? (
             <ButtonRow>
-              <Button
-                onClick={() => {
-                  setShowExplain((prev) => ({ ...prev, [currentId]: !prev[currentId] }));
-                }}
-              >
+              <Button onClick={() => setShowExplain((prev) => ({ ...prev, [currentId]: !prev[currentId] }))}>
                 {showExplain[currentId] ? "Hide" : "Learn more"}
               </Button>
             </ButtonRow>
           ) : null}
 
-          {result ? (
+          {result && mode === "practice" ? (
             <>
               <SectionTitle>Results</SectionTitle>
               <Stat>
@@ -470,32 +591,125 @@ export function EngineRunner(props: {
       </Card>
 
       <RightCol>
-        <Card>
-          {current ? (
-            <QuestionRenderer
-              question={current}
-              scenario={current.scenarioId ? scenarios.find((s) => s.id === current.scenarioId) : undefined}
-              response={engine.getResponse(current.id)}
-              optionOrder={engine.getOptionOrder(current.id)}
-              onChange={(r) => engine.setResponse(current.id, r)}
-              showCorrect={showCorrect}
-            />
-          ) : (
-            <Subtle>Loading…</Subtle>
-          )}
-        </Card>
+        {/* EXAM REVIEW MODE */}
+        {mode === "exam" && engine.attempt?.submittedAt ? (
+          examView === "review_list" ? (
+            <Card>
+              <SectionTitle>Review results</SectionTitle>
+              <Subtle>Click a question to review your answer and see the explanation.</Subtle>
 
-        {/* Explanation card (practice only, Learn more toggled) */}
-        {mode === "practice" && current && currentId && showExplain[currentId] ? (
-          <ExplanationCard>
-            <ExplanationTitle>Explanation</ExplanationTitle>
-            <ExplanationBody>
-              {current.explanation?.trim()
-                ? current.explanation
-                : "No explanation has been provided for this question yet."}
-            </ExplanationBody>
-          </ExplanationCard>
-        ) : null}
+              <Divider />
+
+              {result ? (
+                <>
+                  <ReviewSummary>
+                    <ReviewSummaryBox>
+                      <ReviewSummaryLabel>Score</ReviewSummaryLabel>
+                      <ReviewSummaryValue>
+                        {result.totalScore} / {result.maxScore}
+                      </ReviewSummaryValue>
+                    </ReviewSummaryBox>
+
+                    <ReviewSummaryBox>
+                      <ReviewSummaryLabel>Percent</ReviewSummaryLabel>
+                      <ReviewSummaryValue>{examPercent}%</ReviewSummaryValue>
+                    </ReviewSummaryBox>
+
+                    <ReviewSummaryBox>
+                      <ReviewSummaryLabel>Incorrect</ReviewSummaryLabel>
+                      <ReviewSummaryValue>{result.incorrectQuestionIds.length}</ReviewSummaryValue>
+                    </ReviewSummaryBox>
+                  </ReviewSummary>
+
+                  <Divider />
+                </>
+              ) : null}
+
+              <ToggleRow>
+                <ToggleBox
+                  type="checkbox"
+                  checked={incorrectOnly}
+                  onChange={(e) => setIncorrectOnly(e.target.checked)}
+                />
+                Incorrect only
+              </ToggleRow>
+
+              <Divider />
+
+              <ReviewList>
+                {reviewRows.map((r) => (
+                  <ReviewItem
+                    key={r.qid}
+                    $ok={r.isCorrect}
+                    onClick={() => openReviewQuestion(r.idx)}
+                  >
+                    Question {r.idx + 1} {r.isCorrect ? "✅" : "❌"}
+                    <ReviewMeta>{r.isCorrect ? "Correct" : "Incorrect"}</ReviewMeta>
+                  </ReviewItem>
+                ))}
+              </ReviewList>
+            </Card>
+          ) : (
+            <>
+              <Card>
+                {current ? (
+                  <QuestionRenderer
+                    question={current}
+                    scenario={current.scenarioId ? scenarios.find((s) => s.id === current.scenarioId) : undefined}
+                    response={engine.getResponse(current.id)}
+                    optionOrder={engine.getOptionOrder(current.id)}
+                    onChange={() => {}}
+                    showCorrect={true}
+                  />
+                ) : (
+                  <Subtle>Loading…</Subtle>
+                )}
+
+                <BackRow>
+                  <Button onClick={() => setExamView("review_list")}>Back to results</Button>
+                </BackRow>
+              </Card>
+
+              <ExplanationCard>
+                <ExplanationTitle>Explanation</ExplanationTitle>
+                <ExplanationBody>
+                  {current?.explanation?.trim()
+                    ? current.explanation
+                    : "No explanation has been provided for this question yet."}
+                </ExplanationBody>
+              </ExplanationCard>
+            </>
+          )
+        ) : (
+          /* NORMAL MODE (practice taking OR exam taking pre-submit) */
+          <>
+            <Card>
+              {current ? (
+                <QuestionRenderer
+                  question={current}
+                  scenario={current.scenarioId ? scenarios.find((s) => s.id === current.scenarioId) : undefined}
+                  response={engine.getResponse(current.id)}
+                  optionOrder={engine.getOptionOrder(current.id)}
+                  onChange={(r) => engine.setResponse(current.id, r)}
+                  showCorrect={showCorrect}
+                />
+              ) : (
+                <Subtle>Loading…</Subtle>
+              )}
+            </Card>
+
+            {mode === "practice" && current && currentId && showExplain[currentId] ? (
+              <ExplanationCard>
+                <ExplanationTitle>Explanation</ExplanationTitle>
+                <ExplanationBody>
+                  {current.explanation?.trim()
+                    ? current.explanation
+                    : "No explanation has been provided for this question yet."}
+                </ExplanationBody>
+              </ExplanationCard>
+            ) : null}
+          </>
+        )}
       </RightCol>
     </Grid>
   );
