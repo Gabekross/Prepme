@@ -515,6 +515,30 @@ export function EngineRunner(props: {
     setExamView("review_question");
   }
 
+  async function retakeExam() {
+  // Reset review UI
+  setIncorrectOnly(false);
+  setExamView("take");
+
+  // Clear persisted attempt so it doesn't resume
+  const s = new LocalAttemptStorage(storageNamespace);
+  if (s.clearLatest) await s.clearLatest();
+
+  // Start a fresh shuffled attempt (full set)
+  if ((engine as any).hardRestart) {
+    await (engine as any).hardRestart({
+      bank: questions,
+      blueprint,
+      mode,
+      reshuffleQuestions: true,
+      storageNamespace,
+    });
+  } else {
+    await engine.startNewAttempt({ reshuffleQuestions: true });
+  }
+}
+
+
   return (
     <Grid>
       <Card>
@@ -597,6 +621,9 @@ export function EngineRunner(props: {
             <Card>
               <SectionTitle>Review results</SectionTitle>
               <Subtle>Click a question to review your answer and see the explanation.</Subtle>
+              <ButtonRow>
+              <Button onClick={retakeExam}>Retake exam</Button>
+              </ButtonRow>
 
               <Divider />
 
