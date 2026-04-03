@@ -1,7 +1,21 @@
 import type { Question, Scenario } from "../core/types";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
-type DbBank = { id: string; slug: string };
+type DbBank = {
+  id: string;
+  slug: string;
+  duration_minutes: number | null;
+  pass_threshold_pct: number | null;
+};
+
+export type BankConfig = {
+  id: string;
+  slug: string;
+  /** Exam time limit in minutes. Null = untimed. */
+  durationMinutes: number | null;
+  /** Pass threshold percentage 0-100. Default: 70. */
+  passThreshold: number;
+};
 type DbScenario = { scenario_key: string; title: string | null; text: string };
 type DbQuestion = {
   question_key: string;
@@ -20,11 +34,20 @@ type DbQuestion = {
   explanation: string | null;
 };
 
-export async function loadBankBySlug(slug: string) {
+export async function loadBankBySlug(slug: string): Promise<BankConfig> {
   const sb = supabaseBrowser();
-  const { data, error } = await sb.from("question_banks").select("id,slug").eq("slug", slug).single<DbBank>();
+  const { data, error } = await sb
+    .from("question_banks")
+    .select("id,slug,duration_minutes,pass_threshold_pct")
+    .eq("slug", slug)
+    .single<DbBank>();
   if (error) throw error;
-  return data;
+  return {
+    id: data.id,
+    slug: data.slug,
+    durationMinutes: data.duration_minutes ?? null,
+    passThreshold: data.pass_threshold_pct ?? 70,
+  };
 }
 
 export async function loadScenarios(bankId: string): Promise<Scenario[]> {

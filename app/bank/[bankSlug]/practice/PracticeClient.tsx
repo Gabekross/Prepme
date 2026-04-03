@@ -8,7 +8,7 @@ import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/
 
 const P = styled.p`
   margin: 0;
-  color: rgba(15, 23, 42, 0.7);
+  color: ${(p) => p.theme.muted};
   font-size: 14px;
   line-height: 1.45;
 `;

@@ -12,42 +12,70 @@ const Grid = styled.div`
   gap: 12px;
   grid-template-columns: 1fr;
 
-  @media (min-width: 860px) {
+  @media (min-width: 760px) {
     grid-template-columns: 1fr 1fr;
     gap: 16px;
   }
 `;
 
 const Col = styled.div`
-  border: 1px solid rgba(255,255,255,0.10);
-  background: rgba(255,255,255,0.03);
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  background: ${(p) => p.theme.cardBg2};
   border-radius: 16px;
-  padding: 12px;
+  padding: 14px;
+  min-width: 0;
 `;
 
 const Heading = styled.div`
-  font-weight: 900;
+  font-weight: 800;
+  font-size: 13.5px;
+  color: ${(p) => p.theme.text};
   margin-bottom: 10px;
 `;
 
-const PromptLabel = styled(Subtle)`
-  opacity: 0.9;
+const PromptLabel = styled.div`
+  font-size: 13.5px;
+  color: ${(p) => p.theme.text};
+  font-weight: 600;
+  line-height: 1.4;
+  word-break: break-word;
+  overflow-wrap: break-word;
 `;
 
 const PromptRow = styled.div`
   display: grid;
-  gap: 12px;
+  gap: 14px;
 `;
 
-const SlotButton = styled.button<{ $ok?: boolean }>`
+const SlotButton = styled.button<{ $ok?: boolean; $incorrect?: boolean }>`
   width: 100%;
-  border-radius: 14px;
-  border: 1px dashed rgba(255,255,255,0.20);
-  background: ${(p) => (p.$ok ? "rgba(80,200,120,0.14)" : "rgba(255,255,255,0.04)")};
-  color: rgba(255,255,255,0.92);
-  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1.5px dashed ${(p) =>
+    p.$ok
+      ? p.theme.successBorder
+      : p.$incorrect
+      ? p.theme.errorBorder
+      : p.theme.buttonBorder};
+  background: ${(p) =>
+    p.$ok
+      ? p.theme.successSoft
+      : p.$incorrect
+      ? p.theme.errorSoft
+      : p.theme.buttonBg};
+  color: ${(p) => p.theme.text};
+  padding: 10px 12px;
   text-align: left;
   cursor: pointer;
+  font-size: 13.5px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.45;
+  min-height: 42px;
+  transition: background 140ms ease, border-color 140ms ease;
+
+  &:hover {
+    background: ${(p) => !p.$ok && !p.$incorrect && p.theme.buttonHover};
+  }
 `;
 
 const SlotWrap = styled.div`
@@ -66,12 +94,31 @@ const AnswersList = styled.div`
 `;
 
 const AnswerCard = styled.div<{ $dragging?: boolean; $selected?: boolean }>`
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: ${(p) => (p.$selected ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)")};
-  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1.5px solid ${(p) => p.$selected ? p.theme.accent : p.theme.cardBorder};
+  background: ${(p) => p.$selected ? p.theme.accentSoft : p.theme.buttonBg};
+  color: ${(p) => p.theme.text};
+  padding: 10px 12px;
   cursor: grab;
-  opacity: ${(p) => (p.$dragging ? 0.85 : 1)};
+  opacity: ${(p) => (p.$dragging ? 0.75 : 1)};
+  font-size: 13.5px;
+  line-height: 1.45;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  transition: background 140ms ease, border-color 140ms ease;
+  box-shadow: ${(p) => p.$selected ? `0 0 0 3px ${p.theme.accentSoft}` : "none"};
+
+  &:hover {
+    background: ${(p) => !p.$selected && p.theme.buttonHover};
+    border-color: ${(p) => !p.$selected && p.theme.accent};
+  }
+`;
+
+const SlotMeta = styled.div<{ $ok: boolean }>`
+  font-size: 11.5px;
+  font-weight: 700;
+  color: ${(p) => p.$ok ? p.theme.success : p.theme.error};
+  margin-top: 4px;
 `;
 
 const TransformWrap = styled.div<{ $transform?: string; $transition?: string }>`
@@ -124,16 +171,18 @@ export function DndMatch(props: {
   }
 
   function clear(promptId: string) {
+    if (showCorrect) return;
     onChange({ type: "dnd_match", mapping: { ...mapping, [promptId]: null } });
   }
 
   function assignByTap(promptId: string) {
-    if (!selectedAnswerId) return;
+    if (showCorrect || !selectedAnswerId) return;
     onChange({ type: "dnd_match", mapping: { ...mapping, [promptId]: selectedAnswerId } });
     setSelectedAnswerId(null);
   }
 
   function onDragEnd(e: DragEndEvent) {
+    if (showCorrect) return;
     const activeId = String(e.active.id);
     const overId = e.over ? String(e.over.id) : null;
     if (!overId) return;
@@ -147,7 +196,7 @@ export function DndMatch(props: {
     <Grid>
       <Col>
         <Heading>Prompts</Heading>
-        <Subtle>Drag an answer onto a prompt, or tap-select an answer then tap a slot.</Subtle>
+        <Subtle>Drag an answer onto a slot, or tap an answer then tap a slot.</Subtle>
         <Divider />
         <DndContext sensors={sensors} onDragEnd={onDragEnd}>
           <PromptRow>
@@ -155,20 +204,25 @@ export function DndMatch(props: {
               const assignedId = mapping[p.id] ?? null;
               const correctId = question.answerKey.mapping[p.id];
               const ok = !!(showCorrect && assignedId && assignedId === correctId);
+              const incorrect = !!(showCorrect && assignedId && assignedId !== correctId);
               return (
                 <SlotWrap key={p.id}>
                   <PromptLabel>{p.text}</PromptLabel>
                   <SlotDroppable id={`slot:${p.id}`}>
-                    <SlotButton $ok={ok} onClick={() => assignByTap(p.id)}>
-                      {assignedId ? answerText(assignedId) : "Tap to assign (or drop here)"}
-                      {showCorrect && ok ? <Subtle>✓ Correct</Subtle> : null}
+                    <SlotButton $ok={ok} $incorrect={incorrect} onClick={() => assignByTap(p.id)}>
+                      {assignedId ? answerText(assignedId) : "Drop here or tap to assign"}
                     </SlotButton>
                   </SlotDroppable>
-                  {assignedId ? (
+                  {showCorrect && (
+                    <SlotMeta $ok={ok}>
+                      {ok ? "✓ Correct" : assignedId ? `✗ Incorrect — correct: ${answerText(correctId)}` : `Answer: ${answerText(correctId)}`}
+                    </SlotMeta>
+                  )}
+                  {!showCorrect && assignedId && (
                     <ClearRow>
                       <LinkButton onClick={() => clear(p.id)}>Clear</LinkButton>
                     </ClearRow>
-                  ) : null}
+                  )}
                 </SlotWrap>
               );
             })}
@@ -178,7 +232,11 @@ export function DndMatch(props: {
 
       <Col>
         <Heading>Answers</Heading>
-        <Subtle>Available answers (drag or tap to select).</Subtle>
+        <Subtle>
+          {selectedAnswerId
+            ? "Answer selected — now tap a slot to assign."
+            : "Drag or tap an answer to select it."}
+        </Subtle>
         <Divider />
 
         <DndContext sensors={sensors} onDragEnd={onDragEnd}>
@@ -189,8 +247,8 @@ export function DndMatch(props: {
                 const a = answers.find((x) => x.id === id)!;
                 const selected = selectedAnswerId === id;
                 return (
-                  <div key={id} onClick={() => setSelectedAnswerId(selected ? null : id)}>
-                    <SortableAnswer id={id} text={(selected ? "✓ " : "") + a.text} selected={selected} />
+                  <div key={id} onClick={() => !showCorrect && setSelectedAnswerId(selected ? null : id)}>
+                    <SortableAnswer id={id} text={a.text} selected={selected} />
                   </div>
                 );
               })}

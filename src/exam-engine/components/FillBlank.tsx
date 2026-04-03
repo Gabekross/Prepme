@@ -9,35 +9,81 @@ type InputState = "neutral" | "correct" | "incorrect";
 
 const FieldWrap = styled.div`
   display: grid;
-  gap: 6px;
+  gap: 8px;
 `;
 
-const Hint = styled.div`
-  font-size: 12px;
-  opacity: 0.82;
+const FieldLabel = styled.div`
+  font-size: 13px;
+  font-weight: 700;
+  color: ${(p) => p.theme.mutedStrong};
 `;
 
-const Input = styled.input<{ $state?: InputState }>`
+const Input = styled.input<{ $state: InputState }>`
   width: 100%;
+  box-sizing: border-box;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.92);
-  padding: 12px 12px;
-  outline: none;
-
-  ${(p) =>
+  border: 1.5px solid ${(p) =>
     p.$state === "correct"
-      ? `
-    background: rgba(34,197,94,0.16);
-    box-shadow: 0 0 0 1px rgba(34,197,94,0.35) inset;
-  `
+      ? p.theme.successBorder
       : p.$state === "incorrect"
-      ? `
-    background: rgba(239,68,68,0.16);
-    box-shadow: 0 0 0 1px rgba(239,68,68,0.35) inset;
-  `
-      : ""};
+      ? p.theme.errorBorder
+      : p.theme.inputBorder};
+  background: ${(p) =>
+    p.$state === "correct"
+      ? p.theme.successSoft
+      : p.$state === "incorrect"
+      ? p.theme.errorSoft
+      : p.theme.inputBg};
+  color: ${(p) => p.theme.text};
+  padding: 11px 14px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+
+  &::placeholder {
+    color: ${(p) => p.theme.muted};
+  }
+
+  &:focus {
+    border-color: ${(p) =>
+      p.$state === "correct"
+        ? p.theme.success
+        : p.$state === "incorrect"
+        ? p.theme.error
+        : p.theme.accent};
+    box-shadow: 0 0 0 3px ${(p) =>
+      p.$state === "correct"
+        ? p.theme.successSoft
+        : p.$state === "incorrect"
+        ? p.theme.errorSoft
+        : p.theme.accentSoft};
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.75;
+  }
+`;
+
+const FeedbackRow = styled.div<{ $correct: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: ${(p) => (p.$correct ? p.theme.success : p.theme.error)};
+`;
+
+const CorrectAnswer = styled.div`
+  font-size: 12.5px;
+  color: ${(p) => p.theme.muted};
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 10px;
+  background: ${(p) => p.theme.cardBg2};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  word-break: break-word;
+  overflow-wrap: break-word;
 `;
 
 function normalizeText(s: string) {
@@ -45,7 +91,6 @@ function normalizeText(s: string) {
 }
 
 function normalizeNumeric(s: string) {
-  // allows "1,200" or " 1 200 " -> "1200"
   return s.replace(/,/g, "").replace(/\s+/g, "").trim();
 }
 
@@ -64,7 +109,9 @@ function isBlankCorrect(q: Extract<Question, { type: "fill_blank" }>, blankId: s
   }
 
   const v = normalizeText(value);
-  return accepted.some((a) => (ci ? normalizeText(a).toLowerCase() === v.toLowerCase() : normalizeText(a) === v));
+  return accepted.some((a) =>
+    ci ? normalizeText(a).toLowerCase() === v.toLowerCase() : normalizeText(a) === v
+  );
 }
 
 export function FillBlank(props: {
@@ -76,30 +123,33 @@ export function FillBlank(props: {
   const { question, response, onChange, showCorrect } = props;
   const values = response.type === "fill_blank" ? response.values : {};
   const blanks = question.payload.blanks;
+  const isNumeric = question.payload.inputMode === "numeric";
 
   return (
     <Stack>
-      <Subtle>Enter your answer.</Subtle>
+      <Subtle>
+        {isNumeric ? "Enter a numeric answer." : "Type your answer in the field below."}
+      </Subtle>
 
-      {blanks.map((b) => {
+      {blanks.map((b, idx) => {
         const val = values[b.id] ?? "";
         const hasValue = val.trim().length > 0;
-
         const correct = showCorrect ? isBlankCorrect(question, b.id, val) : null;
-
-        const state: InputState =
-          showCorrect && hasValue ? (correct ? "correct" : "incorrect") : "neutral";
-
-        // Pick a display hint for correct answers (first acceptable value)
-        const correctHint =
-          showCorrect && !hasValue ? question.answerKey.values[b.id]?.[0] : null;
+        const state: InputState = showCorrect && hasValue ? (correct ? "correct" : "incorrect") : "neutral";
+        const correctHint = question.answerKey.values[b.id]?.[0];
 
         return (
           <FieldWrap key={b.id}>
+            {blanks.length > 1 && (
+              <FieldLabel>Blank {idx + 1}{b.placeholder ? ` — ${b.placeholder}` : ""}</FieldLabel>
+            )}
+
             <Input
+              type={isNumeric ? "number" : "text"}
               value={val}
-              placeholder={b.placeholder ?? "Answer"}
+              placeholder={b.placeholder ?? (isNumeric ? "Enter number…" : "Enter answer…")}
               $state={state}
+              disabled={showCorrect}
               onChange={(e) =>
                 onChange({
                   type: "fill_blank",
@@ -108,13 +158,19 @@ export function FillBlank(props: {
               }
             />
 
-            {showCorrect && hasValue ? (
-              <Hint>{correct ? "✓ Correct" : "✗ Incorrect"}</Hint>
-            ) : null}
+            {showCorrect && hasValue && (
+              <FeedbackRow $correct={!!correct}>
+                {correct ? "✓ Correct" : "✕ Incorrect"}
+              </FeedbackRow>
+            )}
 
-            {showCorrect && !hasValue && correctHint ? (
-              <Hint>Correct answer: {correctHint}</Hint>
-            ) : null}
+            {showCorrect && !hasValue && correctHint && (
+              <CorrectAnswer>Correct answer: {correctHint}</CorrectAnswer>
+            )}
+
+            {showCorrect && hasValue && !correct && correctHint && (
+              <CorrectAnswer>Correct answer: {correctHint}</CorrectAnswer>
+            )}
           </FieldWrap>
         );
       })}

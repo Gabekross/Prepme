@@ -45,33 +45,48 @@ const Label = styled.div`
 
 const Input = styled.input`
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.92);
+  border: 1px solid ${(p) => p.theme.inputBorder};
+  background: ${(p) => p.theme.inputBg};
+  color: ${(p) => p.theme.text};
   padding: 10px 12px;
   outline: none;
+  width: 100%;
+  min-width: 0;
 `;
 
 const Select = styled.select`
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(11,16,32,0.35);
-  color: rgba(255,255,255,0.92);
-  padding: 10px 12px;
+  border: 1px solid ${(p) => p.theme.inputBorder};
+  background: ${(p) => p.theme.inputBg};
+  color: ${(p) => p.theme.text};
+  padding: 10px 36px 10px 12px;
   outline: none;
+  width: 100%;
+  min-width: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
 `;
 
 const Button = styled.button<{ $danger?: boolean }>`
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: ${(p) => (p.$danger ? "rgba(239,68,68,0.18)" : "rgba(255,255,255,0.08)")};
-  color: rgba(255,255,255,0.92);
+  border: 1px solid ${(p) => p.$danger ? p.theme.errorBorder : p.theme.buttonBorder};
+  background: ${(p) => p.$danger ? p.theme.errorSoft : p.theme.buttonBg};
+  color: ${(p) => p.$danger ? p.theme.error : p.theme.text};
   padding: 10px 12px;
   cursor: pointer;
-  font-weight: 900;
+  font-weight: 700;
+  white-space: nowrap;
 
   &:hover {
-    background: ${(p) => (p.$danger ? "rgba(239,68,68,0.24)" : "rgba(255,255,255,0.10)")};
+    background: ${(p) => p.$danger ? p.theme.errorBorder : p.theme.buttonHover};
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
   }
 `;
 

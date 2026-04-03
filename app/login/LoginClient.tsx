@@ -5,95 +5,224 @@ import styled from "styled-components";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { useRouter } from "next/navigation";
 
+/* ── layout ─────────────────────────────────────────────────────────────── */
+
+const PageWrap = styled.div`
+  display: flex;
+  justify-content: center;
+  padding: 32px 16px 64px;
+`;
+
 const Card = styled.div`
-  max-width: 520px;
-  margin: 0 auto;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+  max-width: 440px;
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: ${(p) => p.theme.shadowLg};
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, ${(p) => p.theme.accentSoft}, transparent 70%);
+    pointer-events: none;
+  }
+`;
+
+const CardIcon = styled.div`
+  width: 52px;
+  height: 52px;
   border-radius: 18px;
-  padding: 16px;
+  background: linear-gradient(135deg, ${(p) => p.theme.accent} 0%, #7c3aed 100%);
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px ${(p) => p.theme.accentSoft};
 `;
 
 const Title = styled.h1`
-  margin: 0 0 10px 0;
-  font-size: 18px;
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.4px;
+  color: ${(p) => p.theme.text};
 `;
 
-const Subtle = styled.p`
-  margin: 0 0 12px 0;
-  font-size: 13px;
-  opacity: 0.85;
-  line-height: 1.45;
+const Subtitle = styled.p`
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: ${(p) => p.theme.muted};
+  line-height: 1.5;
 `;
 
-const Row = styled.div`
+/* ── form fields ─────────────────────────────────────────────────────────── */
+
+const FieldGroup = styled.div`
   display: grid;
-  gap: 10px;
-  margin-top: 12px;
+  gap: 14px;
+  margin-bottom: 20px;
 `;
 
 const Label = styled.label`
   display: grid;
-  gap: 6px;
-  font-size: 12px;
-  opacity: 0.9;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: ${(p) => p.theme.mutedStrong};
 `;
 
 const Input = styled.input`
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.92);
-  padding: 10px 12px;
+  border: 1px solid ${(p) => p.theme.inputBorder};
+  background: ${(p) => p.theme.inputBg};
+  color: ${(p) => p.theme.text};
+  padding: 10px 14px;
+  font-size: 14px;
   outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+
+  &::placeholder {
+    color: ${(p) => p.theme.muted};
+  }
+
+  &:focus {
+    border-color: ${(p) => p.theme.accent};
+    box-shadow: 0 0 0 3px ${(p) => p.theme.accentSoft};
+  }
 `;
+
+/* ── buttons ─────────────────────────────────────────────────────────────── */
 
 const ButtonRow = styled.div`
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-top: 6px;
 `;
 
-const Button = styled.button`
+const PrimaryButton = styled.button`
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.92);
-  padding: 10px 12px;
+  border: 1px solid transparent;
+  background: ${(p) => p.theme.accent};
+  color: white;
+  padding: 11px 16px;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
-  font-weight: 800;
+  transition: background 150ms ease, transform 100ms ease, opacity 150ms ease;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
+  &:hover:not(:disabled) {
+    background: ${(p) => p.theme.accentHover};
+    transform: translateY(-1px);
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 `;
 
-const Msg = styled.div`
-  font-size: 13px;
-  opacity: 0.92;
-  line-height: 1.4;
-`;
-
-const Code = styled.code`
-  display: block;
-  margin-top: 8px;
-  font-size: 12px;
-  opacity: 0.9;
-  background: rgba(0, 0, 0, 0.25);
-  padding: 10px;
+const SecondaryButton = styled.button`
   border-radius: 12px;
-  overflow: auto;
+  border: 1px solid ${(p) => p.theme.buttonBorder};
+  background: ${(p) => p.theme.buttonBg};
+  color: ${(p) => p.theme.text};
+  padding: 11px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 150ms ease;
+
+  &:hover:not(:disabled) {
+    background: ${(p) => p.theme.buttonHover};
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
 
-console.log("SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-console.log("ANON_KEY first 12:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0, 12));
+/* ── feedback ────────────────────────────────────────────────────────────── */
 
+const Divider = styled.div`
+  height: 1px;
+  background: ${(p) => p.theme.divider};
+  margin: 24px 0;
+`;
+
+const Msg = styled.div<{ $type?: "success" | "error" | "info" }>`
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  font-weight: 600;
+  border: 1px solid ${(p) =>
+    p.$type === "success"
+      ? p.theme.successBorder
+      : p.$type === "error"
+      ? p.theme.errorBorder
+      : p.theme.cardBorder};
+  background: ${(p) =>
+    p.$type === "success"
+      ? p.theme.successSoft
+      : p.$type === "error"
+      ? p.theme.errorSoft
+      : p.theme.cardBg2};
+  color: ${(p) =>
+    p.$type === "success"
+      ? p.theme.success
+      : p.$type === "error"
+      ? p.theme.error
+      : p.theme.text};
+`;
+
+const SectionTitle = styled.h2`
+  margin: 0 0 14px;
+  font-size: 16px;
+  font-weight: 800;
+  color: ${(p) => p.theme.text};
+  letter-spacing: -0.2px;
+`;
+
+const OutlineButton = styled.button`
+  border-radius: 12px;
+  border: 1px solid ${(p) => p.theme.accent}40;
+  background: ${(p) => p.theme.accentSoft};
+  color: ${(p) => p.theme.accent};
+  padding: 11px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 150ms ease;
+  width: 100%;
+
+  &:hover:not(:disabled) {
+    background: ${(p) => p.theme.accent};
+    color: white;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+function getMsgType(msg: string): "success" | "error" | "info" {
+  if (!msg) return "info";
+  const lower = msg.toLowerCase();
+  if (lower.includes("failed") || lower.includes("error") || lower.includes("not signed")) return "error";
+  if (lower.includes("signed in") || lower.includes("reset email sent") || lower.includes("signed up")) return "success";
+  return "info";
+}
 
 export default function LoginClient() {
   const sb = useMemo(() => supabaseBrowser(), []);
@@ -101,12 +230,9 @@ export default function LoginClient() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [resetEmail, setResetEmail] = useState("");
-
   const [msg, setMsg] = useState<string>("");
-  const [userId, setUserId] = useState<string>("");
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
 
   async function refreshSession() {
     setMsg("");
@@ -114,61 +240,51 @@ export default function LoginClient() {
     const user = data.user;
 
     if (!user) {
-      setUserId("");
-      setIsAdmin(false);
       setMsg("Not signed in.");
       return;
     }
 
-    setUserId(user.id);
-
-    // Check admin role
     const { data: roles, error } = await sb.from("user_roles").select("role").eq("user_id", user.id);
     if (error) {
-      setIsAdmin(false);
       setMsg(`Signed in, but role check failed: ${error.message}`);
       return;
     }
 
     const admin = (roles ?? []).some((r: any) => r.role === "admin");
-    setIsAdmin(admin);
-    setMsg(admin ? "Signed in as ADMIN ✅" : "Signed in (not admin).");
+    setMsg(admin ? "Signed in as admin." : "Signed in.");
 
-    // Auto-redirect
     if (admin) router.push("/admin/questions");
-    else router.push("/engine");
+    else router.push("/");
   }
 
   async function signIn() {
-    setMsg("Signing in...");
+    if (loading) return;
+    setLoading(true);
+    setMsg("Signing in…");
     const { error } = await sb.auth.signInWithPassword({ email, password });
+    setLoading(false);
     if (error) return setMsg(`Sign in failed: ${error.message}`);
     await refreshSession();
   }
 
   async function signUp() {
-    setMsg("Signing up...");
+    if (loading) return;
+    setLoading(true);
+    setMsg("Creating account…");
     const { error } = await sb.auth.signUp({ email, password });
+    setLoading(false);
     if (error) return setMsg(`Sign up failed: ${error.message}`);
-    setMsg("Signed up. Check email confirmation if your project requires it. Now try signing in.");
-  }
-
-  async function signOut() {
-    setMsg("Signing out...");
-    const { error } = await sb.auth.signOut();
-    if (error) return setMsg(`Sign out failed: ${error.message}`);
-    setUserId("");
-    setIsAdmin(false);
-    setMsg("Signed out.");
+    setMsg("Account created. Check your email to confirm, then sign in.");
   }
 
   async function requestPasswordReset() {
-    setMsg("Sending password reset email...");
+    if (loading || !resetEmail) return;
+    setLoading(true);
+    setMsg("Sending reset email…");
     const redirectTo = `${window.location.origin}/reset-password`;
-
     const { error } = await sb.auth.resetPasswordForEmail(resetEmail, { redirectTo });
+    setLoading(false);
     if (error) return setMsg(`Reset failed: ${error.message}`);
-
     setMsg("Reset email sent. Check your inbox.");
   }
 
@@ -177,64 +293,80 @@ export default function LoginClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const hasCredentials = !!email && !!password;
+
   return (
-    <Card>
-      <Title>Login</Title>
-      <Subtle>
-        Sign in for admin tools (question upload). Admins will be redirected to <b>/admin/questions</b>.
-      </Subtle>
+    <PageWrap>
+      <Card>
+        <CardIcon>🔐</CardIcon>
+        <Title>Sign In</Title>
+        <Subtitle>
+          Access admin tools and question management. Admins are redirected automatically.
+        </Subtitle>
 
-      <Row>
-        <Label>
-          Email
-          <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" />
-        </Label>
+        <FieldGroup>
+          <Label>
+            Email address
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              autoComplete="email"
+            />
+          </Label>
 
-        <Label>
-          Password
-          <Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" type="password" />
-        </Label>
+          <Label>
+            Password
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              onKeyDown={(e) => e.key === "Enter" && hasCredentials && signIn()}
+            />
+          </Label>
+        </FieldGroup>
 
         <ButtonRow>
-          <Button onClick={signIn} disabled={!email || !password}>
-            Sign In
-          </Button>
-          <Button onClick={signUp} disabled={!email || !password}>
+          <PrimaryButton onClick={signIn} disabled={!hasCredentials || loading}>
+            {loading ? "Signing in…" : "Sign In"}
+          </PrimaryButton>
+          <SecondaryButton onClick={signUp} disabled={!hasCredentials || loading}>
             Sign Up
-          </Button>
-          <Button onClick={signOut}>Sign Out</Button>
-          <Button onClick={refreshSession}>Refresh Session</Button>
+          </SecondaryButton>
         </ButtonRow>
 
-        <Msg>{msg}</Msg>
+        {msg && (
+          <Msg $type={getMsgType(msg)} style={{ marginTop: 14 }}>
+            {msg}
+          </Msg>
+        )}
 
-        {userId ? (
-          <Code>
-            userId: {userId}
-            {"\n"}admin: {String(isAdmin)}
-          </Code>
-        ) : null}
-      </Row>
+        <Divider />
 
-      <Row>
-        <Title style={{ fontSize: 16, marginTop: 10 }}>Password Reset</Title>
+        <SectionTitle>Forgot Password?</SectionTitle>
 
-        <Label>
-          Reset email
-          <Input value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} placeholder="you@email.com" />
+        <Label style={{ marginBottom: 12 }}>
+          Email address
+          <Input
+            type="email"
+            value={resetEmail}
+            onChange={(e) => setResetEmail(e.target.value)}
+            placeholder="you@example.com"
+            autoComplete="email"
+          />
         </Label>
 
-        <ButtonRow>
-          <Button onClick={requestPasswordReset} disabled={!resetEmail}>
-            Send Reset Email
-          </Button>
-        </ButtonRow>
+        <OutlineButton onClick={requestPasswordReset} disabled={!resetEmail || loading}>
+          Send Reset Email
+        </OutlineButton>
 
-        <Subtle>
-          You’ll receive a link that opens <b>/reset-password</b> in this app. After setting a new password, you can sign
-          in again.
-        </Subtle>
-      </Row>
-    </Card>
+        <Subtitle style={{ marginTop: 12, marginBottom: 0, fontSize: 12 }}>
+          You'll receive a link that opens <strong>/reset-password</strong> where you can set a new password.
+        </Subtitle>
+      </Card>
+    </PageWrap>
   );
 }

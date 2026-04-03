@@ -81,6 +81,10 @@ export type Blueprint = {
   excludeTags?: string[];
   accessTier?: AccessTier;
   setId?: SetId;
+  /** Exam time limit in minutes. Null/undefined = untimed. */
+  durationMinutes?: number;
+  /** Passing score percentage (0-100). Default: 70. */
+  passThreshold?: number;
 };
 
 export type Attempt = {

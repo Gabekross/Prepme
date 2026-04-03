@@ -34,6 +34,13 @@ export function useAppTheme() {
 export function ThemeClient({ children }: { children: React.ReactNode }) {
   const [themeName, setThemeNameState] = useState<AppThemeName>("light");
 
+  // Sync color-scheme on <html> imperatively so native browser controls
+  // (buttons, inputs, scrollbars) match the active theme immediately —
+  // even before styled-components GlobalStyle is injected.
+  useEffect(() => {
+    document.documentElement.style.colorScheme = themeName === "dark" ? "dark" : "light";
+  }, [themeName]);
+
   useEffect(() => {
     const stored = typeof window !== "undefined" ? (localStorage.getItem(LS_THEME_KEY) as AppThemeName | null) : null;
     if (stored === "light" || stored === "dark") setThemeNameState(stored);
@@ -41,7 +48,10 @@ export function ThemeClient({ children }: { children: React.ReactNode }) {
 
   function setThemeName(t: AppThemeName) {
     setThemeNameState(t);
-    if (typeof window !== "undefined") localStorage.setItem(LS_THEME_KEY, t);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(LS_THEME_KEY, t);
+      document.documentElement.style.colorScheme = t === "dark" ? "dark" : "light";
+    }
   }
 
   function toggle() {

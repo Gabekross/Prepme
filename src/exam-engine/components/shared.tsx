@@ -10,24 +10,27 @@ export const Stack = styled.div`
 `;
 
 export const Subtle = styled.div`
-  font-size: 12px;
+  font-size: 13px;
   color: ${(p) => p.theme.muted};
-  line-height: 1.4;
+  line-height: 1.5;
 `;
 
 export const Divider = styled.div`
   height: 1px;
-  background: ${(p) => p.theme.cardBorder};
-  margin: 10px 0;
+  background: ${(p) => p.theme.divider};
+  margin: 12px 0;
 `;
 
 export const Badge = styled.span<{ $state?: AnswerState }>`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
-  padding: 6px 10px;
+  font-size: 12.5px;
+  font-weight: 800;
+  padding: 6px 12px;
   border-radius: 999px;
+
+  /* default */
   border: 1px solid ${(p) => p.theme.cardBorder};
   background: ${(p) => p.theme.buttonBg};
   color: ${(p) => p.theme.text};
@@ -35,16 +38,18 @@ export const Badge = styled.span<{ $state?: AnswerState }>`
   ${(p) =>
     p.$state === "correct"
       ? `
-    border-color: rgba(34,197,94,0.55);
-    background: rgba(34,197,94,0.14);
+    border-color: ${p.theme.successBorder};
+    background: ${p.theme.successSoft};
+    color: ${p.theme.success};
   `
       : ""}
 
   ${(p) =>
     p.$state === "incorrect"
       ? `
-    border-color: rgba(239,68,68,0.55);
-    background: rgba(239,68,68,0.14);
+    border-color: ${p.theme.errorBorder};
+    background: ${p.theme.errorSoft};
+    color: ${p.theme.error};
   `
       : ""}
 
@@ -52,8 +57,9 @@ export const Badge = styled.span<{ $state?: AnswerState }>`
     p.$state === "missed"
       ? `
     border-style: dashed;
-    border-color: rgba(245,158,11,0.55);
-    background: rgba(245,158,11,0.12);
+    border-color: ${p.theme.warningBorder};
+    background: ${p.theme.warningSoft};
+    color: ${p.theme.warning};
   `
       : ""}
 `;
@@ -62,46 +68,47 @@ export const OptionButton = styled.button<{ $state?: AnswerState; $selected?: bo
   width: 100%;
   text-align: left;
   border-radius: 14px;
-  border: 1px solid ${(p) => p.theme.cardBorder};
+  border: 1.5px solid ${(p) => p.theme.cardBorder};
   background: ${(p) => p.theme.buttonBg};
   color: ${(p) => p.theme.text};
-  padding: 12px 12px;
+  padding: 13px 14px;
   cursor: pointer;
-  line-height: 1.35;
+  line-height: 1.45;
+  transition: background 140ms ease, border-color 140ms ease, box-shadow 140ms ease, transform 100ms ease;
 
   &:hover {
     background: ${(p) => p.theme.buttonHover};
+    transform: translateX(2px);
   }
 
   &:active {
-    transform: translateY(1px);
+    transform: translateX(0);
   }
 
-  /* ✅ Strong, always-visible selection highlight */
   ${(p) =>
     p.$selected
       ? `
     border-color: ${p.theme.accent};
     box-shadow: 0 0 0 3px ${p.theme.accentSoft};
+    background: ${p.theme.accentSoft};
   `
       : ""}
 
-  /* ✅ Correctness states override selection after reveal */
   ${(p) =>
     p.$state === "correct"
       ? `
-    border-color: rgba(34,197,94,0.85);
-    box-shadow: 0 0 0 3px rgba(34,197,94,0.18);
-    background: ${p.theme.name === "dark" ? "rgba(34,197,94,0.18)" : "rgba(34,197,94,0.12)"};
+    border-color: ${p.theme.successBorder};
+    box-shadow: 0 0 0 3px ${p.theme.successSoft};
+    background: ${p.theme.successSoft};
   `
       : ""}
 
   ${(p) =>
     p.$state === "incorrect"
       ? `
-    border-color: rgba(239,68,68,0.85);
-    box-shadow: 0 0 0 3px rgba(239,68,68,0.18);
-    background: ${p.theme.name === "dark" ? "rgba(239,68,68,0.18)" : "rgba(239,68,68,0.12)"};
+    border-color: ${p.theme.errorBorder};
+    box-shadow: 0 0 0 3px ${p.theme.errorSoft};
+    background: ${p.theme.errorSoft};
   `
       : ""}
 
@@ -109,9 +116,9 @@ export const OptionButton = styled.button<{ $state?: AnswerState; $selected?: bo
     p.$state === "missed"
       ? `
     border-style: dashed;
-    border-color: rgba(245,158,11,0.85);
-    box-shadow: 0 0 0 3px rgba(245,158,11,0.16);
-    background: ${p.theme.name === "dark" ? "rgba(245,158,11,0.14)" : "rgba(245,158,11,0.10)"};
+    border-color: ${p.theme.warningBorder};
+    box-shadow: 0 0 0 3px ${p.theme.warningSoft};
+    background: ${p.theme.warningSoft};
   `
       : ""}
 `;
@@ -122,9 +129,11 @@ export const Button = styled.button`
   background: ${(p) => p.theme.buttonBg};
   color: ${(p) => p.theme.text};
   border-radius: 12px;
-  padding: 10px 12px;
-  font-weight: 800;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-weight: 700;
   cursor: pointer;
+  transition: background 140ms ease, transform 100ms ease;
 
   &:hover {
     background: ${(p) => p.theme.buttonHover};
@@ -135,7 +144,7 @@ export const Button = styled.button`
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: not-allowed;
   }
 `;
@@ -143,12 +152,15 @@ export const Button = styled.button`
 export const LinkButton = styled.button`
   border: none;
   background: transparent;
-  color: ${(p) => p.theme.muted};
+  color: ${(p) => p.theme.accent};
   cursor: pointer;
-  text-decoration: underline;
+  font-size: 13px;
+  font-weight: 700;
   padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 
   &:hover {
-    color: ${(p) => p.theme.text};
+    color: ${(p) => p.theme.accentHover};
   }
 `;

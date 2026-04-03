@@ -50,9 +50,9 @@ type State = {
 
   retryIncorrectOnly: () => Promise<void>;
 
-  currentQuestion: Question | null;
-  canPrev: boolean;
-  canNext: boolean;
+  currentQuestion: () => Question | null;
+  canPrev: () => boolean;
+  canNext: () => boolean;
 
   prev: () => void;
   next: () => void;
@@ -62,10 +62,11 @@ type State = {
   getOptionOrder: (qid: string) => string[];
 
   toggleFlagCurrent: () => void;
-  isCurrentFlagged: boolean;
+  isCurrentFlagged: () => boolean;
 
   submitAttempt: () => void;
   goToIndex: (index: number) => void;
+  recordTimeOnQuestion: (qid: string, ms: number) => void;
 
 };
 
@@ -320,7 +321,7 @@ export const useExamSession = create<State>((set, get) => ({
     makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
   },
 
-  get currentQuestion() {
+  currentQuestion: (): Question | null => {
     const att = get().attempt;
     if (!att) return null;
 
@@ -335,15 +336,14 @@ export const useExamSession = create<State>((set, get) => ({
     return source.find((q) => q.id === qid) ?? source[0] ?? null;
   },
 
-
-  get canPrev() {
+  canPrev: (): boolean => {
     const att = get().attempt;
     if (!att) return false;
     const visibleSet = buildVisibleSet(get().questions);
     return findNextVisibleIndex(att, visibleSet, -1) !== null;
   },
 
-  get canNext() {
+  canNext: (): boolean => {
     const att = get().attempt;
     if (!att) return false;
     const visibleSet = buildVisibleSet(get().questions);
@@ -423,7 +423,7 @@ export const useExamSession = create<State>((set, get) => ({
     makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
   },
 
-  get isCurrentFlagged() {
+  isCurrentFlagged: (): boolean => {
     const att = get().attempt;
     if (!att) return false;
     const qid = att.questionOrder[att.currentIndex];
@@ -434,6 +434,18 @@ export const useExamSession = create<State>((set, get) => ({
     const att = get().attempt;
     if (!att) return;
     const nextAttempt = { ...att, submittedAt: new Date().toISOString() };
+    set({ attempt: nextAttempt });
+    makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
+  },
+
+  recordTimeOnQuestion: (qid: string, ms: number) => {
+    const att = get().attempt;
+    if (!att || ms <= 0) return;
+    const prev = att.timeSpentMsByQuestionId[qid] ?? 0;
+    const nextAttempt = {
+      ...att,
+      timeSpentMsByQuestionId: { ...att.timeSpentMsByQuestionId, [qid]: prev + ms },
+    };
     set({ attempt: nextAttempt });
     makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
   },

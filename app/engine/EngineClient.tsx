@@ -21,16 +21,17 @@ const Grid = styled.div`
 `;
 
 const Card = styled.div`
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.cardBorder};
   border-radius: 18px;
   padding: 14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  box-shadow: ${(p) => p.theme.shadow};
 `;
 
 const Title = styled.h1`
   font-size: 18px;
   margin: 0 0 8px 0;
+  color: ${(p) => p.theme.text};
 `;
 
 const Row = styled.div`
@@ -48,11 +49,16 @@ const ButtonRow = styled.div`
 const Select = styled.select`
   width: 100%;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(11,16,32,0.35);
-  color: rgba(255,255,255,0.92);
-  padding: 10px 12px;
+  border: 1px solid ${(p) => p.theme.inputBorder};
+  background: ${(p) => p.theme.inputBg};
+  color: ${(p) => p.theme.text};
+  padding: 10px 36px 10px 12px;
   outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
 `;
 
 const Stat = styled.div`
@@ -62,21 +68,22 @@ const Stat = styled.div`
 `;
 
 const StatBox = styled.div`
-  border: 1px solid rgba(255,255,255,0.10);
-  background: rgba(255,255,255,0.03);
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  background: ${(p) => p.theme.cardBg2};
   border-radius: 14px;
   padding: 10px 12px;
 `;
 
 const StatLabel = styled.div`
   font-size: 11px;
-  opacity: 0.75;
+  color: ${(p) => p.theme.muted};
 `;
 
 const StatValue = styled.div`
   margin-top: 4px;
   font-size: 16px;
   font-weight: 900;
+  color: ${(p) => p.theme.text};
 `;
 
 const Bullets = styled.ul`
@@ -190,7 +197,7 @@ const canNext =
             <Button onClick={() => engine.startNewAttempt({ reshuffleQuestions: true })}>Reshuffle questions</Button>
             <Button onClick={() => engine.startNewAttempt({ reshuffleQuestions: false })}>Restart attempt</Button>
             <Button onClick={() => engine.retryIncorrectOnly()}>Retry incorrect only</Button>
-            <Button onClick={() => engine.toggleFlagCurrent()}>{engine.isCurrentFlagged ? "Unflag" : "Flag"} question</Button>
+            <Button onClick={() => engine.toggleFlagCurrent()}>{engine.isCurrentFlagged() ? "Unflag" : "Flag"} question</Button>
           </ButtonRow>
 
           <ButtonRow>
