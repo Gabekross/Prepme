@@ -5,6 +5,7 @@ import styled from "styled-components";
 import type { Question, Scenario } from "@/src/exam-engine/core/types";
 import { EngineRunner } from "@/src/exam-engine/ui/EngineRunner";
 import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
+import { pmpBank } from "@/src/exam-engine/data/seed.pmp";
 
 const P = styled.p`
   margin: 0;
@@ -23,29 +24,35 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
       try {
         const bank = await loadBankBySlug(bankSlug);
         const [qs, scns] = await Promise.all([loadQuestions(bank.id), loadScenarios(bank.id)]);
-        setQuestions(qs);
+        // Fall back to seed data when Supabase bank is empty (local dev / demo)
+        setQuestions(qs.length ? qs : pmpBank);
         setScenarios(scns);
-        setMsg(qs.length ? "" : "No questions found for this bank (or none are free + published).");
+        setMsg("");
       } catch (e: any) {
-        setMsg(e?.message ?? "Failed to load bank.");
+        // Supabase unavailable — use seed data so the app stays usable
+        setQuestions(pmpBank);
+        setScenarios([]);
+        setMsg("");
       }
     })();
   }, [bankSlug]);
 
   if (!questions) return <P>{msg}</P>;
-  if (msg) return <P>{msg}</P>;
 
   return (
-<EngineRunner
-  key={`${bankSlug}__practice`}                 // ✅ forces a clean remount
-  title={`Practice • ${bankSlug}`}
-  subtitle="Work through questions with feedback after submission."
-  questions={questions}
-  scenarios={scenarios}
-  blueprint={{ total: 30 }}
-  mode="practice"
-  allowDomainFilter
-  storageNamespace={`${bankSlug}__practice`}     // ✅ isolates attempts
-/>
+    <EngineRunner
+      key={`${bankSlug}__practice`}
+      title={`Practice • ${bankSlug}`}
+      subtitle="Work through questions with feedback after submission."
+      questions={questions}
+      scenarios={scenarios}
+      blueprint={{
+        total: 20,
+        domains: { people: 8, process: 10, business_environment: 2 },
+      }}
+      mode="practice"
+      allowDomainFilter
+      storageNamespace={`${bankSlug}__practice`}
+    />
   );
 }

@@ -1180,7 +1180,40 @@ export function EngineRunner(props: {
 
   const questionEntryRef = useRef<{ qid: string; enteredAt: number } | null>(null);
 
+  /**
+   * Ref that always points to the latest attempt.
+   * Used inside effect cleanup closures where the Zustand state would be stale.
+   */
+  const latestAttemptRef = useRef(engine.attempt);
   useEffect(() => {
+    latestAttemptRef.current = engine.attempt;
+  }, [engine.attempt]);
+
+  useEffect(() => {
+    const ns = storageNamespace;
+
+    /**
+     * SESSION GUARD
+     * ─────────────────────────────────────────────────────────────────────────
+     * React useEffect cleanup runs on SPA navigation (component unmounts) but
+     * NOT on a browser hard refresh (browser destroys the JS context first).
+     * `beforeunload` fires on refresh/close/address-bar-nav but NOT on SPA nav.
+     *
+     * Combining both lets us:
+     *   • SPA nav away  → cleanup runs, no beforeunload  → clear in-progress localStorage → fresh start on return ✅
+     *   • Hard refresh  → beforeunload fires, cleanup may not run → localStorage kept → restore on reload ✅
+     *   • Tab close     → beforeunload fires, cleanup may or may not run → flag is set but nobody reads it ✅ (no harm)
+     */
+    const REFRESH_FLAG = `exam_refresh__${ns}`;
+
+    function onBeforeUnload() {
+      try { sessionStorage.setItem(REFRESH_FLAG, "1"); } catch { /* ignore private-mode quota errors */ }
+    }
+    if (typeof window !== "undefined") {
+      window.addEventListener("beforeunload", onBeforeUnload);
+    }
+
+    // Reset all local UI state, then load / create the attempt
     setInitialized(false);
     setRevealed({});
     setSubmittedQ({});
@@ -1190,8 +1223,34 @@ export function EngineRunner(props: {
     setShowSubmitConfirm(false);
     setExamView("take");
     setTimeRemaining(null);
+
     engine.initIfNeeded({ bank: questions, defaultBlueprint: blueprint, mode, storageNamespace })
       .then(() => setInitialized(true));
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("beforeunload", onBeforeUnload);
+
+        // Check whether the beforeunload event fired (= page refresh / hard nav)
+        const isRefresh = sessionStorage.getItem(REFRESH_FLAG) === "1";
+        // Always remove the flag — it's only meaningful for this single transition
+        sessionStorage.removeItem(REFRESH_FLAG);
+
+        if (isRefresh) {
+          // Page refresh: keep localStorage so the exam can be restored on reload
+          return;
+        }
+      }
+
+      // ── SPA navigation away ──────────────────────────────────────────────
+      // Clear the active in-progress attempt so the user starts fresh next time.
+      // IMPORTANT: do NOT clear submitted attempts — the results review relies on them.
+      const att = latestAttemptRef.current;
+      if (att && !att.submittedAt) {
+        // Fire-and-forget (localStorage ops are synchronous internally)
+        new LocalAttemptStorage(ns).clearLatest();
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, questions, storageNamespace]);
 

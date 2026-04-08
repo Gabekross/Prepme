@@ -68,6 +68,14 @@ type State = {
   goToIndex: (index: number) => void;
   recordTimeOnQuestion: (qid: string, ms: number) => void;
 
+  /**
+   * Explicitly destroy the current in-progress session.
+   * Clears both the Zustand in-memory state and the localStorage entry.
+   * Does NOT clear submitted attempts (results must remain accessible).
+   * Call this when the user explicitly chooses to abandon an exam.
+   */
+  resetSession: () => Promise<void>;
+
 };
 
 function makeStorage(namespace: string) {
@@ -448,5 +456,15 @@ export const useExamSession = create<State>((set, get) => ({
     };
     set({ attempt: nextAttempt });
     makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
+  },
+
+  resetSession: async () => {
+    const att = get().attempt;
+    const ns = get().storageNamespace;
+    // Only wipe in-progress attempts; keep submitted ones so results remain accessible
+    if (att && !att.submittedAt) {
+      await makeStorage(ns)?.clearLatest();
+    }
+    set({ attempt: null, picked: null, questions: null, bank: null });
   },
 }));
