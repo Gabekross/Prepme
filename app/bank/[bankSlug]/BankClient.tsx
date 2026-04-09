@@ -320,7 +320,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
         </Desc>
       </Header>
 
-      <SectionLabel>Choose a study mode</SectionLabel>
+      <SectionLabel>Practice</SectionLabel>
 
       <Grid>
         <ModeCard href={`/bank/${bank.slug}/practice`} $variant="practice">
@@ -347,42 +347,84 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
             </FeatureItem>
             <FeatureItem>
               <FeatureDot $variant="practice">✓</FeatureDot>
-              30 randomized questions per session
+              20 randomized questions per session
             </FeatureItem>
           </FeatureList>
 
           <CardCta $variant="practice">Start Practice →</CardCta>
         </ModeCard>
+      </Grid>
 
-        <ModeCard href={`/bank/${bank.slug}/exam`} $variant="exam">
+      <SectionLabel style={{ marginTop: 36 }}>Exam Simulations</SectionLabel>
+
+      <Grid>
+        <ModeCard href={`/bank/${bank.slug}/exam/set-a`} $variant="exam">
           <ModeHeader>
-            <ModeIcon $variant="exam">🎓</ModeIcon>
+            <ModeIcon $variant="exam">🅰️</ModeIcon>
             <ModeTitleGroup>
-              <ModeTitle>Exam Simulation</ModeTitle>
-              <ModeSubtitle>Full exam experience under realistic conditions</ModeSubtitle>
+              <ModeTitle>Simulation — Set A</ModeTitle>
+              <ModeSubtitle>70 questions drawn from Set A question bank</ModeSubtitle>
             </ModeTitleGroup>
           </ModeHeader>
 
           <FeatureList>
             <FeatureItem>
               <FeatureDot $variant="exam">✓</FeatureDot>
-              No feedback until you submit the full exam
-            </FeatureItem>
-            <FeatureItem>
-              <FeatureDot $variant="exam">✓</FeatureDot>
-              Detailed review with explanations after submit
+              Timed simulation under real exam conditions
             </FeatureItem>
             <FeatureItem>
               <FeatureDot $variant="exam">✓</FeatureDot>
               Score breakdown by domain and question type
             </FeatureItem>
+          </FeatureList>
+
+          <CardCta $variant="exam">Start Set A →</CardCta>
+        </ModeCard>
+
+        <ModeCard href={`/bank/${bank.slug}/exam/set-b`} $variant="exam">
+          <ModeHeader>
+            <ModeIcon $variant="exam">🅱️</ModeIcon>
+            <ModeTitleGroup>
+              <ModeTitle>Simulation — Set B</ModeTitle>
+              <ModeSubtitle>70 questions drawn from Set B question bank</ModeSubtitle>
+            </ModeTitleGroup>
+          </ModeHeader>
+
+          <FeatureList>
             <FeatureItem>
               <FeatureDot $variant="exam">✓</FeatureDot>
-              60 questions — mirrors real exam length
+              Timed simulation under real exam conditions
+            </FeatureItem>
+            <FeatureItem>
+              <FeatureDot $variant="exam">✓</FeatureDot>
+              Fresh questions — no overlap with Set A
             </FeatureItem>
           </FeatureList>
 
-          <CardCta $variant="exam">Start Simulation →</CardCta>
+          <CardCta $variant="exam">Start Set B →</CardCta>
+        </ModeCard>
+
+        <ModeCard href={`/bank/${bank.slug}/exam/set-c`} $variant="exam">
+          <ModeHeader>
+            <ModeIcon $variant="exam">🅾️</ModeIcon>
+            <ModeTitleGroup>
+              <ModeTitle>Simulation — Set C</ModeTitle>
+              <ModeSubtitle>70 questions drawn from Set C question bank</ModeSubtitle>
+            </ModeTitleGroup>
+          </ModeHeader>
+
+          <FeatureList>
+            <FeatureItem>
+              <FeatureDot $variant="exam">✓</FeatureDot>
+              Timed simulation under real exam conditions
+            </FeatureItem>
+            <FeatureItem>
+              <FeatureDot $variant="exam">✓</FeatureDot>
+              Fresh questions — no overlap with Sets A or B
+            </FeatureItem>
+          </FeatureList>
+
+          <CardCta $variant="exam">Start Set C →</CardCta>
         </ModeCard>
       </Grid>
     </>

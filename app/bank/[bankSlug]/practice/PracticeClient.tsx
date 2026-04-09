@@ -6,6 +6,11 @@ import type { Question, Scenario } from "@/src/exam-engine/core/types";
 import { EngineRunner } from "@/src/exam-engine/ui/EngineRunner";
 import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
 import { pmpBank } from "@/src/exam-engine/data/seed.pmp";
+import { setABank } from "@/src/exam-engine/data/seed.set-a";
+
+/** Combined local seed pool — practice mode draws from ALL available questions
+ *  regardless of setId, giving the student maximum variety. */
+const combinedSeedBank: Question[] = [...pmpBank, ...setABank];
 
 const P = styled.p`
   margin: 0;
@@ -24,13 +29,13 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
       try {
         const bank = await loadBankBySlug(bankSlug);
         const [qs, scns] = await Promise.all([loadQuestions(bank.id), loadScenarios(bank.id)]);
-        // Fall back to seed data when Supabase bank is empty (local dev / demo)
-        setQuestions(qs.length ? qs : pmpBank);
+        // Fall back to combined seed data when Supabase bank is empty (local dev / demo)
+        setQuestions(qs.length ? qs : combinedSeedBank);
         setScenarios(scns);
         setMsg("");
       } catch (e: any) {
         // Supabase unavailable — use seed data so the app stays usable
-        setQuestions(pmpBank);
+        setQuestions(combinedSeedBank);
         setScenarios([]);
         setMsg("");
       }

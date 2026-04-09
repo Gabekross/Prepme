@@ -122,6 +122,9 @@ function clampToNearestVisible(att: Attempt, visibleSet: Set<string>) {
  * Example: you added new Supabase questions, but the old attempt references only old IDs.
  */
 function isStaleAttempt(existing: Attempt, bank: Question[]) {
+  // Empty or broken attempts are always stale
+  if (!existing.questionOrder?.length) return true;
+
   const bankIds = new Set(bank.map((q) => q.id));
   const overlap = existing.questionOrder.filter((id) => bankIds.has(id)).length;
 
@@ -398,7 +401,9 @@ export const useExamSession = create<State>((set, get) => ({
   getResponse: (qid) => {
     const att = get().attempt;
     if (!att) return { type: "mcq_single", choiceId: null } as any;
-    return att.responsesByQuestionId[qid];
+    // Guard: return a safe default if the question isn't in the response map
+    // (can happen during state transitions between different exam sets)
+    return att.responsesByQuestionId[qid] ?? ({ type: "mcq_single", choiceId: null } as any);
   },
 
   setResponse: (qid, r) => {
