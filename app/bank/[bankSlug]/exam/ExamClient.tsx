@@ -8,6 +8,7 @@ import { EngineRunner } from "@/src/exam-engine/ui/EngineRunner";
 import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
 import { pmpBank } from "@/src/exam-engine/data/seed.pmp";
 import { setABank } from "@/src/exam-engine/data/seed.set-a";
+import { setBBank } from "@/src/exam-engine/data/seed.set-b";
 
 /** Map of URL-friendly setId slugs → internal SetId values */
 const SET_MAP: Record<string, SetId> = {
@@ -22,7 +23,7 @@ const SET_MAP: Record<string, SetId> = {
 /** Seed-data fallbacks keyed by SetId (expand as sets B & C are generated) */
 const SEED_FALLBACKS: Partial<Record<SetId, Question[]>> = {
   set_a: setABank,
-  // set_b: setBBank,   ← import and add once generated
+  set_b: setBBank,
   // set_c: setCBank,   ← import and add once generated
 };
 

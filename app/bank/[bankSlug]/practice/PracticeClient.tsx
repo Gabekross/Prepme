@@ -52,8 +52,8 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
       questions={questions}
       scenarios={scenarios}
       blueprint={{
-        total: 20,
-        domains: { people: 8, process: 10, business_environment: 2 },
+        total: 90,
+        domains: { people: 70, process: 14, business_environment: 6 },
       }}
       mode="practice"
       allowDomainFilter

@@ -2,17 +2,17 @@
 /**
  * generate-seed-sql.ts
  *
- * Reads the TypeScript seed banks (setABank, etc.) and generates a Supabase-
- * compatible SQL file that can be appended to supabase/seed.sql.
+ * Reads the TypeScript seed banks and generates Supabase-compatible SQL files.
  *
- * Usage:  npx tsx scripts/generate-seed-sql.ts > supabase/seed-set-a.sql
+ * Usage:
+ *   npx tsx scripts/generate-seed-sql.ts set_a > supabase/seed-set-a.sql
+ *   npx tsx scripts/generate-seed-sql.ts set_b > supabase/seed-set-b.sql
  */
 import { setABank } from "../src/exam-engine/data/seed.set-a";
+import { setBBank } from "../src/exam-engine/data/seed.set-b";
 import type { Question } from "../src/exam-engine/core/types";
 
 function esc(s: string): string {
-  // Escape single quotes for SQL strings using $$ quoting would be complex;
-  // instead double single-quotes inside a standard string literal.
   return s.replace(/'/g, "''");
 }
 
@@ -73,5 +73,17 @@ function generateBlock(setId: string, label: string, questions: Question[]): str
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────
-const sql = generateBlock("set_a", "PMP SET A — 180 Questions", setABank);
+const BANKS: Record<string, { label: string; questions: Question[] }> = {
+  set_a: { label: "PMP SET A — 180 Questions", questions: setABank },
+  set_b: { label: "PMP SET B — 180 Questions", questions: setBBank },
+};
+
+const target = process.argv[2] ?? "set_a";
+const bank = BANKS[target];
+if (!bank) {
+  console.error(`Unknown set: ${target}. Available: ${Object.keys(BANKS).join(", ")}`);
+  process.exit(1);
+}
+
+const sql = generateBlock(target, bank.label, bank.questions);
 process.stdout.write(sql + "\n");
