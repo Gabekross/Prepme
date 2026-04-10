@@ -119,16 +119,22 @@ export class SupabaseAttemptStorage implements AttemptStorage {
     result: any,
     passed: boolean
   ): Promise<void> {
+    // Compute question-level counts (not raw points which vary per question type)
+    const scoreResults = result.scoreResults ?? [];
+    const questionsCorrect = scoreResults.filter((sr: any) => sr.isCorrect).length;
+    const questionsTotal = scoreResults.length;
+    const questionPercent =
+      questionsTotal > 0
+        ? Math.round((questionsCorrect / questionsTotal) * 10000) / 100
+        : 0;
+
     const update: AttemptUpdate = {
       status: "submitted",
       state: attempt,
       result,
-      total_score: result.totalScore,
-      max_score: result.maxScore,
-      score_percent:
-        result.maxScore > 0
-          ? Math.round((result.totalScore / result.maxScore) * 10000) / 100
-          : 0,
+      total_score: questionsCorrect,
+      max_score: questionsTotal,
+      score_percent: questionPercent,
       passed,
       submitted_at: attempt.submittedAt ?? new Date().toISOString(),
     };

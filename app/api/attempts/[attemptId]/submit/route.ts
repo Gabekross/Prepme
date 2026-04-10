@@ -120,9 +120,12 @@ export async function POST(
     // Score the attempt server-side
     const result = scoreAttempt(attempt, attemptQuestions);
     const passThreshold = attempt.blueprint.passThreshold ?? 70;
+    // Use question-level counts for pass/fail (not raw points)
+    const questionsCorrect = result.scoreResults.filter((sr) => sr.isCorrect).length;
+    const questionsTotal = result.scoreResults.length;
     const scorePercent =
-      result.maxScore > 0
-        ? Math.round((result.totalScore / result.maxScore) * 10000) / 100
+      questionsTotal > 0
+        ? Math.round((questionsCorrect / questionsTotal) * 10000) / 100
         : 0;
     const passed = scorePercent >= passThreshold;
 
@@ -140,8 +143,8 @@ export async function POST(
           status: "submitted",
           state: { ...attempt, submittedAt: now },
           result,
-          total_score: result.totalScore,
-          max_score: result.maxScore,
+          total_score: questionsCorrect,
+          max_score: questionsTotal,
           score_percent: scorePercent,
           passed,
           submitted_at: now,

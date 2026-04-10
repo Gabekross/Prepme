@@ -102,7 +102,9 @@ const AttemptList = styled.div`
   animation: ${fadeUp} 400ms 140ms ease both;
 `;
 
-const AttemptCard = styled.div`
+const AttemptCard = styled(Link)`
+  text-decoration: none;
+  color: inherit;
   background: ${(p) => p.theme.cardBg};
   border: 1px solid ${(p) => p.theme.cardBorder};
   border-radius: 16px;
@@ -111,10 +113,12 @@ const AttemptCard = styled.div`
   align-items: center;
   gap: 16px;
   box-shadow: ${(p) => p.theme.shadow};
-  transition: border-color 150ms ease;
+  transition: border-color 150ms ease, transform 150ms ease;
+  cursor: pointer;
 
   &:hover {
     border-color: ${(p) => p.theme.accent}60;
+    transform: translateY(-2px);
   }
 
   @media (max-width: 480px) {
@@ -292,7 +296,7 @@ export default function DashboardClient() {
           <SectionTitle>Recent Attempts</SectionTitle>
           <AttemptList>
             {submitted.map((a) => (
-              <AttemptCard key={a.id}>
+              <AttemptCard key={a.id} href={`/dashboard/results/${a.id}`}>
                 <AttemptInfo>
                   <AttemptTitle>
                     {a.mode === "exam" ? "Exam Simulation" : "Practice Session"}
@@ -300,9 +304,7 @@ export default function DashboardClient() {
                   </AttemptTitle>
                   <AttemptMeta>
                     {formatDate(a.submitted_at ?? a.created_at)}
-                    {a.total_score !== null &&
-                      a.max_score !== null &&
-                      ` · ${a.total_score}/${a.max_score} questions correct`}
+                    {a.score_percent !== null && ` · Score: ${a.score_percent}%`}
                   </AttemptMeta>
                 </AttemptInfo>
                 <ScoreBadge $passed={a.passed}>

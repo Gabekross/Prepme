@@ -112,6 +112,12 @@ type State = {
    */
   resetSession: () => Promise<void>;
 
+  /**
+   * Score the current attempt and persist the result to Supabase.
+   * Call this after submitAttempt() to save the scoring breakdown.
+   */
+  persistScoringResult: (questions: Question[], passThreshold?: number) => Promise<void>;
+
   /** Internal: get the current storage instance (hybrid or local) */
   _storage: () => ReturnType<typeof getOrCreateStorage>;
 };
@@ -659,6 +665,48 @@ export const useExamSession = create<State>((set, get) => ({
 
     set({ attempt: nextAttempt });
     get()._storage()?.saveAttempt(nextAttempt);
+  },
+
+  persistScoringResult: async (questions: Question[], passThreshold: number = 70) => {
+    const att = get().attempt;
+    if (!att || !att.submittedAt) return;
+
+    try {
+      // Score the attempt
+      const attemptQuestions = questions.filter((q) => att.questionOrder.includes(q.id));
+      if (attemptQuestions.length === 0) return;
+
+      const result = scoreAttempt(att, attemptQuestions);
+      // Use question-level counts for pass/fail (not raw points)
+      const questionsCorrect = result.scoreResults.filter((sr) => sr.isCorrect).length;
+      const questionsTotal = result.scoreResults.length;
+      const scorePercent =
+        questionsTotal > 0
+          ? Math.round((questionsCorrect / questionsTotal) * 10000) / 100
+          : 0;
+      const passed = scorePercent >= passThreshold;
+
+      // Persist via the remote storage if available
+      const storage = get()._storage();
+      if (storage && "getRemote" in storage) {
+        const hybrid = storage as import("../core/hybridStorage").HybridAttemptStorage;
+        const remote = hybrid.getRemote();
+        if (remote) {
+          await remote.submitWithResult(att.id, att, result, passed);
+          console.info("[persistScoringResult] Saved to Supabase:", {
+            score: `${result.totalScore}/${result.maxScore}`,
+            percent: scorePercent,
+            passed,
+          });
+          return;
+        }
+      }
+
+      // Fallback: no remote storage, save result into the attempt state locally
+      console.info("[persistScoringResult] No remote — result computed but not persisted to DB");
+    } catch (e) {
+      console.warn("[persistScoringResult] Failed:", e);
+    }
   },
 
   resetSession: async () => {

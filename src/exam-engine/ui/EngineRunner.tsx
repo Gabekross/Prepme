@@ -1325,6 +1325,11 @@ export function EngineRunner(props: {
 
   const currentId = current?.id ?? null;
 
+  /** Persist scoring result to Supabase after submission (fire-and-forget) */
+  function persistResult() {
+    engine.persistScoringResult(questions, passThreshold).catch(() => {});
+  }
+
   useEffect(() => {
     if (!currentId) return;
     setShowExplain((prev) => ({ ...prev, [currentId]: false }));
@@ -1346,7 +1351,10 @@ export function EngineRunner(props: {
       if (remaining <= 600) setTimerWarning("critical");
       else if (remaining <= 1800) setTimerWarning("low");
       else setTimerWarning("none");
-      if (remaining === 0) engine.submitAttempt();
+      if (remaining === 0) {
+        engine.submitAttempt();
+        persistResult();
+      }
     }
 
     tick();
@@ -1505,6 +1513,7 @@ export function EngineRunner(props: {
   function confirmSubmit() {
     setShowSubmitConfirm(false);
     engine.submitAttempt();
+    persistResult();
     if (mode === "exam") {
       setShowProcessing(true);
     }
@@ -1534,11 +1543,12 @@ export function EngineRunner(props: {
             engine.recordAdaptiveResult(currentId, sr.isCorrect);
           }
         } catch { /* never block the main flow */ }
-        if (isLast) engine.submitAttempt();
+        if (isLast) { engine.submitAttempt(); persistResult(); }
         return;
       }
       if (isLast) {
         engine.submitAttempt();
+        persistResult();
         return;
       }
       engine.next();
