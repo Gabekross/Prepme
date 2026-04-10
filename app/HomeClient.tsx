@@ -116,15 +116,9 @@ const Grid = styled.div`
   display: grid;
   gap: 16px;
   grid-template-columns: 1fr;
+  max-width: 420px;
+  margin: 0 auto;
   animation: ${fadeUp} 500ms 160ms ease both;
-
-  @media (min-width: 640px) {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  @media (min-width: 1024px) {
-    grid-template-columns: 1fr 1fr 1fr;
-  }
 `;
 
 /* ── card accent colors (cycling) ─────────────────────────────────────────── */
@@ -144,17 +138,19 @@ const Card = styled(Link)<{ $idx: number }>`
   background: ${(p) => p.theme.cardBg};
   border: 1px solid ${(p) => p.theme.cardBorder};
   border-radius: 20px;
-  padding: 18px;
+  padding: 20px;
   box-shadow: ${(p) => p.theme.shadow};
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   gap: 10px;
   min-width: 0;
 
   @media (min-width: 480px) {
-    padding: 20px;
+    padding: 24px;
   }
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 
@@ -236,11 +232,13 @@ const CardDesc = styled.div`
 const CardFooter = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding-top: 8px;
+  padding-top: 10px;
   border-top: 1px solid ${(p) => p.theme.divider};
   margin-top: auto;
   flex-wrap: wrap;
+  width: 100%;
 `;
 
 const FooterPill = styled.span`
@@ -258,7 +256,6 @@ const FooterPill = styled.span`
 const FooterMuted = styled.span`
   font-size: 12px;
   color: ${(p) => p.theme.muted};
-  margin-left: auto;
 `;
 
 /* ── empty / loading states ──────────────────────────────────────────────── */
@@ -292,14 +289,8 @@ const SkeletonGrid = styled.div`
   display: grid;
   gap: 16px;
   grid-template-columns: 1fr;
-
-  @media (min-width: 640px) {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  @media (min-width: 1024px) {
-    grid-template-columns: 1fr 1fr 1fr;
-  }
+  max-width: 420px;
+  margin: 0 auto;
 `;
 
 const SkeletonCard = styled.div`
@@ -393,10 +384,10 @@ export default function HomeClient() {
 
       {!loading && !error && banks.length > 0 && (
         <>
-          <SectionHeader>
+          {/* <SectionHeader>
             <SectionTitle>Available Exam Banks</SectionTitle>
             <SectionCount>{banks.length} bank{banks.length !== 1 ? "s" : ""}</SectionCount>
-          </SectionHeader>
+          </SectionHeader> */}
 
           <Grid>
             {banks.map((b, idx) => (
