@@ -20,6 +20,8 @@ export class HybridAttemptStorage implements AttemptStorage {
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingAttempt: Attempt | null = null;
   private readonly SAVE_DEBOUNCE_MS = 2000;
+  /** Track whether the first remote save has happened (first save is immediate) */
+  private firstSaveDone = false;
 
   constructor(opts: {
     namespace: string;
@@ -27,17 +29,24 @@ export class HybridAttemptStorage implements AttemptStorage {
   }) {
     this.local = new LocalAttemptStorage(opts.namespace);
     this.remote = opts.remote ?? null;
+    console.info(
+      `[HybridStorage] Created for "${opts.namespace}" — remote: ${this.remote ? "YES" : "NO (local-only)"}`
+    );
   }
 
   async saveAttempt(attempt: Attempt): Promise<void> {
     // Local write is always synchronous/instant
     await this.local.saveAttempt(attempt);
 
-    // Debounced remote write (fire-and-forget)
+    // Remote write (first save immediate, subsequent saves debounced)
     if (this.remote) {
       this.pendingAttempt = attempt;
 
-      if (!this.saveTimer) {
+      if (!this.firstSaveDone) {
+        // First save — flush immediately so the row exists in Supabase
+        this.firstSaveDone = true;
+        this.flushRemote();
+      } else if (!this.saveTimer) {
         this.saveTimer = setTimeout(() => {
           this.flushRemote();
         }, this.SAVE_DEBOUNCE_MS);

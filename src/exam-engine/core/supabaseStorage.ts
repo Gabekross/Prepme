@@ -47,7 +47,9 @@ export class SupabaseAttemptStorage implements AttemptStorage {
       .upsert(row, { onConflict: "id" });
 
     if (error) {
-      console.warn("[SupabaseStorage] saveAttempt failed:", error.message);
+      console.warn("[SupabaseStorage] saveAttempt failed:", error.message, error);
+    } else {
+      console.debug("[SupabaseStorage] saveAttempt OK:", attempt.id);
     }
   }
 

@@ -127,6 +127,7 @@ function makeStorage(
   if (typeof window === "undefined") return null;
 
   const userId = opts?.userId;
+  console.info(`[makeStorage] ns="${namespace}" userId=${userId ?? "NONE"} bankSlug=${opts?.bankSlug ?? "NONE"}`);
   if (userId && opts?.bankSlug) {
     const remote = new SupabaseAttemptStorage({
       supabase: supabaseBrowser(),

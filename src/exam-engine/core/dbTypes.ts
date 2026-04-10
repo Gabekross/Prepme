@@ -5,7 +5,8 @@
 
 import type { Attempt, AttemptResult, Mode } from "./types";
 
-/** Row shape for the `attempts` table */
+/** Row shape for the `attempts` table. Note: `id` is TEXT (not UUID) because
+ *  the engine generates IDs like "att_30b69edb9050a8_1775844242408". */
 export type AttemptRow = {
   id: string;
   user_id: string;
