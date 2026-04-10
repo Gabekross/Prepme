@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import styled, { keyframes } from "styled-components";
+import styled, { keyframes, useTheme } from "styled-components";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { supabaseBrowser } from "@/lib/supabase/browser";
@@ -20,6 +20,49 @@ type AttemptSummary = {
   passed: boolean | null;
   created_at: string;
   submitted_at: string | null;
+};
+
+type DomainKey = "people" | "process" | "business_environment";
+type QuestionTypeKey =
+  | "mcq_single"
+  | "mcq_multi"
+  | "dnd_match"
+  | "dnd_order"
+  | "hotspot"
+  | "fill_blank";
+
+type BucketStats = {
+  score: number;
+  maxScore: number;
+  correct: number;
+  total: number;
+};
+
+type AttemptResult = {
+  byDomain: Partial<Record<DomainKey, BucketStats>>;
+  byType: Partial<Record<QuestionTypeKey, BucketStats>>;
+};
+
+type AttemptWithResult = {
+  id: string;
+  mode: "practice" | "exam";
+  set_id: string | null;
+  result: AttemptResult | null;
+};
+
+const DOMAIN_LABELS: Record<DomainKey, string> = {
+  people: "People",
+  process: "Process",
+  business_environment: "Business Environment",
+};
+
+const TYPE_LABELS: Record<QuestionTypeKey, string> = {
+  mcq_single: "MCQ Single",
+  mcq_multi: "MCQ Multi",
+  dnd_match: "Drag & Match",
+  dnd_order: "Drag & Order",
+  hotspot: "Hotspot",
+  fill_blank: "Fill Blank",
 };
 
 /* ── animations ─────────────────────────────────────────────────────────── */
@@ -199,6 +242,155 @@ const P = styled.p`
   font-size: 14px;
 `;
 
+/* ── analytics styled components ───────────────────────────────────────── */
+
+const AnalyticsSection = styled.div`
+  margin-bottom: 32px;
+  animation: ${fadeUp} 400ms 100ms ease both;
+`;
+
+const AnalyticsGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const AnalyticsCard = styled.div`
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 16px;
+  padding: 18px;
+`;
+
+const AnalyticsCardTitle = styled.h3`
+  font-size: 14px;
+  font-weight: 800;
+  color: ${(p) => p.theme.text};
+  margin: 0 0 14px;
+  letter-spacing: -0.2px;
+`;
+
+const BarRow = styled.div`
+  margin-bottom: 12px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const BarLabel = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: ${(p) => p.theme.text};
+  margin-bottom: 5px;
+`;
+
+const BarLabelRight = styled.span`
+  color: ${(p) => p.theme.muted};
+  font-weight: 500;
+`;
+
+const BarTrack = styled.div`
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: ${(p) => p.theme.cardBorder};
+  overflow: hidden;
+`;
+
+const BarFill = styled.div<{ $pct: number; $color: string }>`
+  height: 100%;
+  width: ${(p) => Math.max(p.$pct, 2)}%;
+  border-radius: 4px;
+  background: ${(p) => p.$color};
+  transition: width 600ms ease;
+`;
+
+const FocusCard = styled.div`
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 16px;
+  padding: 18px;
+`;
+
+const FocusItem = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const FocusIcon = styled.span`
+  font-size: 16px;
+  line-height: 1.3;
+  flex-shrink: 0;
+`;
+
+const FocusText = styled.div`
+  font-size: 13px;
+  color: ${(p) => p.theme.text};
+  line-height: 1.4;
+`;
+
+const FocusPercent = styled.span<{ $color: string }>`
+  font-weight: 700;
+  color: ${(p) => p.$color};
+`;
+
+const TabRow = styled.div`
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+`;
+
+const Tab = styled.button<{ $active: boolean }>`
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid ${(p) => p.$active ? p.theme.accent : p.theme.cardBorder};
+  background: ${(p) => p.$active ? p.theme.accentSoft : p.theme.buttonBg};
+  color: ${(p) => p.$active ? p.theme.accent : p.theme.muted};
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 150ms ease;
+
+  &:hover {
+    border-color: ${(p) => p.theme.accent};
+    color: ${(p) => p.theme.accent};
+  }
+`;
+
+const SetBadge = styled.span`
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  background: ${(p) => p.theme.accentSoft};
+  color: ${(p) => p.theme.accent};
+  margin-left: 6px;
+  vertical-align: middle;
+`;
+
+const NoData = styled.div`
+  font-size: 13px;
+  color: ${(p) => p.theme.muted};
+  padding: 16px 0;
+  text-align: center;
+`;
+
 /* ── helpers ─────────────────────────────────────────────────────────────── */
 
 function formatDate(iso: string) {
@@ -216,46 +408,166 @@ function setLabel(setId: string | null) {
   return setId.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function pctColor(pct: number, theme: { success: string; warning: string; error: string }) {
+  if (pct >= 70) return theme.success;
+  if (pct >= 50) return theme.warning;
+  return theme.error;
+}
+
+type AggBucket = { correct: number; total: number };
+
+function aggregateResults(results: AttemptResult[]) {
+  const byDomain: Record<string, AggBucket> = {};
+  const byType: Record<string, AggBucket> = {};
+
+  for (const r of results) {
+    if (r.byDomain) {
+      for (const [k, v] of Object.entries(r.byDomain)) {
+        if (!v) continue;
+        if (!byDomain[k]) byDomain[k] = { correct: 0, total: 0 };
+        byDomain[k].correct += v.correct;
+        byDomain[k].total += v.total;
+      }
+    }
+    if (r.byType) {
+      for (const [k, v] of Object.entries(r.byType)) {
+        if (!v) continue;
+        if (!byType[k]) byType[k] = { correct: 0, total: 0 };
+        byType[k].correct += v.correct;
+        byType[k].total += v.total;
+      }
+    }
+  }
+
+  return { byDomain, byType };
+}
+
 /* ── component ──────────────────────────────────────────────────────────── */
 
 export default function DashboardClient() {
   const { user, loading: authLoading } = useAuth();
+  const theme = useTheme() as { success: string; warning: string; error: string };
   const sb = useMemo(() => supabaseBrowser(), []);
   const [attempts, setAttempts] = useState<AttemptSummary[]>([]);
+  const [allResults, setAllResults] = useState<AttemptWithResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [analyticsTab, setAnalyticsTab] = useState<"practice" | "exam">("practice");
 
   useEffect(() => {
     if (authLoading || !user) return;
 
     (async () => {
-      const { data } = await sb
-        .from("attempts")
-        .select(
-          "id, bank_slug, mode, set_id, status, total_score, max_score, score_percent, passed, created_at, submitted_at"
-        )
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(50);
+      const [attemptsRes, resultsRes] = await Promise.all([
+        sb
+          .from("attempts")
+          .select(
+            "id, bank_slug, mode, set_id, status, total_score, max_score, score_percent, passed, created_at, submitted_at"
+          )
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(50),
+        sb
+          .from("attempts")
+          .select("id, mode, set_id, result")
+          .eq("user_id", user.id)
+          .eq("status", "submitted"),
+      ]);
 
-      setAttempts((data as AttemptSummary[]) ?? []);
+      setAttempts((attemptsRes.data as AttemptSummary[]) ?? []);
+
+      const rawResults = (resultsRes.data as AttemptWithResult[]) ?? [];
+      setAllResults(rawResults.filter((r) => r.result !== null));
+
       setLoading(false);
     })();
   }, [user, authLoading, sb]);
 
+  /* ── derived data (all hooks MUST run before any early return) ──────── */
+
+  const submitted = useMemo(() => attempts.filter((a) => a.status === "submitted"), [attempts]);
+  const examAttempts = useMemo(() => submitted.filter((a) => a.mode === "exam"), [submitted]);
+  const practiceAttempts = useMemo(() => submitted.filter((a) => a.mode === "practice"), [submitted]);
+  const passedExams = useMemo(() => examAttempts.filter((a) => a.passed), [examAttempts]);
+  const avgScore = useMemo(
+    () =>
+      examAttempts.length > 0
+        ? Math.round(
+            examAttempts.reduce((sum, a) => sum + (a.score_percent ?? 0), 0) /
+              examAttempts.length
+          )
+        : null,
+    [examAttempts]
+  );
+
+  // Split results by mode
+  const practiceResults = useMemo(
+    () => allResults.filter((r) => r.mode === "practice").map((r) => r.result as AttemptResult),
+    [allResults]
+  );
+  const examResults = useMemo(
+    () => allResults.filter((r) => r.mode === "exam").map((r) => r.result as AttemptResult),
+    [allResults]
+  );
+
+  // Aggregate for whichever tab is active
+  const activeResults = analyticsTab === "practice" ? practiceResults : examResults;
+  const agg = useMemo(() => aggregateResults(activeResults), [activeResults]);
+
+  const domainEntries = useMemo(() => {
+    return (Object.keys(DOMAIN_LABELS) as DomainKey[])
+      .filter((k) => agg.byDomain[k] && agg.byDomain[k].total > 0)
+      .map((k) => {
+        const b = agg.byDomain[k];
+        const pct = b.total > 0 ? Math.round((b.correct / b.total) * 100) : 0;
+        return { key: k, label: DOMAIN_LABELS[k], pct, correct: b.correct, total: b.total };
+      });
+  }, [agg]);
+
+  const typeEntries = useMemo(() => {
+    return (Object.keys(TYPE_LABELS) as QuestionTypeKey[])
+      .filter((k) => agg.byType[k] && agg.byType[k].total > 0)
+      .map((k) => {
+        const b = agg.byType[k];
+        const pct = b.total > 0 ? Math.round((b.correct / b.total) * 100) : 0;
+        return { key: k, label: TYPE_LABELS[k], pct, correct: b.correct, total: b.total };
+      });
+  }, [agg]);
+
+  const weakAreas = useMemo(() => {
+    const modeAttempts = analyticsTab === "practice" ? practiceAttempts : examAttempts;
+    if (modeAttempts.length < 2) return [];
+    const all = [
+      ...domainEntries.map((d) => ({ label: d.label, pct: d.pct, kind: "domain" as const })),
+      ...typeEntries.map((t) => ({ label: t.label, pct: t.pct, kind: "type" as const })),
+    ];
+    all.sort((a, b) => a.pct - b.pct);
+    return all.slice(0, 3);
+  }, [domainEntries, typeEntries, practiceAttempts, examAttempts, analyticsTab]);
+
+  // Exam set breakdown
+  const examSetBreakdown = useMemo(() => {
+    if (analyticsTab !== "exam") return [];
+    const setMap: Record<string, AttemptResult[]> = {};
+    for (const r of allResults) {
+      if (r.mode !== "exam" || !r.result) continue;
+      const key = r.set_id ?? "other";
+      if (!setMap[key]) setMap[key] = [];
+      setMap[key].push(r.result as AttemptResult);
+    }
+    return Object.entries(setMap).map(([setId, results]) => {
+      const agg = aggregateResults(results);
+      const totalCorrect = Object.values(agg.byDomain).reduce((s, b) => s + b.correct, 0);
+      const totalQ = Object.values(agg.byDomain).reduce((s, b) => s + b.total, 0);
+      const pct = totalQ > 0 ? Math.round((totalCorrect / totalQ) * 100) : 0;
+      const label = setId === "other" ? "Other" : setId.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      return { setId, label, pct, correct: totalCorrect, total: totalQ, attempts: results.length };
+    });
+  }, [allResults, analyticsTab]);
+
+  /* ── early returns (after all hooks) ───────────────────────────────── */
+
   if (authLoading || loading) return <P>Loading dashboard...</P>;
   if (!user) return <P>Please sign in to view your dashboard.</P>;
-
-  const submitted = attempts.filter((a) => a.status === "submitted");
-  const examAttempts = submitted.filter((a) => a.mode === "exam");
-  const practiceAttempts = submitted.filter((a) => a.mode === "practice");
-  const passedExams = examAttempts.filter((a) => a.passed);
-  const avgScore =
-    examAttempts.length > 0
-      ? Math.round(
-          examAttempts.reduce((sum, a) => sum + (a.score_percent ?? 0), 0) /
-            examAttempts.length
-        )
-      : null;
 
   return (
     <Wrap>
@@ -284,6 +596,109 @@ export default function DashboardClient() {
           <StatLabel>Exams Passed</StatLabel>
         </StatCard>
       </StatsGrid>
+
+      {allResults.length > 0 && (
+        <AnalyticsSection>
+          <SectionTitle>Performance Analytics</SectionTitle>
+
+          <TabRow>
+            <Tab $active={analyticsTab === "practice"} onClick={() => setAnalyticsTab("practice")}>
+              Practice ({practiceResults.length})
+            </Tab>
+            <Tab $active={analyticsTab === "exam"} onClick={() => setAnalyticsTab("exam")}>
+              Exam Simulations ({examResults.length})
+            </Tab>
+          </TabRow>
+
+          {activeResults.length === 0 ? (
+            <NoData>
+              No {analyticsTab === "practice" ? "practice" : "exam"} results yet.
+            </NoData>
+          ) : (
+            <>
+              {/* Exam set breakdown */}
+              {analyticsTab === "exam" && examSetBreakdown.length > 0 && (
+                <AnalyticsCard style={{ marginBottom: 14 }}>
+                  <AnalyticsCardTitle>Performance by Exam Set</AnalyticsCardTitle>
+                  {examSetBreakdown.map((s) => (
+                    <BarRow key={s.setId}>
+                      <BarLabel>
+                        <span>{s.label} <SetBadge>{s.attempts} attempt{s.attempts !== 1 ? "s" : ""}</SetBadge></span>
+                        <BarLabelRight>
+                          {s.pct}% ({s.correct}/{s.total})
+                        </BarLabelRight>
+                      </BarLabel>
+                      <BarTrack>
+                        <BarFill $pct={s.pct} $color={pctColor(s.pct, theme)} />
+                      </BarTrack>
+                    </BarRow>
+                  ))}
+                </AnalyticsCard>
+              )}
+
+              <AnalyticsGrid>
+                {domainEntries.length > 0 && (
+                  <AnalyticsCard>
+                    <AnalyticsCardTitle>Domain Performance</AnalyticsCardTitle>
+                    {domainEntries.map((d) => (
+                      <BarRow key={d.key}>
+                        <BarLabel>
+                          <span>{d.label}</span>
+                          <BarLabelRight>
+                            {d.pct}% ({d.correct}/{d.total})
+                          </BarLabelRight>
+                        </BarLabel>
+                        <BarTrack>
+                          <BarFill $pct={d.pct} $color={pctColor(d.pct, theme)} />
+                        </BarTrack>
+                      </BarRow>
+                    ))}
+                  </AnalyticsCard>
+                )}
+                {typeEntries.length > 0 && (
+                  <AnalyticsCard>
+                    <AnalyticsCardTitle>Question Type Performance</AnalyticsCardTitle>
+                    {typeEntries.map((t) => (
+                      <BarRow key={t.key}>
+                        <BarLabel>
+                          <span>{t.label}</span>
+                          <BarLabelRight>
+                            {t.pct}% ({t.correct}/{t.total})
+                          </BarLabelRight>
+                        </BarLabel>
+                        <BarTrack>
+                          <BarFill $pct={t.pct} $color={pctColor(t.pct, theme)} />
+                        </BarTrack>
+                      </BarRow>
+                    ))}
+                  </AnalyticsCard>
+                )}
+              </AnalyticsGrid>
+
+              {weakAreas.length > 0 && (
+                <FocusCard>
+                  <AnalyticsCardTitle>
+                    Focus Areas
+                    <SetBadge>{analyticsTab === "practice" ? "Practice" : "Exam"}</SetBadge>
+                  </AnalyticsCardTitle>
+                  {weakAreas.map((w) => (
+                    <FocusItem key={w.label}>
+                      <FocusIcon>{w.pct < 50 ? "\u26A0" : "\u25CB"}</FocusIcon>
+                      <FocusText>
+                        <FocusPercent $color={pctColor(w.pct, theme)}>
+                          {w.pct}%
+                        </FocusPercent>{" "}
+                        accuracy in {w.label} &mdash; Practice more{" "}
+                        {w.kind === "domain" ? `${w.label} domain` : `${w.label}`} questions
+                      </FocusText>
+                    </FocusItem>
+                  ))}
+                </FocusCard>
+              )}
+            </>
+          )}
+        </AnalyticsSection>
+      )}
 
       {submitted.length === 0 ? (
         <EmptyState>

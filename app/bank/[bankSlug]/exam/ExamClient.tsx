@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import styled from "styled-components";
+import React, { useEffect, useState, useCallback } from "react";
+import styled, { keyframes } from "styled-components";
 import type { Question, Scenario, SetId } from "@/src/exam-engine/core/types";
 import type { BankConfig } from "@/src/exam-engine/data/loadFromSupabase";
 import { EngineRunner } from "@/src/exam-engine/ui/EngineRunner";
 import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
 import { balanceSimulationBlueprint } from "@/src/exam-engine/core/simulationBalance";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { supabaseBrowser } from "@/lib/supabase/browser";
+import { LocalAttemptStorage } from "@/src/exam-engine/core/storage";
 import { pmpBank } from "@/src/exam-engine/data/seed.pmp";
 import { setABank } from "@/src/exam-engine/data/seed.set-a";
 import { setBBank } from "@/src/exam-engine/data/seed.set-b";
@@ -38,12 +40,163 @@ const FALLBACK_BANK_CONFIG: BankConfig = {
   passThreshold: 61,
 };
 
+/* ── animations ─────────────────────────────────────────────────────────── */
+
+const fadeUp = keyframes`
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
+/* ── styled ─────────────────────────────────────────────────────────────── */
+
 const P = styled.p`
   margin: 0;
   color: ${(p) => p.theme.muted};
   font-size: 14px;
   line-height: 1.45;
 `;
+
+const ResumeWrap = styled.div`
+  max-width: 520px;
+  margin: 0 auto;
+  animation: ${fadeUp} 400ms ease both;
+`;
+
+const ResumeCard = styled.div`
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 24px;
+  padding: 28px 24px;
+  box-shadow: ${(p) => p.theme.shadow};
+  text-align: center;
+
+  @media (max-width: 480px) {
+    padding: 24px 16px;
+  }
+`;
+
+const ResumeIcon = styled.div`
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #f59e0b);
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  margin: 0 auto 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+`;
+
+const ResumeTitle = styled.h1`
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.4px;
+  color: ${(p) => p.theme.text};
+`;
+
+const ResumeSubtitle = styled.p`
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: ${(p) => p.theme.muted};
+  line-height: 1.5;
+`;
+
+const ProgressBar = styled.div`
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: ${(p) => p.theme.cardBorder};
+  margin: 16px 0 8px;
+  overflow: hidden;
+`;
+
+const ProgressFill = styled.div<{ $pct: number }>`
+  height: 100%;
+  width: ${(p) => p.$pct}%;
+  border-radius: 4px;
+  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #f59e0b);
+  transition: width 400ms ease;
+`;
+
+const ProgressText = styled.div`
+  font-size: 13px;
+  font-weight: 700;
+  color: ${(p) => p.theme.text};
+  margin-bottom: 4px;
+`;
+
+const MetaText = styled.div`
+  font-size: 12px;
+  color: ${(p) => p.theme.muted};
+  margin-bottom: 4px;
+`;
+
+const MetaTextLast = styled(MetaText)`
+  margin-bottom: 20px;
+`;
+
+const ButtonRow = styled.div`
+  display: flex;
+  gap: 10px;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+  }
+`;
+
+const ResumeBtn = styled.button`
+  flex: 1;
+  padding: 14px 20px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #f59e0b);
+  color: white;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 150ms ease, transform 100ms ease;
+
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+`;
+
+const FreshBtn = styled.button`
+  flex: 1;
+  padding: 14px 20px;
+  border-radius: 14px;
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  background: ${(p) => p.theme.cardBg};
+  color: ${(p) => p.theme.text};
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 150ms ease, transform 100ms ease;
+
+  &:hover {
+    border-color: ${(p) => p.theme.error};
+    color: ${(p) => p.theme.error};
+    background: ${(p) => p.theme.errorSoft};
+    transform: translateY(-1px);
+  }
+`;
+
+/* ── types ─────────────────────────────────────────────────────────────── */
+
+interface InProgressAttempt {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  state: {
+    questionOrder: string[];
+    responsesByQuestionId: Record<string, unknown>;
+    currentIndex: number;
+  };
+}
+
+/* ── component ──────────────────────────────────────────────────────────── */
 
 interface ExamClientProps {
   bankSlug: string;
@@ -57,10 +210,20 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [bankConfig, setBankConfig] = useState<BankConfig | null>(null);
-  const [msg, setMsg] = useState("Loading exam…");
+  const [msg, setMsg] = useState("Loading exam\u2026");
+
+  // Resume-flow state
+  const [inProgressAttempt, setInProgressAttempt] = useState<InProgressAttempt | null>(null);
+  const [resumeCheckDone, setResumeCheckDone] = useState(false);
+  const [started, setStarted] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   const resolvedSetId: SetId | undefined = rawSetId ? SET_MAP[rawSetId] : undefined;
   const setLabel = resolvedSetId?.replace("_", " ").toUpperCase() ?? "Random";
+
+  const namespaceKey = resolvedSetId
+    ? `${bankSlug}__exam__${resolvedSetId}`
+    : `${bankSlug}__exam`;
 
   useEffect(() => {
     (async () => {
@@ -110,16 +273,145 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
     })();
   }, [bankSlug, resolvedSetId]);
 
+  // Check for in-progress exam attempt once data is loaded
+  useEffect(() => {
+    if (!questions || !bankConfig || !user?.id) {
+      setResumeCheckDone(true);
+      return;
+    }
+
+    (async () => {
+      try {
+        const sb = supabaseBrowser();
+        let query = sb
+          .from("attempts")
+          .select("id, state, created_at, updated_at")
+          .eq("user_id", user.id)
+          .eq("bank_slug", bankSlug)
+          .eq("mode", "exam")
+          .eq("status", "in_progress");
+
+        if (resolvedSetId) {
+          query = query.eq("set_id", resolvedSetId);
+        }
+
+        const { data } = await query
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (data?.state?.questionOrder) {
+          setInProgressAttempt(data as InProgressAttempt);
+        }
+      } catch {
+        // Silently ignore — proceed without resume
+      } finally {
+        setResumeCheckDone(true);
+      }
+    })();
+  }, [questions, bankConfig, user?.id, bankSlug, resolvedSetId]);
+
+  const handleStartFresh = useCallback(async () => {
+    if (!inProgressAttempt) return;
+    setClearing(true);
+    try {
+      const sb = supabaseBrowser();
+      await sb.from("attempts").update({ status: "abandoned" }).eq("id", inProgressAttempt.id);
+      new LocalAttemptStorage(namespaceKey).clearLatest();
+    } catch {
+      // Best-effort clear
+    }
+    setInProgressAttempt(null);
+    setClearing(false);
+  }, [inProgressAttempt, namespaceKey]);
+
+  const handleResume = useCallback(() => {
+    setStarted(true);
+  }, []);
+
   if (!questions || !bankConfig) return <P>{msg}</P>;
 
-  const namespaceKey = resolvedSetId
-    ? `${bankSlug}__exam__${resolvedSetId}`
-    : `${bankSlug}__exam`;
+  // Show resume card if there's an in-progress attempt
+  if (!started && resumeCheckDone && inProgressAttempt) {
+    const { state, created_at, updated_at } = inProgressAttempt;
+    const totalQ = state.questionOrder.length;
+    const answered = Object.keys(state.responsesByQuestionId).length;
+    const pct = totalQ > 0 ? Math.round((answered / totalQ) * 100) : 0;
+
+    const lastActive = new Date(updated_at);
+    const formattedDate = lastActive.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    const formattedTime = lastActive.toLocaleTimeString(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+
+    // Compute time remaining if timed
+    let timeRemainingLabel: string | null = null;
+    const durationMinutes = bankConfig.durationMinutes;
+    if (durationMinutes) {
+      const startedAt = new Date(created_at).getTime();
+      const deadline = startedAt + durationMinutes * 60 * 1000;
+      const remainMs = deadline - Date.now();
+      if (remainMs > 0) {
+        const remainMin = Math.floor(remainMs / 60000);
+        const remainHrs = Math.floor(remainMin / 60);
+        const leftoverMin = remainMin % 60;
+        timeRemainingLabel = remainHrs > 0
+          ? `${remainHrs}h ${leftoverMin}m remaining`
+          : `${remainMin}m remaining`;
+      } else {
+        timeRemainingLabel = "Time expired";
+      }
+    }
+
+    return (
+      <ResumeWrap>
+        <ResumeCard>
+          <ResumeIcon>&#9654;</ResumeIcon>
+          <ResumeTitle>Resume Exam?</ResumeTitle>
+          <ResumeSubtitle>
+            You have an unfinished exam simulation{resolvedSetId ? ` (${setLabel})` : ""}.
+          </ResumeSubtitle>
+
+          <ProgressText>
+            {answered} of {totalQ} questions answered
+          </ProgressText>
+          <ProgressBar>
+            <ProgressFill $pct={pct} />
+          </ProgressBar>
+          {timeRemainingLabel && (
+            <MetaText>
+              {timeRemainingLabel}
+            </MetaText>
+          )}
+          <MetaTextLast>
+            Last active: {formattedDate} at {formattedTime}
+          </MetaTextLast>
+
+          <ButtonRow>
+            <ResumeBtn onClick={handleResume}>
+              Resume Exam
+            </ResumeBtn>
+            <FreshBtn onClick={handleStartFresh} disabled={clearing}>
+              {clearing ? "Clearing\u2026" : "Start Fresh"}
+            </FreshBtn>
+          </ButtonRow>
+        </ResumeCard>
+      </ResumeWrap>
+    );
+  }
+
+  // Wait for resume check before rendering engine
+  if (!resumeCheckDone) return <P>Loading exam…</P>;
 
   return (
     <EngineRunner
       key={namespaceKey}
-      title={`Exam Simulation • ${setLabel}`}
+      title={`Exam Simulation \u2022 ${setLabel}`}
       subtitle={
         resolvedSetId
           ? `${setLabel} simulation. Submit to see your results.`
