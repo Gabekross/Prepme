@@ -10,6 +10,7 @@
  */
 import { setABank } from "../src/exam-engine/data/seed.set-a";
 import { setBBank } from "../src/exam-engine/data/seed.set-b";
+import { setCBank } from "../src/exam-engine/data/seed.set-c";
 import type { Question } from "../src/exam-engine/core/types";
 
 function esc(s: string): string {
@@ -76,6 +77,7 @@ function generateBlock(setId: string, label: string, questions: Question[]): str
 const BANKS: Record<string, { label: string; questions: Question[] }> = {
   set_a: { label: "PMP SET A — 180 Questions", questions: setABank },
   set_b: { label: "PMP SET B — 180 Questions", questions: setBBank },
+  set_c: { label: "PMP SET C — 180 Questions", questions: setCBank },
 };
 
 const target = process.argv[2] ?? "set_a";

@@ -9,6 +9,7 @@ import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/
 import { pmpBank } from "@/src/exam-engine/data/seed.pmp";
 import { setABank } from "@/src/exam-engine/data/seed.set-a";
 import { setBBank } from "@/src/exam-engine/data/seed.set-b";
+import { setCBank } from "@/src/exam-engine/data/seed.set-c";
 
 /** Map of URL-friendly setId slugs → internal SetId values */
 const SET_MAP: Record<string, SetId> = {
@@ -24,7 +25,7 @@ const SET_MAP: Record<string, SetId> = {
 const SEED_FALLBACKS: Partial<Record<SetId, Question[]>> = {
   set_a: setABank,
   set_b: setBBank,
-  // set_c: setCBank,   ← import and add once generated
+  set_c: setCBank,
 };
 
 /** Default bank config used when Supabase is unavailable */
