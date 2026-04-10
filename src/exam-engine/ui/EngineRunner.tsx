@@ -1122,8 +1122,13 @@ function isAnswered(question: Question | null, response: Response): boolean {
       return response?.type === "mcq_multi" && Array.isArray(response.choiceIds) && response.choiceIds.length > 0;
     case "dnd_match":
       return response?.type === "dnd_match" && response.mapping && Object.values(response.mapping).some((v) => !!v);
-    case "dnd_order":
-      return response?.type === "dnd_order" && Array.isArray(response.orderedIds) && response.orderedIds.length > 0;
+    case "dnd_order": {
+      if (response?.type !== "dnd_order" || !Array.isArray(response.orderedIds) || response.orderedIds.length === 0) return false;
+      // The initial response pre-populates orderedIds with the item list order.
+      // Only count as "answered" if the user has actually reordered.
+      const initial = question.payload.items.map((i: any) => i.id);
+      return response.orderedIds.some((id: string, idx: number) => id !== initial[idx]);
+    }
     case "hotspot":
       return response?.type === "hotspot" && !!response.selectedRegionId;
     case "fill_blank":
@@ -1593,7 +1598,6 @@ export function EngineRunner(props: {
           </>
         )}
 
-        <SectionTitle>Navigation</SectionTitle>
         <NavRow>
           <NavBtn
             onClick={() => engine.prev()}
