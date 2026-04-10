@@ -66,15 +66,15 @@ const Prompt = styled.div`
 `;
 
 const DOMAIN_LABELS: Record<string, string> = {
-  people: "👥 People",
-  process: "⚙️ Process",
-  business_environment: "🌐 Business Env.",
+  people: "People",
+  process: "Process",
+  business_environment: "Business Env.",
 };
 
 const DIFFICULTY_LABELS: Record<string, string> = {
-  easy: "🟢 Easy",
-  medium: "🟡 Medium",
-  hard: "🔴 Hard",
+  easy: "Easy",
+  medium: "Medium",
+  hard: "Hard",
 };
 
 const TYPE_LABELS: Record<string, string> = {

@@ -59,7 +59,7 @@ export function ScenarioBlock({ scenario }: { scenario: Scenario }) {
   return (
     <Box>
       <KickerRow>
-        <Kicker>📋 Scenario</Kicker>
+        <Kicker>Scenario</Kicker>
       </KickerRow>
       <Title>{scenario.title ?? "Context"}</Title>
       <Text>{scenario.text}</Text>

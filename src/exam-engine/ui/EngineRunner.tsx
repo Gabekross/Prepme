@@ -252,10 +252,14 @@ const Select = styled.select`
 /* ── navigation buttons ──────────────────────────────────────────────────── */
 
 const NavRow = styled.div`
-  display: flex;
+  display: none;
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+
+  @media (min-width: 980px) {
+    display: flex;
+  }
 `;
 
 const NavBtn = styled.button<{ $primary?: boolean; $danger?: boolean }>`
@@ -353,6 +357,11 @@ const LearnMoreBtn = styled.button`
   margin-top: 6px;
   text-align: center;
   transition: background 150ms ease;
+  display: none;
+
+  @media (min-width: 980px) {
+    display: block;
+  }
 
   &:hover {
     background: ${(p) => p.theme.buttonHover};
@@ -373,11 +382,15 @@ const FlagBtn = styled.button<{ $flagged?: boolean }>`
   cursor: pointer;
   margin-top: 6px;
   text-align: center;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   gap: 6px;
   transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+
+  @media (min-width: 980px) {
+    display: flex;
+  }
 
   &:hover {
     background: ${(p) => p.$flagged ? p.theme.warningBorder : p.theme.buttonHover};
@@ -1177,6 +1190,7 @@ export function EngineRunner(props: {
   const [incorrectOnly, setIncorrectOnly] = useState(false);
   const [flaggedOnly, setFlaggedOnly] = useState(false);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [showQuestionGrid, setShowQuestionGrid] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [timerWarning, setTimerWarning] = useState<"none" | "low" | "critical">("none");
 
@@ -1427,7 +1441,7 @@ export function EngineRunner(props: {
     if (mode === "practice") {
       const isRevealed = !!(currentId && revealed[currentId]);
       if (!isRevealed && answered) return "Submit Answer";
-      if (isRevealed && isLast) return "Finish Practice ✓";
+      if (isRevealed && isLast) return "Finish Practice";
       if (isRevealed) return "Next Question →";
       return isLast ? "Skip & Finish" : "Skip Question";
     }
@@ -1529,7 +1543,7 @@ export function EngineRunner(props: {
         <SideSubtitle>{subtitle}</SideSubtitle>
 
         <ModeBadge $mode={mode}>
-          {mode === "practice" ? "✏️ Practice Mode" : "🎓 Exam Simulation"}
+          {mode === "practice" ? "Practice Mode" : "Exam Simulation"}
         </ModeBadge>
 
         <ProgressSection>
@@ -1545,7 +1559,7 @@ export function EngineRunner(props: {
         {/* ── Timer (exam mode only) ──────────────────────── */}
         {mode === "exam" && !engine.attempt?.submittedAt && timeRemaining !== null && (
           <TimerBlock $warning={timerWarning}>
-            <TimerLabel>⏱ Time Remaining</TimerLabel>
+            <TimerLabel>Time Remaining</TimerLabel>
             <TimerValue $warning={timerWarning}>{formatTime(timeRemaining)}</TimerValue>
           </TimerBlock>
         )}
@@ -1554,11 +1568,11 @@ export function EngineRunner(props: {
         {mode === "exam" && !engine.attempt?.submittedAt && engine.attempt && (
           <UnansweredRow>
             <UnansweredBadge $urgent={(total - answeredCount) > 0}>
-              {total - answeredCount === 0 ? "✓ All answered" : `${total - answeredCount} unanswered`}
+              {total - answeredCount === 0 ? "All answered" : `${total - answeredCount} unanswered`}
             </UnansweredBadge>
             {flaggedCount > 0 && (
               <UnansweredBadge $urgent={false}>
-                🚩 {flaggedCount} flagged
+                {flaggedCount} flagged
               </UnansweredBadge>
             )}
           </UnansweredRow>
@@ -1611,7 +1625,7 @@ export function EngineRunner(props: {
             $flagged={!!engine.attempt.flagged[currentId]}
             onClick={() => engine.toggleFlagCurrent()}
           >
-            {engine.attempt.flagged[currentId] ? "🚩 Flagged for Review" : "🏳 Flag for Review"}
+            {engine.attempt.flagged[currentId] ? "Flagged for Review" : "Flag for Review"}
           </FlagBtn>
         )}
 
@@ -1621,11 +1635,20 @@ export function EngineRunner(props: {
           </LearnMoreBtn>
         )}
 
-        {/* Question jump grid */}
-        {engine.attempt && (
+        {/* Question grid toggle (practice only) */}
+        {engine.attempt && mode === "practice" && (
           <>
             <Divider />
-            <SectionTitle>Questions</SectionTitle>
+            <LearnMoreBtn onClick={() => setShowQuestionGrid((v) => !v)} style={{ display: "block" }}>
+              {showQuestionGrid ? "Hide Question Map" : "Show Question Map"}
+            </LearnMoreBtn>
+          </>
+        )}
+
+        {/* Question jump grid — practice only, toggled */}
+        {engine.attempt && mode === "practice" && showQuestionGrid && (
+          <>
+            <SectionTitle style={{ marginTop: 10 }}>Questions</SectionTitle>
             <QGridWrap>
               {engine.attempt.questionOrder.map((qid, idx) => {
                 const isCurrent = idx === engine.attempt!.currentIndex;
@@ -1743,9 +1766,9 @@ export function EngineRunner(props: {
             )}
             <Divider />
             <ActionRow>
-              <RetakeBtn onClick={retakePractice} style={{ flex: 1 }}>↺ New Session</RetakeBtn>
+              <RetakeBtn onClick={retakePractice} style={{ flex: 1 }}>New Session</RetakeBtn>
               {incorrectCount > 0 && (
-                <RetakeBtn onClick={retryIncorrect} style={{ flex: 1 }}>⚡ Retry Wrong</RetakeBtn>
+                <RetakeBtn onClick={retryIncorrect} style={{ flex: 1 }}>Retry Wrong</RetakeBtn>
               )}
             </ActionRow>
           </>
@@ -1759,7 +1782,7 @@ export function EngineRunner(props: {
           <Card>
             <ResultsHero $pass={examPassed}>
               <ResultsIcon $pass={examPassed}>
-                {examPassed ? "🎉" : "📚"}
+                {examPassed ? "Passed" : "Review"}
               </ResultsIcon>
               <ResultsScore>{examPercent}%</ResultsScore>
               <ResultsSubtext>
@@ -1828,7 +1851,7 @@ export function EngineRunner(props: {
             <Divider />
 
             <ActionRow>
-              <RetakeBtn onClick={retakeExam}>↺ Retake Exam</RetakeBtn>
+              <RetakeBtn onClick={retakeExam}>Retake Exam</RetakeBtn>
             </ActionRow>
 
             <Divider />
@@ -1860,7 +1883,7 @@ export function EngineRunner(props: {
                     checked={flaggedOnly}
                     onChange={() => { setFlaggedOnly(true); setIncorrectOnly(false); }}
                   />
-                  🚩 Flagged ({flaggedCount})
+                  Flagged ({flaggedCount})
                 </FilterToggle>
               )}
             </FilterToggleRow>
@@ -1871,12 +1894,12 @@ export function EngineRunner(props: {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <ReviewItemMeta>
                       Q{r.idx + 1} · {r.isCorrect ? "Correct" : "Incorrect"}
-                      {r.isFlagged && <ReviewFlagBadge> 🚩</ReviewFlagBadge>}
+                      {r.isFlagged && <ReviewFlagBadge> Flagged</ReviewFlagBadge>}
                     </ReviewItemMeta>
                     {r.promptPreview && <ReviewItemPrompt>{r.promptPreview}{r.promptPreview.length >= 72 ? "…" : ""}</ReviewItemPrompt>}
                   </div>
                   <ReviewStatusDot $ok={r.isCorrect}>
-                    {r.isCorrect ? "✅" : "❌"}
+                    {r.isCorrect ? "Correct" : "Wrong"}
                   </ReviewStatusDot>
                 </ReviewItem>
               ))}
@@ -1905,7 +1928,7 @@ export function EngineRunner(props: {
 
             <ExplanationCard>
               <ExplanationHeader>
-                <ExplanationIcon>💡</ExplanationIcon>
+                <ExplanationIcon>?</ExplanationIcon>
                 <div>
                   <ExplanationTitle>Explanation</ExplanationTitle>
                   <ExplanationSubtitle>Why this answer is correct</ExplanationSubtitle>
@@ -1923,7 +1946,7 @@ export function EngineRunner(props: {
         {/* PRACTICE COMPLETE banner */}
         {practiceSubmitted && result && (
           <CompleteCard>
-            <CompleteEmoji>{(result.totalScore / result.maxScore) >= 0.8 ? "🎉" : (result.totalScore / result.maxScore) >= 0.6 ? "📈" : "📚"}</CompleteEmoji>
+            <CompleteEmoji>{(result.totalScore / result.maxScore) >= 0.8 ? "Excellent" : (result.totalScore / result.maxScore) >= 0.6 ? "Good" : "Review"}</CompleteEmoji>
             <CompleteTitle>
               {(result.totalScore / result.maxScore) >= 0.8
                 ? "Excellent Work!"
@@ -1935,9 +1958,9 @@ export function EngineRunner(props: {
               {correctCount} / {total} correct — {result.maxScore > 0 ? Math.round((result.totalScore / result.maxScore) * 100) : 0}% accuracy
             </CompleteSubtitle>
             <CompleteActions>
-              <CompletePrimaryBtn onClick={retakePractice}>↺ New Session</CompletePrimaryBtn>
+              <CompletePrimaryBtn onClick={retakePractice}>New Session</CompletePrimaryBtn>
               {incorrectCount > 0 && (
-                <CompleteSecondaryBtn onClick={retryIncorrect}>⚡ Retry {incorrectCount} Wrong</CompleteSecondaryBtn>
+                <CompleteSecondaryBtn onClick={retryIncorrect}>Retry {incorrectCount} Wrong</CompleteSecondaryBtn>
               )}
             </CompleteActions>
           </CompleteCard>
@@ -1987,7 +2010,7 @@ export function EngineRunner(props: {
                   aria-label="Flag question"
                   title={engine.attempt.flagged[currentId] ? "Unflag" : "Flag for review"}
                 >
-                  {engine.attempt.flagged[currentId] ? "🚩" : "🏳"}
+                  {engine.attempt.flagged[currentId] ? "Flag" : "Flag"}
                 </NavBtn>
               )}
               {mode === "exam" && !engine.attempt?.submittedAt && (
@@ -2005,7 +2028,7 @@ export function EngineRunner(props: {
             {mode === "practice" && current && currentId && showExplain[currentId] && (
               <ExplanationCard>
                 <ExplanationHeader>
-                  <ExplanationIcon>💡</ExplanationIcon>
+                  <ExplanationIcon>?</ExplanationIcon>
                   <div>
                     <ExplanationTitle>Explanation</ExplanationTitle>
                     <ExplanationSubtitle>Why this answer is correct</ExplanationSubtitle>
@@ -2060,7 +2083,7 @@ export function EngineRunner(props: {
                   ) ?? -1;
                   if (firstFlagged >= 0) engine.goToIndex(firstFlagged);
                 }}>
-                  🚩 Review {flaggedCount} Flagged Question{flaggedCount !== 1 ? "s" : ""}
+                  Review {flaggedCount} Flagged Question{flaggedCount !== 1 ? "s" : ""}
                 </ConfirmReviewBtn>
               )}
               <ConfirmSubmitBtn onClick={confirmSubmit}>
