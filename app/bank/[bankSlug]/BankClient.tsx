@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import Link from "next/link";
 import { supabaseBrowser } from "@/lib/supabase/browser";
+import { useAuth } from "@/lib/auth/AuthProvider";
 
 type Bank = { id: string; slug: string; name: string; description: string | null };
 
@@ -272,6 +273,153 @@ const CardCta = styled.div<{ $variant: "practice" | "exam" }>`
   }
 `;
 
+/* ── locked card (Pro-gated sets) ───────────────────────────────────────── */
+
+const LockedCard = styled.div`
+  text-decoration: none;
+  color: inherit;
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: ${(p) => p.theme.shadow};
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  cursor: pointer;
+  opacity: 0.7;
+
+  @media (min-width: 480px) { padding: 24px; }
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, opacity 180ms ease;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, ${(p) => p.theme.accent}18, transparent 70%);
+    pointer-events: none;
+  }
+
+  &:hover { transform: translateY(-3px); box-shadow: ${(p) => p.theme.shadowLg}; opacity: 1; }
+`;
+
+const LockBadge = styled.div`
+  position: absolute;
+  top: 14px; right: 14px;
+  display: flex; align-items: center; gap: 5px;
+  background: ${(p) => p.theme.warningSoft};
+  border: 1px solid ${(p) => p.theme.warningBorder};
+  color: ${(p) => p.theme.warning};
+  font-size: 11px; font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+`;
+
+const UpgradeOverlay = styled.div`
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 9000;
+  display: grid; place-items: center;
+  padding: 20px;
+  animation: ${fadeUp} 200ms ease both;
+`;
+
+const UpgradeCard = styled.div`
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 24px;
+  padding: 32px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: ${(p) => p.theme.shadowLg};
+  text-align: center;
+`;
+
+const UpgradeTitle = styled.h2`
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 900;
+  color: ${(p) => p.theme.text};
+`;
+
+const UpgradeText = styled.p`
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: ${(p) => p.theme.muted};
+  line-height: 1.6;
+`;
+
+const UpgradeFeature = styled.div`
+  text-align: left;
+  margin-bottom: 20px;
+  display: grid;
+  gap: 8px;
+`;
+
+const UpgradeFeatureItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: ${(p) => p.theme.text};
+  font-weight: 600;
+`;
+
+const UpgradeCheckmark = styled.span`
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: ${(p) => p.theme.accentSoft};
+  color: ${(p) => p.theme.accent};
+  display: grid; place-items: center;
+  font-size: 11px; flex-shrink: 0;
+`;
+
+const UpgradePrice = styled.div`
+  font-size: 32px;
+  font-weight: 900;
+  color: ${(p) => p.theme.text};
+  margin-bottom: 4px;
+`;
+
+const UpgradePriceNote = styled.div`
+  font-size: 13px;
+  color: ${(p) => p.theme.muted};
+  margin-bottom: 20px;
+`;
+
+const UpgradeBtn = styled.button`
+  width: 100%;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
+  color: white;
+  padding: 13px 20px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 150ms ease, transform 100ms ease;
+  margin-bottom: 10px;
+
+  &:hover { opacity: 0.9; transform: translateY(-1px); }
+`;
+
+const UpgradeCloseBtn = styled.button`
+  background: none; border: none;
+  color: ${(p) => p.theme.muted};
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  padding: 8px 16px;
+
+  &:hover { color: ${(p) => p.theme.text}; }
+`;
+
 const P = styled.p`
   margin: 0;
   color: ${(p) => p.theme.muted};
@@ -280,8 +428,10 @@ const P = styled.p`
 
 export default function BankClient({ bankSlug }: { bankSlug: string }) {
   const sb = useMemo(() => supabaseBrowser(), []);
+  const { isPro } = useAuth();
   const [bank, setBank] = useState<Bank | null>(null);
   const [msg, setMsg] = useState("Loading…");
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -381,52 +531,138 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
           <CardCta $variant="exam">Start Set A →</CardCta>
         </ModeCard>
 
-        <ModeCard href={`/bank/${bank.slug}/exam/set-b/instructions`} $variant="exam">
-          <ModeHeader>
-            <ModeIcon $variant="exam">🅱️</ModeIcon>
-            <ModeTitleGroup>
-              <ModeTitle>Simulation — Set B</ModeTitle>
-              <ModeSubtitle>70 questions drawn from Set B question bank</ModeSubtitle>
-            </ModeTitleGroup>
-          </ModeHeader>
+        {isPro ? (
+          <ModeCard href={`/bank/${bank.slug}/exam/set-b/instructions`} $variant="exam">
+            <ModeHeader>
+              <ModeIcon $variant="exam">🅱️</ModeIcon>
+              <ModeTitleGroup>
+                <ModeTitle>Simulation — Set B</ModeTitle>
+                <ModeSubtitle>70 questions drawn from Set B question bank</ModeSubtitle>
+              </ModeTitleGroup>
+            </ModeHeader>
+            <FeatureList>
+              <FeatureItem>
+                <FeatureDot $variant="exam">✓</FeatureDot>
+                Timed simulation under real exam conditions
+              </FeatureItem>
+              <FeatureItem>
+                <FeatureDot $variant="exam">✓</FeatureDot>
+                Fresh questions — no overlap with Set A
+              </FeatureItem>
+            </FeatureList>
+            <CardCta $variant="exam">Start Set B →</CardCta>
+          </ModeCard>
+        ) : (
+          <LockedCard onClick={() => setShowUpgrade(true)}>
+            <LockBadge>PRO</LockBadge>
+            <ModeHeader>
+              <ModeIcon $variant="exam">🅱️</ModeIcon>
+              <ModeTitleGroup>
+                <ModeTitle>Simulation — Set B</ModeTitle>
+                <ModeSubtitle>70 fresh questions — no overlap with Set A</ModeSubtitle>
+              </ModeTitleGroup>
+            </ModeHeader>
+            <FeatureList>
+              <FeatureItem>
+                <FeatureDot $variant="exam">✓</FeatureDot>
+                Timed simulation under real exam conditions
+              </FeatureItem>
+              <FeatureItem>
+                <FeatureDot $variant="exam">✓</FeatureDot>
+                Fresh questions — no overlap with Set A
+              </FeatureItem>
+            </FeatureList>
+            <CardCta $variant="exam">Unlock Set B</CardCta>
+          </LockedCard>
+        )}
 
-          <FeatureList>
-            <FeatureItem>
-              <FeatureDot $variant="exam">✓</FeatureDot>
-              Timed simulation under real exam conditions
-            </FeatureItem>
-            <FeatureItem>
-              <FeatureDot $variant="exam">✓</FeatureDot>
-              Fresh questions — no overlap with Set A
-            </FeatureItem>
-          </FeatureList>
-
-          <CardCta $variant="exam">Start Set B →</CardCta>
-        </ModeCard>
-
-        <ModeCard href={`/bank/${bank.slug}/exam/set-c/instructions`} $variant="exam">
-          <ModeHeader>
-            <ModeIcon $variant="exam">🅾️</ModeIcon>
-            <ModeTitleGroup>
-              <ModeTitle>Simulation — Set C</ModeTitle>
-              <ModeSubtitle>70 questions drawn from Set C question bank</ModeSubtitle>
-            </ModeTitleGroup>
-          </ModeHeader>
-
-          <FeatureList>
-            <FeatureItem>
-              <FeatureDot $variant="exam">✓</FeatureDot>
-              Timed simulation under real exam conditions
-            </FeatureItem>
-            <FeatureItem>
-              <FeatureDot $variant="exam">✓</FeatureDot>
-              Fresh questions — no overlap with Sets A or B
-            </FeatureItem>
-          </FeatureList>
-
-          <CardCta $variant="exam">Start Set C →</CardCta>
-        </ModeCard>
+        {isPro ? (
+          <ModeCard href={`/bank/${bank.slug}/exam/set-c/instructions`} $variant="exam">
+            <ModeHeader>
+              <ModeIcon $variant="exam">🅾️</ModeIcon>
+              <ModeTitleGroup>
+                <ModeTitle>Simulation — Set C</ModeTitle>
+                <ModeSubtitle>70 questions drawn from Set C question bank</ModeSubtitle>
+              </ModeTitleGroup>
+            </ModeHeader>
+            <FeatureList>
+              <FeatureItem>
+                <FeatureDot $variant="exam">✓</FeatureDot>
+                Timed simulation under real exam conditions
+              </FeatureItem>
+              <FeatureItem>
+                <FeatureDot $variant="exam">✓</FeatureDot>
+                Fresh questions — no overlap with Sets A or B
+              </FeatureItem>
+            </FeatureList>
+            <CardCta $variant="exam">Start Set C →</CardCta>
+          </ModeCard>
+        ) : (
+          <LockedCard onClick={() => setShowUpgrade(true)}>
+            <LockBadge>PRO</LockBadge>
+            <ModeHeader>
+              <ModeIcon $variant="exam">🅾️</ModeIcon>
+              <ModeTitleGroup>
+                <ModeTitle>Simulation — Set C</ModeTitle>
+                <ModeSubtitle>70 fresh questions — no overlap with Sets A or B</ModeSubtitle>
+              </ModeTitleGroup>
+            </ModeHeader>
+            <FeatureList>
+              <FeatureItem>
+                <FeatureDot $variant="exam">✓</FeatureDot>
+                Timed simulation under real exam conditions
+              </FeatureItem>
+              <FeatureItem>
+                <FeatureDot $variant="exam">✓</FeatureDot>
+                Fresh questions — no overlap with Sets A or B
+              </FeatureItem>
+            </FeatureList>
+            <CardCta $variant="exam">Unlock Set C</CardCta>
+          </LockedCard>
+        )}
       </Grid>
+
+      {/* ── Upgrade Modal ──────────────────────────────────────── */}
+      {showUpgrade && (
+        <UpgradeOverlay onClick={() => setShowUpgrade(false)}>
+          <UpgradeCard onClick={(e) => e.stopPropagation()}>
+            <UpgradeTitle>Upgrade to Pro</UpgradeTitle>
+            <UpgradeText>
+              Unlock the full exam preparation experience and maximize your chances of passing the PMP on your first attempt.
+            </UpgradeText>
+            <UpgradeFeature>
+              <UpgradeFeatureItem>
+                <UpgradeCheckmark>✓</UpgradeCheckmark>
+                All 3 exam simulations (210 exam questions)
+              </UpgradeFeatureItem>
+              <UpgradeFeatureItem>
+                <UpgradeCheckmark>✓</UpgradeCheckmark>
+                Adaptive difficulty engine
+              </UpgradeFeatureItem>
+              <UpgradeFeatureItem>
+                <UpgradeCheckmark>✓</UpgradeCheckmark>
+                Weakness targeting per domain & topic
+              </UpgradeFeatureItem>
+              <UpgradeFeatureItem>
+                <UpgradeCheckmark>✓</UpgradeCheckmark>
+                Topic-level mastery insights
+              </UpgradeFeatureItem>
+              <UpgradeFeatureItem>
+                <UpgradeCheckmark>✓</UpgradeCheckmark>
+                Personalized study recommendations
+              </UpgradeFeatureItem>
+            </UpgradeFeature>
+            <UpgradePrice>$29</UpgradePrice>
+            <UpgradePriceNote>One-time payment · Lifetime access</UpgradePriceNote>
+            <UpgradeBtn onClick={() => { /* TODO: Stripe checkout */ alert("Stripe checkout coming soon!"); }}>
+              Upgrade Now
+            </UpgradeBtn>
+            <UpgradeCloseBtn onClick={() => setShowUpgrade(false)}>
+              Maybe later
+            </UpgradeCloseBtn>
+          </UpgradeCard>
+        </UpgradeOverlay>
+      )}
     </>
   );
 }

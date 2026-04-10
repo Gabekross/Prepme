@@ -15,7 +15,9 @@ import { setABank } from "@/src/exam-engine/data/seed.set-a";
  *  regardless of setId, giving the student maximum variety. */
 const combinedSeedBank: Question[] = [...pmpBank, ...setABank];
 
-const QUESTION_PRESETS = [10, 20, 25, 30, 50, 90];
+const FREE_PRESETS = [10, 20, 25, 30];
+const PRO_PRESETS = [50, 90];
+const QUESTION_PRESETS = [...FREE_PRESETS, ...PRO_PRESETS];
 
 /* ── animations ─────────────────────────────────────────────────────────── */
 
@@ -116,6 +118,36 @@ const PresetBtn = styled.button<{ $active: boolean }>`
     background: ${(p) => p.theme.successSoft};
     color: ${(p) => p.theme.success};
   }
+`;
+
+const LockedPresetBtn = styled.button`
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  background: ${(p) => p.theme.buttonBg};
+  color: ${(p) => p.theme.muted};
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 150ms ease;
+  min-width: 54px;
+  position: relative;
+  opacity: 0.6;
+
+  &:hover { opacity: 1; border-color: ${(p) => p.theme.warningBorder}; }
+`;
+
+const ProTag = styled.span`
+  position: absolute;
+  top: -6px; right: -6px;
+  background: ${(p) => p.theme.warningSoft};
+  border: 1px solid ${(p) => p.theme.warningBorder};
+  color: ${(p) => p.theme.warning};
+  font-size: 8px;
+  font-weight: 900;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
 `;
 
 const CustomRow = styled.div`
@@ -287,7 +319,7 @@ interface InProgressAttempt {
 /* ── component ──────────────────────────────────────────────────────────── */
 
 export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
-  const { user } = useAuth();
+  const { user, isPro } = useAuth();
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [msg, setMsg] = useState("Loading questions\u2026");
@@ -446,15 +478,30 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
 
           <Label>Number of Questions</Label>
           <PresetsRow>
-            {QUESTION_PRESETS.filter((n) => n <= maxQuestions).map((n) => (
-              <PresetBtn
-                key={n}
-                $active={questionCount === n}
-                onClick={() => setQuestionCount(n)}
-              >
-                {n}
-              </PresetBtn>
-            ))}
+            {QUESTION_PRESETS.filter((n) => n <= maxQuestions).map((n) => {
+              const isProPreset = PRO_PRESETS.includes(n);
+              if (isProPreset && !isPro) {
+                return (
+                  <LockedPresetBtn
+                    key={n}
+                    onClick={() => alert("Upgrade to Pro to unlock longer practice sessions!")}
+                    title="Pro feature"
+                  >
+                    {n}
+                    <ProTag>PRO</ProTag>
+                  </LockedPresetBtn>
+                );
+              }
+              return (
+                <PresetBtn
+                  key={n}
+                  $active={questionCount === n}
+                  onClick={() => setQuestionCount(n)}
+                >
+                  {n}
+                </PresetBtn>
+              );
+            })}
           </PresetsRow>
 
           <CustomRow>

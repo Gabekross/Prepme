@@ -3,7 +3,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/browser";
+import { useAuth } from "@/lib/auth/AuthProvider";
 import type { BankConfig } from "@/src/exam-engine/data/loadFromSupabase";
 import { loadBankBySlug } from "@/src/exam-engine/data/loadFromSupabase";
 
@@ -256,11 +258,22 @@ interface Props {
   setSlug: string;
 }
 
+const PRO_SETS = ["set-b", "set-c"];
+
 export default function InstructionClient({ bankSlug, setSlug }: Props) {
+  const { isPro, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [bankConfig, setBankConfig] = useState<BankConfig | null>(null);
   const [loading, setLoading] = useState(true);
 
   const setLabel = SET_LABELS[setSlug] ?? setSlug.replace(/-/g, " ").toUpperCase();
+
+  // Redirect free users away from Pro-only sets
+  useEffect(() => {
+    if (!authLoading && !isPro && PRO_SETS.includes(setSlug)) {
+      router.replace(`/bank/${bankSlug}`);
+    }
+  }, [authLoading, isPro, setSlug, bankSlug, router]);
 
   useEffect(() => {
     (async () => {

@@ -8,6 +8,7 @@ type AuthState = {
   user: User | null;
   loading: boolean;
   isAdmin: boolean;
+  isPro: boolean;
   signOut: () => Promise<void>;
 };
 
@@ -24,6 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isPro, setIsPro] = useState(false);
 
   async function checkUser() {
     try {
@@ -36,13 +38,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .from("user_roles")
           .select("role")
           .eq("user_id", u.id);
-        setIsAdmin((roles ?? []).some((r: any) => r.role === "admin"));
+        const roleList = (roles ?? []).map((r: any) => r.role);
+        setIsAdmin(roleList.includes("admin"));
+        setIsPro(roleList.includes("pro") || roleList.includes("admin"));
       } else {
         setIsAdmin(false);
+        setIsPro(false);
       }
     } catch {
       setUser(null);
       setIsAdmin(false);
+      setIsPro(false);
     } finally {
       setLoading(false);
     }
@@ -55,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       if (!session?.user) {
         setIsAdmin(false);
+        setIsPro(false);
       } else {
         // Re-check admin role on sign-in
         checkUser();
@@ -69,12 +76,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await sb.auth.signOut();
     setUser(null);
     setIsAdmin(false);
+    setIsPro(false);
   }
 
   const value = useMemo(
-    () => ({ user, loading, isAdmin, signOut }),
+    () => ({ user, loading, isAdmin, isPro, signOut }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [user, loading, isAdmin]
+    [user, loading, isAdmin, isPro]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

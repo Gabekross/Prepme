@@ -389,6 +389,99 @@ const P = styled.p`
   font-size: 14px;
 `;
 
+/* ── pro upsell ────────────────────────────────────────────────────────── */
+
+const UpsellBanner = styled.div`
+  background: linear-gradient(135deg, ${(p) => p.theme.accentSoft}, ${(p) => p.theme.warningSoft});
+  border: 1px solid ${(p) => p.theme.accentSoft};
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: ${fadeUp} 400ms 120ms ease both;
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+    align-items: center;
+  }
+`;
+
+const UpsellText = styled.div`
+  flex: 1;
+`;
+
+const UpsellTitle = styled.div`
+  font-size: 15px;
+  font-weight: 800;
+  color: ${(p) => p.theme.text};
+  margin-bottom: 4px;
+`;
+
+const UpsellSub = styled.div`
+  font-size: 13px;
+  color: ${(p) => p.theme.muted};
+  line-height: 1.5;
+`;
+
+const UpsellBtn = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 800;
+  text-decoration: none;
+  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
+  color: white;
+  white-space: nowrap;
+  transition: opacity 150ms ease;
+  &:hover { opacity: 0.85; }
+`;
+
+const ProGateWrap = styled.div`
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+`;
+
+const ProGateBlur = styled.div`
+  filter: blur(5px);
+  opacity: 0.4;
+  pointer-events: none;
+  user-select: none;
+`;
+
+const ProGateOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  gap: 8px;
+`;
+
+const ProGateBadge = styled.div`
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: ${(p) => p.theme.warning};
+  background: ${(p) => p.theme.warningSoft};
+  border: 1px solid ${(p) => p.theme.warningBorder};
+  padding: 4px 12px;
+  border-radius: 8px;
+`;
+
+const ProGateLabel = styled.div`
+  font-size: 13px;
+  font-weight: 700;
+  color: ${(p) => p.theme.text};
+`;
+
 /* ── helpers ─────────────────────────────────────────────────────────────── */
 
 function formatDate(iso: string) {
@@ -418,7 +511,7 @@ function formatMs(ms: number): string {
 /* ── component ──────────────────────────────────────────────────────────── */
 
 export default function ResultsClient({ attemptId }: { attemptId: string }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isPro } = useAuth();
   const sb = useMemo(() => supabaseBrowser(), []);
   const [attempt, setAttempt] = useState<AttemptFullRow | null>(null);
   const [loading, setLoading] = useState(true);
@@ -505,6 +598,23 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
         )}
       </HeroCard>
 
+      {/* ── Pro upsell for free users ────────────────────────── */}
+      {!isPro && attempt.mode === "exam" && (
+        <UpsellBanner>
+          <UpsellText>
+            <UpsellTitle>
+              {passed ? "Pass with even more confidence" : "Improve your score with Pro"}
+            </UpsellTitle>
+            <UpsellSub>
+              {passed
+                ? "Unlock 2 more full exam simulations, adaptive difficulty, and topic-level insights to solidify your preparation."
+                : "Unlock adaptive difficulty that targets your weak areas, 2 additional exam sets, and personalized study recommendations."}
+            </UpsellSub>
+          </UpsellText>
+          <UpsellBtn href="/bank/pmp">Upgrade to Pro — $29</UpsellBtn>
+        </UpsellBanner>
+      )}
+
       {/* ── No scoring notice ──────────────────────────────── */}
       {!hasScoring && (
         <SectionCard $delay={100}>
@@ -566,31 +676,61 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
 
       {/* ── Question Type Breakdown ─────────────────────────── */}
       {result && (
-        <SectionCard $delay={220}>
-          <SectionTitle>Performance by Question Type</SectionTitle>
-          <BreakdownGrid>
-            {(Object.entries(result.byType) as [string, { correct: number; total: number }][])
-              .filter(([, t]) => t.total > 0)
-              .map(([qtype, t]) => {
-                const pct = t.total > 0 ? Math.round((t.correct / t.total) * 100) : 0;
-                const pass = pct >= passThreshold;
-                return (
-                  <BreakdownItem key={qtype}>
-                    <BreakdownHeader>
-                      <BreakdownName>{QTYPE_LABELS[qtype] ?? qtype}</BreakdownName>
-                      <BreakdownValues>
-                        <BreakdownScore>{t.correct}/{t.total}</BreakdownScore>
-                        <BreakdownPct $pass={pass}>{pct}%</BreakdownPct>
-                      </BreakdownValues>
-                    </BreakdownHeader>
-                    <BarTrack>
-                      <BarFill $pct={pct} $pass={pass} />
-                    </BarTrack>
-                  </BreakdownItem>
-                );
-              })}
-          </BreakdownGrid>
-        </SectionCard>
+        isPro ? (
+          <SectionCard $delay={220}>
+            <SectionTitle>Performance by Question Type</SectionTitle>
+            <BreakdownGrid>
+              {(Object.entries(result.byType) as [string, { correct: number; total: number }][])
+                .filter(([, t]) => t.total > 0)
+                .map(([qtype, t]) => {
+                  const pct = t.total > 0 ? Math.round((t.correct / t.total) * 100) : 0;
+                  const pass = pct >= passThreshold;
+                  return (
+                    <BreakdownItem key={qtype}>
+                      <BreakdownHeader>
+                        <BreakdownName>{QTYPE_LABELS[qtype] ?? qtype}</BreakdownName>
+                        <BreakdownValues>
+                          <BreakdownScore>{t.correct}/{t.total}</BreakdownScore>
+                          <BreakdownPct $pass={pass}>{pct}%</BreakdownPct>
+                        </BreakdownValues>
+                      </BreakdownHeader>
+                      <BarTrack>
+                        <BarFill $pct={pct} $pass={pass} />
+                      </BarTrack>
+                    </BreakdownItem>
+                  );
+                })}
+            </BreakdownGrid>
+          </SectionCard>
+        ) : (
+          <ProGateWrap>
+            <ProGateOverlay>
+              <ProGateBadge>PRO</ProGateBadge>
+              <ProGateLabel>Unlock question type breakdown</ProGateLabel>
+              <UpsellBtn href="/bank/pmp" style={{ marginTop: 4 }}>Upgrade</UpsellBtn>
+            </ProGateOverlay>
+            <ProGateBlur>
+              <SectionCard $delay={220}>
+                <SectionTitle>Performance by Question Type</SectionTitle>
+                <BreakdownGrid>
+                  {(Object.entries(result.byType) as [string, { correct: number; total: number }][])
+                    .filter(([, t]) => t.total > 0)
+                    .map(([qtype, t]) => {
+                      const pct = t.total > 0 ? Math.round((t.correct / t.total) * 100) : 0;
+                      return (
+                        <BreakdownItem key={qtype}>
+                          <BreakdownHeader>
+                            <BreakdownName>{QTYPE_LABELS[qtype] ?? qtype}</BreakdownName>
+                          </BreakdownHeader>
+                          <BarTrack><BarFill $pct={pct} $pass={false} /></BarTrack>
+                        </BreakdownItem>
+                      );
+                    })}
+                </BreakdownGrid>
+              </SectionCard>
+            </ProGateBlur>
+          </ProGateWrap>
+        )
       )}
 
       {/* ── Time Analysis ───────────────────────────────────── */}

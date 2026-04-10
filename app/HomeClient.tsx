@@ -827,7 +827,7 @@ export default function HomeClient() {
           </StatCard>
           <StatCard>
             <StatValue>
-              {stats ? (stats.totalAttempts > 0 ? stats.totalAttempts.toLocaleString() : "New") : "..."}
+              {stats ? stats.totalAttempts.toLocaleString() : "..."}
             </StatValue>
             <StatLabel>Sessions Completed</StatLabel>
           </StatCard>

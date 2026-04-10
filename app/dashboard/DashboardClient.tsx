@@ -349,6 +349,64 @@ const FocusPercent = styled.span<{ $color: string }>`
   color: ${(p) => p.$color};
 `;
 
+const ProGateCard = styled.div`
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+`;
+
+const ProGateBlur = styled.div`
+  filter: blur(6px);
+  opacity: 0.4;
+  pointer-events: none;
+  user-select: none;
+`;
+
+const ProGateOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  gap: 8px;
+`;
+
+const ProGateLabel = styled.div`
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: ${(p) => p.theme.warning};
+  background: ${(p) => p.theme.warningSoft};
+  border: 1px solid ${(p) => p.theme.warningBorder};
+  padding: 4px 12px;
+  border-radius: 8px;
+`;
+
+const ProGateText = styled.div`
+  font-size: 13px;
+  font-weight: 700;
+  color: ${(p) => p.theme.text};
+  max-width: 260px;
+`;
+
+const ProGateBtn = styled(Link)`
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: ${(p) => p.theme.accent};
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+`;
+
 const TabRow = styled.div`
   display: flex;
   gap: 6px;
@@ -445,7 +503,7 @@ function aggregateResults(results: AttemptResult[]) {
 /* ── component ──────────────────────────────────────────────────────────── */
 
 export default function DashboardClient() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isPro } = useAuth();
   const theme = useTheme() as { success: string; warning: string; error: string };
   const sb = useMemo(() => supabaseBrowser(), []);
   const [attempts, setAttempts] = useState<AttemptSummary[]>([]);
@@ -656,44 +714,82 @@ export default function DashboardClient() {
                   </AnalyticsCard>
                 )}
                 {typeEntries.length > 0 && (
-                  <AnalyticsCard>
-                    <AnalyticsCardTitle>Question Type Performance</AnalyticsCardTitle>
-                    {typeEntries.map((t) => (
-                      <BarRow key={t.key}>
-                        <BarLabel>
-                          <span>{t.label}</span>
-                          <BarLabelRight>
-                            {t.pct}% ({t.correct}/{t.total})
-                          </BarLabelRight>
-                        </BarLabel>
-                        <BarTrack>
-                          <BarFill $pct={t.pct} $color={pctColor(t.pct, theme)} />
-                        </BarTrack>
-                      </BarRow>
-                    ))}
-                  </AnalyticsCard>
+                  isPro ? (
+                    <AnalyticsCard>
+                      <AnalyticsCardTitle>Question Type Performance</AnalyticsCardTitle>
+                      {typeEntries.map((t) => (
+                        <BarRow key={t.key}>
+                          <BarLabel>
+                            <span>{t.label}</span>
+                            <BarLabelRight>
+                              {t.pct}% ({t.correct}/{t.total})
+                            </BarLabelRight>
+                          </BarLabel>
+                          <BarTrack>
+                            <BarFill $pct={t.pct} $color={pctColor(t.pct, theme)} />
+                          </BarTrack>
+                        </BarRow>
+                      ))}
+                    </AnalyticsCard>
+                  ) : (
+                    <ProGateCard>
+                      <ProGateOverlay>
+                        <ProGateLabel>PRO</ProGateLabel>
+                        <ProGateText>Unlock question type breakdown</ProGateText>
+                        <ProGateBtn href="/bank/pmp">Upgrade to Pro</ProGateBtn>
+                      </ProGateOverlay>
+                      <ProGateBlur>
+                        {typeEntries.map((t) => (
+                          <BarRow key={t.key}>
+                            <BarLabel><span>{t.label}</span></BarLabel>
+                            <BarTrack><BarFill $pct={t.pct} $color="#666" /></BarTrack>
+                          </BarRow>
+                        ))}
+                      </ProGateBlur>
+                    </ProGateCard>
+                  )
                 )}
               </AnalyticsGrid>
 
               {weakAreas.length > 0 && (
-                <FocusCard>
-                  <AnalyticsCardTitle>
-                    Focus Areas
-                    <SetBadge>{analyticsTab === "practice" ? "Practice" : "Exam"}</SetBadge>
-                  </AnalyticsCardTitle>
-                  {weakAreas.map((w) => (
-                    <FocusItem key={w.label}>
-                      <FocusIcon>{w.pct < 50 ? "\u26A0" : "\u25CB"}</FocusIcon>
-                      <FocusText>
-                        <FocusPercent $color={pctColor(w.pct, theme)}>
-                          {w.pct}%
-                        </FocusPercent>{" "}
-                        accuracy in {w.label} &mdash; Practice more{" "}
-                        {w.kind === "domain" ? `${w.label} domain` : `${w.label}`} questions
-                      </FocusText>
-                    </FocusItem>
-                  ))}
-                </FocusCard>
+                isPro ? (
+                  <FocusCard>
+                    <AnalyticsCardTitle>
+                      Focus Areas
+                      <SetBadge>{analyticsTab === "practice" ? "Practice" : "Exam"}</SetBadge>
+                    </AnalyticsCardTitle>
+                    {weakAreas.map((w) => (
+                      <FocusItem key={w.label}>
+                        <FocusIcon>{w.pct < 50 ? "\u26A0" : "\u25CB"}</FocusIcon>
+                        <FocusText>
+                          <FocusPercent $color={pctColor(w.pct, theme)}>
+                            {w.pct}%
+                          </FocusPercent>{" "}
+                          accuracy in {w.label} &mdash; Practice more{" "}
+                          {w.kind === "domain" ? `${w.label} domain` : `${w.label}`} questions
+                        </FocusText>
+                      </FocusItem>
+                    ))}
+                  </FocusCard>
+                ) : (
+                  <ProGateCard>
+                    <ProGateOverlay>
+                      <ProGateLabel>PRO</ProGateLabel>
+                      <ProGateText>Unlock personalized focus areas & study recommendations</ProGateText>
+                      <ProGateBtn href="/bank/pmp">Upgrade to Pro</ProGateBtn>
+                    </ProGateOverlay>
+                    <ProGateBlur>
+                      <FocusItem>
+                        <FocusIcon>&#x26A0;</FocusIcon>
+                        <FocusText>Focus area insights appear here</FocusText>
+                      </FocusItem>
+                      <FocusItem>
+                        <FocusIcon>&#x25CB;</FocusIcon>
+                        <FocusText>Personalized recommendations appear here</FocusText>
+                      </FocusItem>
+                    </ProGateBlur>
+                  </ProGateCard>
+                )
               )}
             </>
           )}
