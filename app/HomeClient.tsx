@@ -329,6 +329,7 @@ export default function HomeClient() {
       const { data, error } = await sb
         .from("question_banks")
         .select("id,slug,name,description")
+        .eq("slug", "pmp")
         .order("name", { ascending: true });
 
       setLoading(false);
@@ -343,11 +344,11 @@ export default function HomeClient() {
   return (
     <>
       <Hero>
-        <HeroKicker>🎓 Exam Preparation Platform</HeroKicker>
-        <H1>Master Your Exam,<br />One Question at a Time</H1>
+        <HeroKicker>PMP Exam Preparation</HeroKicker>
+        <H1>Master the PMP Exam,<br />One Question at a Time</H1>
         <HeroSub>
-          Choose a question bank below. Practice with immediate feedback, or run a
-          full timed exam simulation — all in one place.
+          Practice with immediate feedback, or run a full timed exam simulation
+          — all in one place.
         </HeroSub>
 
         <StatsRow>
