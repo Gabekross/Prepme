@@ -326,6 +326,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const bankSlug = bankSlugMatch?.[1] ?? null;
   const sessionMode: "practice" | "exam" = inExam ? "exam" : "practice";
 
+  // Extract set slug from exam URLs like /bank/set-a/exam/set-a
+  const setSlugMatch = pathname.match(/^\/bank\/[^/]+\/exam\/([^/]+)/);
+  const setSlug = setSlugMatch?.[1] ?? null;
+  // Convert URL slug (e.g. "set-a") to internal setId (e.g. "set_a")
+  const setId = setSlug ? setSlug.replace(/-/g, "_") : null;
+
   async function refresh() {
     const { data } = await sb.auth.getUser();
     const user = data.user;
@@ -381,7 +387,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
     if (!ok) return;
     if (bankSlug) {
-      const ns = `${bankSlug}__exam`;
+      // Namespace must match what ExamClient passes to EngineRunner
+      const ns = setId ? `${bankSlug}__exam__${setId}` : `${bankSlug}__exam`;
+      const s = new LocalAttemptStorage(ns);
+      if (s.clearLatest) await s.clearLatest();
+    }
+    window.location.href = bankSlug ? `/bank/${bankSlug}` : "/";
+  }
+
+  async function exitPractice() {
+    const ok = window.confirm(
+      "Exit practice session?\n\nYour current progress will be cleared."
+    );
+    if (!ok) return;
+    if (bankSlug) {
+      const ns = `${bankSlug}__practice`;
       const s = new LocalAttemptStorage(ns);
       if (s.clearLatest) await s.clearLatest();
     }
@@ -452,9 +472,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       <MenuSectionLabel>Session</MenuSectionLabel>
 
                       {inPractice && (
-                        <MenuAction onClick={restartPractice}>
-                          ↺ Restart (New Shuffle)
-                        </MenuAction>
+                        <>
+                          <MenuAction onClick={restartPractice}>
+                            ↺ Restart (New Shuffle)
+                          </MenuAction>
+                          <MenuAction $danger onClick={exitPractice}>
+                            ✕ Exit Practice
+                          </MenuAction>
+                        </>
                       )}
                       {inExam && (
                         <MenuAction $danger onClick={exitExam}>

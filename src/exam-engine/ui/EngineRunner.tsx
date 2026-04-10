@@ -262,22 +262,28 @@ const NavRow = styled.div`
   }
 `;
 
-const NavBtn = styled.button<{ $primary?: boolean; $danger?: boolean }>`
+const NavBtn = styled.button<{ $primary?: boolean; $danger?: boolean; $flagged?: boolean }>`
   border-radius: 12px;
   border: 1px solid ${(p) =>
-    p.$primary
+    p.$flagged
+      ? p.theme.warningBorder
+      : p.$primary
       ? "transparent"
       : p.$danger
       ? p.theme.errorBorder
       : p.theme.buttonBorder};
   background: ${(p) =>
-    p.$primary
+    p.$flagged
+      ? p.theme.warningSoft
+      : p.$primary
       ? p.theme.accent
       : p.$danger
       ? p.theme.errorSoft
       : p.theme.buttonBg};
   color: ${(p) =>
-    p.$primary
+    p.$flagged
+      ? p.theme.warning
+      : p.$primary
       ? p.theme.accentText
       : p.$danger
       ? p.theme.error
@@ -287,11 +293,13 @@ const NavBtn = styled.button<{ $primary?: boolean; $danger?: boolean }>`
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 150ms ease, transform 100ms ease, opacity 150ms ease;
+  transition: background 150ms ease, transform 100ms ease, opacity 150ms ease, border-color 150ms ease, color 150ms ease;
 
   &:hover:not(:disabled) {
     background: ${(p) =>
-      p.$primary
+      p.$flagged
+        ? p.theme.warningBorder
+        : p.$primary
         ? p.theme.accentHover
         : p.$danger
         ? p.theme.errorBorder
@@ -2009,12 +2017,13 @@ export function EngineRunner(props: {
               </PrimaryBtn>
               {engine.attempt && !engine.attempt.submittedAt && currentId && (
                 <NavBtn
+                  $flagged={!!engine.attempt.flagged[currentId]}
                   onClick={() => engine.toggleFlagCurrent()}
                   style={{ flex: "0 0 auto" }}
                   aria-label="Flag question"
                   title={engine.attempt.flagged[currentId] ? "Unflag" : "Flag for review"}
                 >
-                  {engine.attempt.flagged[currentId] ? "Flag" : "Flag"}
+                  {engine.attempt.flagged[currentId] ? "Flagged" : "Flag"}
                 </NavBtn>
               )}
               {mode === "exam" && !engine.attempt?.submittedAt && (
