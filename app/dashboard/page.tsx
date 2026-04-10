@@ -1,0 +1,14 @@
+import { RequireAuth } from "@/lib/auth/RequireAuth";
+import DashboardClient from "./DashboardClient";
+
+export const metadata = {
+  title: "Dashboard",
+};
+
+export default function DashboardPage() {
+  return (
+    <RequireAuth>
+      <DashboardClient />
+    </RequireAuth>
+  );
+}

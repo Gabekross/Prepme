@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import Link from "next/link";
-import { supabaseBrowser } from "@/lib/supabase/browser";
+import { useAuth } from "@/lib/auth/AuthProvider";
 import { useAppTheme } from "@/ui/ThemeClient";
 import { usePathname } from "next/navigation";
 import { LocalAttemptStorage } from "@/src/exam-engine/core/storage";
@@ -309,11 +309,9 @@ const MenuDivider = styled.div`
 `;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const sb = useMemo(() => supabaseBrowser(), []);
+  const { user, isAdmin, signOut: authSignOut } = useAuth();
+  const signedIn = !!user;
   const { themeName, toggle } = useAppTheme();
-
-  const [signedIn, setSignedIn] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   const pathname = usePathname();
 
   const inPractice = /^\/bank\/[^/]+\/practice/.test(pathname);
@@ -326,31 +324,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const bankSlug = bankSlugMatch?.[1] ?? null;
   const sessionMode: "practice" | "exam" = inExam ? "exam" : "practice";
 
-  // Extract set slug from exam URLs like /bank/set-a/exam/set-a
+  // Extract set slug from exam URLs like /bank/pmp/exam/set-a
   const setSlugMatch = pathname.match(/^\/bank\/[^/]+\/exam\/([^/]+)/);
   const setSlug = setSlugMatch?.[1] ?? null;
   // Convert URL slug (e.g. "set-a") to internal setId (e.g. "set_a")
   const setId = setSlug ? setSlug.replace(/-/g, "_") : null;
-
-  async function refresh() {
-    const { data } = await sb.auth.getUser();
-    const user = data.user;
-    if (!user) {
-      setSignedIn(false);
-      setIsAdmin(false);
-      return;
-    }
-    setSignedIn(true);
-    const { data: roles } = await sb.from("user_roles").select("role").eq("user_id", user.id);
-    setIsAdmin((roles ?? []).some((r: any) => r.role === "admin"));
-  }
-
-  useEffect(() => {
-    refresh();
-    const { data: sub } = sb.auth.onAuthStateChange(() => refresh());
-    return () => sub.subscription.unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -366,10 +344,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [menuOpen]);
-
-  async function signOut() {
-    await sb.auth.signOut();
-  }
 
   function restartPractice() {
     if (!bankSlug) return;
@@ -421,12 +395,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {!inSession ? (
               <>
                 <NavLink href="/">Exams</NavLink>
+                {signedIn && <NavLink href="/dashboard">Dashboard</NavLink>}
                 {isAdmin ? <NavLink href="/admin/questions">Admin</NavLink> : null}
                 <NavDivider />
                 {!signedIn ? (
                   <NavLink href="/login">Sign In</NavLink>
                 ) : (
-                  <NavButton onClick={signOut}>Sign Out</NavButton>
+                  <NavButton onClick={authSignOut}>Sign Out</NavButton>
                 )}
                 <ThemePill onClick={toggle} aria-label="Toggle theme">
                   {themeName === "dark" ? "☾" : "☀︎"}

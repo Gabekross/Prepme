@@ -7,6 +7,7 @@ import type { BankConfig } from "@/src/exam-engine/data/loadFromSupabase";
 import { EngineRunner } from "@/src/exam-engine/ui/EngineRunner";
 import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
 import { balanceSimulationBlueprint } from "@/src/exam-engine/core/simulationBalance";
+import { useAuth } from "@/lib/auth/AuthProvider";
 import { pmpBank } from "@/src/exam-engine/data/seed.pmp";
 import { setABank } from "@/src/exam-engine/data/seed.set-a";
 import { setBBank } from "@/src/exam-engine/data/seed.set-b";
@@ -52,6 +53,7 @@ interface ExamClientProps {
 }
 
 export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProps) {
+  const { user } = useAuth();
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [bankConfig, setBankConfig] = useState<BankConfig | null>(null);
@@ -135,6 +137,9 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
       storageNamespace={namespaceKey}
       durationMinutes={bankConfig.durationMinutes ?? undefined}
       passThreshold={bankConfig.passThreshold}
+      userId={user?.id}
+      bankSlug={bankSlug}
+      setId={resolvedSetId}
     />
   );
 }

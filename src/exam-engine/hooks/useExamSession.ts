@@ -5,6 +5,9 @@ import type { Attempt, AdaptiveState, Blueprint, Difficulty, Mode, Question, Res
 import { createAttempt } from "../core/attempt";
 import { scoreAttempt, scoreQuestion } from "../core/scoring";
 import { LocalAttemptStorage } from "../core/storage";
+import { HybridAttemptStorage } from "../core/hybridStorage";
+import { SupabaseAttemptStorage } from "../core/supabaseStorage";
+import { supabaseBrowser } from "@/lib/supabase/browser";
 import {
   createAdaptiveSessionState,
   updateStreakState,
@@ -23,7 +26,13 @@ type InitArgs = {
   bank: Question[];
   defaultBlueprint: Blueprint;
   mode: Mode;
-  storageNamespace?: string; // ✅ NEW
+  storageNamespace?: string;
+  /** Pass userId to enable server-side persistence via HybridStorage */
+  userId?: string | null;
+  /** Bank slug for Supabase attempt row (e.g. "pmp") */
+  bankSlug?: string;
+  /** Set ID for exam mode (e.g. "set_a") */
+  setId?: string | null;
 };
 
 type StartArgs = { reshuffleQuestions: boolean };
@@ -41,8 +50,13 @@ type State = {
 
   filters: { domain: DomainFilter };
 
-  // ✅ NEW: attempt storage namespace (bank+mode)
+  // attempt storage namespace (bank+mode)
   storageNamespace: string;
+
+  /** User ID for server-side persistence */
+  _userId: string | null;
+  _bankSlug: string | null;
+  _setId: string | null;
 
   /** Adaptive engine state for practice mode. */
   adaptiveSession: AdaptiveSessionState | null;
@@ -98,10 +112,50 @@ type State = {
    */
   resetSession: () => Promise<void>;
 
+  /** Internal: get the current storage instance (hybrid or local) */
+  _storage: () => ReturnType<typeof getOrCreateStorage>;
 };
 
-function makeStorage(namespace: string) {
-  return typeof window !== "undefined" ? new LocalAttemptStorage(namespace) : null;
+/**
+ * Create a storage instance. If userId is provided, creates a HybridAttemptStorage
+ * that persists to both localStorage and Supabase. Otherwise, falls back to localStorage only.
+ */
+function makeStorage(
+  namespace: string,
+  opts?: { userId?: string | null; bankSlug?: string; mode?: string; setId?: string | null }
+): HybridAttemptStorage | LocalAttemptStorage | null {
+  if (typeof window === "undefined") return null;
+
+  const userId = opts?.userId;
+  if (userId && opts?.bankSlug) {
+    const remote = new SupabaseAttemptStorage({
+      supabase: supabaseBrowser(),
+      userId,
+      bankSlug: opts.bankSlug,
+      mode: opts.mode ?? "practice",
+      setId: opts.setId ?? null,
+    });
+    return new HybridAttemptStorage({ namespace, remote });
+  }
+
+  // No userId — local-only storage (anonymous or pre-auth)
+  return new LocalAttemptStorage(namespace);
+}
+
+/** Cache the current storage instance so debounce timers persist across saves */
+let _storageCache: { ns: string; userId: string | null; instance: ReturnType<typeof makeStorage> } | null = null;
+
+function getOrCreateStorage(
+  namespace: string,
+  opts?: { userId?: string | null; bankSlug?: string; mode?: string; setId?: string | null }
+): ReturnType<typeof makeStorage> {
+  const uid = opts?.userId ?? null;
+  if (_storageCache && _storageCache.ns === namespace && _storageCache.userId === uid) {
+    return _storageCache.instance;
+  }
+  const instance = makeStorage(namespace, opts);
+  _storageCache = { ns: namespace, userId: uid, instance };
+  return instance;
 }
 
 function applyDomainFilter(questions: Question[], domain: DomainFilter) {
@@ -193,13 +247,25 @@ export const useExamSession = create<State>((set, get) => ({
 
   storageNamespace: "default",
 
+  _userId: null,
+  _bankSlug: null,
+  _setId: null,
+
   adaptiveSession: null,
 
-  initIfNeeded: async ({ bank, defaultBlueprint, mode, storageNamespace }) => {
-    const ns = storageNamespace ?? "default";
-    set({ storageNamespace: ns });
+  _storage: () => getOrCreateStorage(
+    get().storageNamespace,
+    { userId: get()._userId, bankSlug: get()._bankSlug ?? undefined, mode: get().attempt?.mode, setId: get()._setId }
+  ),
 
-    const storage = makeStorage(ns);
+  initIfNeeded: async ({ bank, defaultBlueprint, mode, storageNamespace, userId, bankSlug, setId }) => {
+    const ns = storageNamespace ?? "default";
+    const uid = userId ?? null;
+    const bSlug = bankSlug ?? null;
+    const sId = setId ?? null;
+    set({ storageNamespace: ns, _userId: uid, _bankSlug: bSlug, _setId: sId });
+
+    const storage = getOrCreateStorage(ns, { userId: uid, bankSlug: bSlug ?? undefined, mode, setId: sId });
     const existing = storage ? await storage.loadLatestAttempt() : null;
 
     // Initialize adaptive session for practice mode (safe: never throws)
@@ -315,14 +381,14 @@ export const useExamSession = create<State>((set, get) => ({
       attempt: nextAttempt,
     });
 
-    makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
+    get()._storage()?.saveAttempt(nextAttempt);
   },
 
     hardRestart: async ({ bank, blueprint, mode, reshuffleQuestions, storageNamespace }) => {
     const ns = storageNamespace ?? get().storageNamespace ?? "default";
     set({ storageNamespace: ns, bank });
 
-    const storage = makeStorage(ns);
+    const storage = get()._storage();
 
     // Fresh attempt using PROVIDED blueprint (full set), not prior attempt.blueprint
     const seed = reshuffleQuestions ? undefined : get().attempt?.seed;
@@ -367,7 +433,7 @@ export const useExamSession = create<State>((set, get) => ({
       adaptiveSession: mode === "practice" ? createAdaptiveSessionState() : null,
     });
 
-    makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
+    get()._storage()?.saveAttempt(nextAttempt);
   },
 
   retryIncorrectOnly: async () => {
@@ -393,7 +459,7 @@ export const useExamSession = create<State>((set, get) => ({
         questions: filtered,
       });
 
-      makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
+      get()._storage()?.saveAttempt(nextAttempt);
       return;
     }
 
@@ -416,7 +482,7 @@ export const useExamSession = create<State>((set, get) => ({
       questions: filtered,
     });
 
-    makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
+    get()._storage()?.saveAttempt(nextAttempt);
   },
 
   currentQuestion: (): Question | null => {
@@ -455,7 +521,7 @@ export const useExamSession = create<State>((set, get) => ({
   const i = Math.max(0, Math.min(index, att.questionOrder.length - 1));
   const nextAttempt = { ...att, currentIndex: i };
   set({ attempt: nextAttempt });
-  makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
+  get()._storage()?.saveAttempt(nextAttempt);
 },
 
 
@@ -469,7 +535,7 @@ export const useExamSession = create<State>((set, get) => ({
 
     const nextAttempt = { ...att, currentIndex: prevIdx };
     set({ attempt: nextAttempt });
-    makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
+    get()._storage()?.saveAttempt(nextAttempt);
   },
 
   next: () => {
@@ -482,7 +548,7 @@ export const useExamSession = create<State>((set, get) => ({
 
     const nextAttempt = { ...att, currentIndex: nextIdx };
     set({ attempt: nextAttempt });
-    makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
+    get()._storage()?.saveAttempt(nextAttempt);
   },
 
   getResponse: (qid) => {
@@ -503,7 +569,7 @@ export const useExamSession = create<State>((set, get) => ({
     };
 
     set({ attempt: next });
-    makeStorage(get().storageNamespace)?.saveAttempt(next);
+    get()._storage()?.saveAttempt(next);
   },
 
   getOptionOrder: (qid) => {
@@ -520,7 +586,7 @@ export const useExamSession = create<State>((set, get) => ({
     const nextAttempt = { ...att, flagged: nextFlagged };
 
     set({ attempt: nextAttempt });
-    makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
+    get()._storage()?.saveAttempt(nextAttempt);
   },
 
   isCurrentFlagged: (): boolean => {
@@ -535,7 +601,7 @@ export const useExamSession = create<State>((set, get) => ({
     if (!att) return;
     const nextAttempt = { ...att, submittedAt: new Date().toISOString() };
     set({ attempt: nextAttempt });
-    makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
+    get()._storage()?.saveAttempt(nextAttempt);
   },
 
   recordTimeOnQuestion: (qid: string, ms: number) => {
@@ -547,7 +613,7 @@ export const useExamSession = create<State>((set, get) => ({
       timeSpentMsByQuestionId: { ...att.timeSpentMsByQuestionId, [qid]: prev + ms },
     };
     set({ attempt: nextAttempt });
-    makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
+    get()._storage()?.saveAttempt(nextAttempt);
   },
 
   recordAdaptiveResult: (qid: string, isCorrect: boolean) => {
@@ -577,7 +643,7 @@ export const useExamSession = create<State>((set, get) => ({
       const nextAttempt = { ...att, adaptiveState };
 
       set({ adaptiveSession: nextSession, attempt: nextAttempt });
-      makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
+      get()._storage()?.saveAttempt(nextAttempt);
     } catch (e) {
       console.warn("[Adaptive] recordAdaptiveResult failed:", e);
     }
@@ -591,15 +657,15 @@ export const useExamSession = create<State>((set, get) => ({
     const nextAttempt = { ...att, confidenceByQuestionId };
 
     set({ attempt: nextAttempt });
-    makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
+    get()._storage()?.saveAttempt(nextAttempt);
   },
 
   resetSession: async () => {
     const att = get().attempt;
-    const ns = get().storageNamespace;
+    const storage = get()._storage();
     // Only wipe in-progress attempts; keep submitted ones so results remain accessible
     if (att && !att.submittedAt) {
-      await makeStorage(ns)?.clearLatest();
+      await storage?.clearLatest();
     }
     set({ attempt: null, picked: null, questions: null, bank: null, adaptiveSession: null });
   },

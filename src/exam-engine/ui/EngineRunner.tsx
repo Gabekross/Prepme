@@ -9,6 +9,7 @@ import { scoreAttempt, scoreQuestion } from "../core/scoring";
 import { LocalAttemptStorage } from "../core/storage";
 import { computeAdaptiveSummary, type AdaptiveSummary } from "../core/analytics";
 import { AdaptiveResults } from "./AdaptiveResults";
+import { ProcessingOverlay } from "./ProcessingOverlay";
 
 /* ── animations ─────────────────────────────────────────────────────────── */
 
@@ -1190,9 +1191,15 @@ export function EngineRunner(props: {
   storageNamespace: string;
   durationMinutes?: number;
   passThreshold?: number;
+  /** User ID for server-side persistence (from auth context) */
+  userId?: string | null;
+  /** Bank slug for Supabase attempt row */
+  bankSlug?: string;
+  /** Set ID for exam mode (e.g. "set_a") */
+  setId?: string | null;
 }) {
   const { title, subtitle, questions, scenarios, blueprint, mode, storageNamespace,
-          durationMinutes, passThreshold = 70 } = props;
+          durationMinutes, passThreshold = 70, userId, bankSlug, setId } = props;
   const engine = useExamSession();
 
   const [initialized, setInitialized] = useState(false);
@@ -1206,6 +1213,7 @@ export function EngineRunner(props: {
   const [showQuestionGrid, setShowQuestionGrid] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [timerWarning, setTimerWarning] = useState<"none" | "low" | "critical">("none");
+  const [showProcessing, setShowProcessing] = useState(false);
 
   const questionEntryRef = useRef<{ qid: string; enteredAt: number } | null>(null);
 
@@ -1253,7 +1261,7 @@ export function EngineRunner(props: {
     setExamView("take");
     setTimeRemaining(null);
 
-    engine.initIfNeeded({ bank: questions, defaultBlueprint: blueprint, mode, storageNamespace })
+    engine.initIfNeeded({ bank: questions, defaultBlueprint: blueprint, mode, storageNamespace, userId, bankSlug, setId })
       .then(() => {
         // For restored practice sessions, pre-populate revealed/submittedQ
         // so that explanation buttons appear for previously answered questions.
@@ -1497,6 +1505,9 @@ export function EngineRunner(props: {
   function confirmSubmit() {
     setShowSubmitConfirm(false);
     engine.submitAttempt();
+    if (mode === "exam") {
+      setShowProcessing(true);
+    }
   }
 
   function onPrimary() {
@@ -2075,6 +2086,14 @@ export function EngineRunner(props: {
           </>
         )}
       </RightCol>
+
+      {/* ── Processing overlay (exam mode) ──────────────────── */}
+      {showProcessing && (
+        <ProcessingOverlay
+          minDuration={3000}
+          onComplete={() => setShowProcessing(false)}
+        />
+      )}
 
       {/* ── Pre-submission confirm dialog ─────────────────── */}
       {showSubmitConfirm && (

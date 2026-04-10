@@ -1,5 +1,10 @@
+import { RequireAuth } from "@/lib/auth/RequireAuth";
 import ExamClient from "./ExamClient";
 
 export default function ExamPage({ params }: { params: { bankSlug: string } }) {
-  return <ExamClient bankSlug={params.bankSlug} />;
+  return (
+    <RequireAuth>
+      <ExamClient bankSlug={params.bankSlug} />
+    </RequireAuth>
+  );
 }

@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import styled from "styled-components";
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 /* ── layout ─────────────────────────────────────────────────────────────── */
 
@@ -227,6 +227,8 @@ function getMsgType(msg: string): "success" | "error" | "info" {
 export default function LoginClient() {
   const sb = useMemo(() => supabaseBrowser(), []);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("returnTo");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -240,7 +242,7 @@ export default function LoginClient() {
     const user = data.user;
 
     if (!user) {
-      setMsg("Not signed in.");
+      // Not signed in — just stay on login page, no error message needed
       return;
     }
 
@@ -251,10 +253,14 @@ export default function LoginClient() {
     }
 
     const admin = (roles ?? []).some((r: any) => r.role === "admin");
-    setMsg(admin ? "Signed in as admin." : "Signed in.");
+    setMsg(admin ? "Signed in as admin. Redirecting..." : "Signed in. Redirecting...");
 
-    if (admin) router.push("/admin/questions");
-    else router.push("/");
+    // Small delay to let the auth state propagate to the provider
+    await new Promise((r) => setTimeout(r, 300));
+
+    const destination = admin ? "/admin/questions" : (returnTo ?? "/");
+    // Use window.location for a hard redirect — ensures middleware/auth state is fresh
+    window.location.href = destination;
   }
 
   async function signIn() {
@@ -301,7 +307,7 @@ export default function LoginClient() {
         <CardIcon>🔐</CardIcon>
         <Title>Sign In</Title>
         <Subtitle>
-          Access admin tools and question management. Admins are redirected automatically.
+          Sign in to access your exams, track progress, and review results.
         </Subtitle>
 
         <FieldGroup>

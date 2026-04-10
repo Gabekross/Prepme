@@ -358,7 +358,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
       <SectionLabel style={{ marginTop: 36 }}>Exam Simulations</SectionLabel>
 
       <Grid>
-        <ModeCard href={`/bank/${bank.slug}/exam/set-a`} $variant="exam">
+        <ModeCard href={`/bank/${bank.slug}/exam/set-a/instructions`} $variant="exam">
           <ModeHeader>
             <ModeIcon $variant="exam">🅰️</ModeIcon>
             <ModeTitleGroup>
@@ -381,7 +381,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
           <CardCta $variant="exam">Start Set A →</CardCta>
         </ModeCard>
 
-        <ModeCard href={`/bank/${bank.slug}/exam/set-b`} $variant="exam">
+        <ModeCard href={`/bank/${bank.slug}/exam/set-b/instructions`} $variant="exam">
           <ModeHeader>
             <ModeIcon $variant="exam">🅱️</ModeIcon>
             <ModeTitleGroup>
@@ -404,7 +404,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
           <CardCta $variant="exam">Start Set B →</CardCta>
         </ModeCard>
 
-        <ModeCard href={`/bank/${bank.slug}/exam/set-c`} $variant="exam">
+        <ModeCard href={`/bank/${bank.slug}/exam/set-c/instructions`} $variant="exam">
           <ModeHeader>
             <ModeIcon $variant="exam">🅾️</ModeIcon>
             <ModeTitleGroup>

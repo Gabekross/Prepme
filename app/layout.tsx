@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import StyledComponentsRegistry from "@/lib/styled-registry";
 import { AppShell } from "@/ui/AppShell";
 import { ThemeClient } from "@/ui/ThemeClient";
+import { AuthProvider } from "@/lib/auth/AuthProvider";
 
 export const metadata: Metadata = {
   title: {
@@ -29,11 +30,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body style={{ margin: 0, padding: 0 }}>
         <StyledComponentsRegistry>
           <ThemeClient>
-            <AppShell>{children}</AppShell>
+            <AuthProvider>
+              <AppShell>{children}</AppShell>
+            </AuthProvider>
           </ThemeClient>
         </StyledComponentsRegistry>
       </body>

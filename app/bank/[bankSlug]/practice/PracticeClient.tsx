@@ -5,6 +5,7 @@ import styled from "styled-components";
 import type { Question, Scenario } from "@/src/exam-engine/core/types";
 import { EngineRunner } from "@/src/exam-engine/ui/EngineRunner";
 import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
+import { useAuth } from "@/lib/auth/AuthProvider";
 import { pmpBank } from "@/src/exam-engine/data/seed.pmp";
 import { setABank } from "@/src/exam-engine/data/seed.set-a";
 
@@ -20,6 +21,7 @@ const P = styled.p`
 `;
 
 export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
+  const { user } = useAuth();
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [msg, setMsg] = useState("Loading questions…");
@@ -58,6 +60,8 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
       mode="practice"
       allowDomainFilter
       storageNamespace={`${bankSlug}__practice`}
+      userId={user?.id}
+      bankSlug={bankSlug}
     />
   );
 }
