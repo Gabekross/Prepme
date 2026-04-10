@@ -63,6 +63,10 @@ export class LocalAttemptStorage implements AttemptStorage {
 
       // Needed for deterministic option ordering
       optionOrderByQuestionId: attempt.optionOrderByQuestionId ?? {},
+
+      // Adaptive state (practice mode continuity)
+      ...(attempt.adaptiveState ? { adaptiveState: attempt.adaptiveState } : {}),
+      ...(attempt.confidenceByQuestionId ? { confidenceByQuestionId: attempt.confidenceByQuestionId } : {}),
     };
 
     return minimal as Attempt;

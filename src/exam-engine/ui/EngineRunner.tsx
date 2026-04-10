@@ -5,8 +5,10 @@ import styled, { keyframes } from "styled-components";
 import type { Blueprint, Domain, Question, Scenario, Response } from "../core/types";
 import { useExamSession } from "../hooks/useExamSession";
 import { QuestionRenderer } from "./QuestionRenderer";
-import { scoreAttempt } from "../core/scoring";
+import { scoreAttempt, scoreQuestion } from "../core/scoring";
 import { LocalAttemptStorage } from "../core/storage";
+import { computeAdaptiveSummary, type AdaptiveSummary } from "../core/analytics";
+import { AdaptiveResults } from "./AdaptiveResults";
 
 /* ── animations ─────────────────────────────────────────────────────────── */
 
@@ -1347,6 +1349,18 @@ export function EngineRunner(props: {
     return scoreAttempt(engine.attempt, qs);
   }, [engine.attempt, engine.bank]);
 
+  const adaptiveSummary: AdaptiveSummary | null = useMemo(() => {
+    try {
+      if (!engine.attempt || !engine.bank) return null;
+      if (!engine.attempt.submittedAt) return null;
+      const qs = engine.bank.filter((q) => engine.attempt!.questionOrder.includes(q.id));
+      return computeAdaptiveSummary(engine.attempt, qs);
+    } catch (e) {
+      console.warn("[Adaptive] Summary computation failed:", e);
+      return null;
+    }
+  }, [engine.attempt, engine.bank]);
+
   useEffect(() => {
     if (mode !== "exam") return;
     if (engine.attempt?.submittedAt) setExamView("review_list");
@@ -1451,6 +1465,13 @@ export function EngineRunner(props: {
         setRevealed((prev) => ({ ...prev, [currentId]: true }));
         setSubmittedQ((prev) => ({ ...prev, [currentId]: true }));
         setShowExplain((prev) => ({ ...prev, [currentId]: false }));
+        // Record adaptive result for streak/weakness tracking
+        try {
+          if (current) {
+            const sr = scoreQuestion(current, engine.getResponse(currentId));
+            engine.recordAdaptiveResult(currentId, sr.isCorrect);
+          }
+        } catch { /* never block the main flow */ }
         if (isLast) engine.submitAttempt();
         return;
       }
@@ -1708,6 +1729,18 @@ export function EngineRunner(props: {
                 <StatValue>{result.maxScore > 0 ? Math.round((result.totalScore / result.maxScore) * 100) : 0}%</StatValue>
               </StatBox>
             </StatGrid>
+            {adaptiveSummary && (
+              <StatGrid style={{ marginTop: 8 }}>
+                <StatBox $variant="neutral">
+                  <StatLabel>Weighted</StatLabel>
+                  <StatValue>{adaptiveSummary.weighted.weightedPercent}%</StatValue>
+                </StatBox>
+                <StatBox $variant="neutral">
+                  <StatLabel>Avg Diff</StatLabel>
+                  <StatValue>{adaptiveSummary.weighted.avgDifficulty}</StatValue>
+                </StatBox>
+              </StatGrid>
+            )}
             <Divider />
             <ActionRow>
               <RetakeBtn onClick={retakePractice} style={{ flex: 1 }}>↺ New Session</RetakeBtn>
@@ -1781,6 +1814,14 @@ export function EngineRunner(props: {
                       );
                     })}
                 </DomainTable>
+              </>
+            )}
+
+            {/* Adaptive insights for exam results */}
+            {adaptiveSummary && (
+              <>
+                <Divider />
+                <AdaptiveResults summary={adaptiveSummary} passThreshold={passThreshold} />
               </>
             )}
 
@@ -1900,6 +1941,13 @@ export function EngineRunner(props: {
               )}
             </CompleteActions>
           </CompleteCard>
+        )}
+
+        {/* ADAPTIVE RESULTS — practice complete */}
+        {practiceSubmitted && adaptiveSummary && (
+          <Card>
+            <AdaptiveResults summary={adaptiveSummary} passThreshold={passThreshold} />
+          </Card>
         )}
 
         {/* NORMAL mode: practice or pre-submit exam */}

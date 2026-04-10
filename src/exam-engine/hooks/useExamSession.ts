@@ -1,10 +1,21 @@
 "use client";
 
 import { create } from "zustand";
-import type { Attempt, Blueprint, Mode, Question, Response, Domain } from "../core/types";
+import type { Attempt, AdaptiveState, Blueprint, Difficulty, Mode, Question, Response, Domain } from "../core/types";
 import { createAttempt } from "../core/attempt";
-import { scoreAttempt } from "../core/scoring";
+import { scoreAttempt, scoreQuestion } from "../core/scoring";
 import { LocalAttemptStorage } from "../core/storage";
+import {
+  createAdaptiveSessionState,
+  updateStreakState,
+  selectNextAdaptiveQuestion,
+  buildAdaptiveCandidatePool,
+  type AdaptiveSessionState,
+} from "../core/adaptiveSelection";
+import { weightedScoreAttempt } from "../core/weightedScoring";
+import { computeTopicStats, getTopicWeaknessMap } from "../core/topicAnalytics";
+import { DEFAULT_DIFFICULTY } from "../core/adaptiveConfig";
+import { adaptiveDebug } from "../core/adaptiveDebug";
 
 type DomainFilter = Domain | "all";
 
@@ -33,8 +44,8 @@ type State = {
   // ✅ NEW: attempt storage namespace (bank+mode)
   storageNamespace: string;
 
-  
-  
+  /** Adaptive engine state for practice mode. */
+  adaptiveSession: AdaptiveSessionState | null;
 
   initIfNeeded: (args: InitArgs) => Promise<void>;
   setDomainFilter: (d: DomainFilter) => void;
@@ -67,6 +78,17 @@ type State = {
   submitAttempt: () => void;
   goToIndex: (index: number) => void;
   recordTimeOnQuestion: (qid: string, ms: number) => void;
+
+  /**
+   * Record an answer AND update adaptive state (streak, weakness tracking).
+   * Call this after revealing the answer in practice mode.
+   */
+  recordAdaptiveResult: (qid: string, isCorrect: boolean) => void;
+
+  /**
+   * Set confidence level for a specific question.
+   */
+  setConfidence: (qid: string, level: "low" | "medium" | "high") => void;
 
   /**
    * Explicitly destroy the current in-progress session.
@@ -134,6 +156,33 @@ function isStaleAttempt(existing: Attempt, bank: Question[]) {
   return overlap < minRequired;
 }
 
+/** Rebuild adaptive weakness maps from current attempt state. */
+function rebuildAdaptiveWeakness(
+  attempt: Attempt,
+  questions: Question[],
+  session: AdaptiveSessionState,
+): AdaptiveSessionState {
+  const qs = questions.filter((q) => attempt.questionOrder.includes(q.id));
+  if (!qs.length) return session;
+
+  const weighted = weightedScoreAttempt(attempt, qs);
+
+  // Domain weakness: invert weighted percent (100% = 0 weakness)
+  const domainWeakness = { ...session.domainWeakness };
+  for (const d of ["people", "process", "business_environment"] as Domain[]) {
+    const stats = weighted.byDomain[d];
+    if (stats.total > 0) {
+      domainWeakness[d] = 1 - stats.weightedPercent / 100;
+    }
+  }
+
+  // Topic weakness
+  const topicStats = computeTopicStats(weighted.scoreResults, qs);
+  const topicWeakness = getTopicWeaknessMap(topicStats);
+
+  return { ...session, domainWeakness, topicWeakness };
+}
+
 export const useExamSession = create<State>((set, get) => ({
   bank: null,
   picked: null,
@@ -144,12 +193,45 @@ export const useExamSession = create<State>((set, get) => ({
 
   storageNamespace: "default",
 
+  adaptiveSession: null,
+
   initIfNeeded: async ({ bank, defaultBlueprint, mode, storageNamespace }) => {
     const ns = storageNamespace ?? "default";
     set({ storageNamespace: ns });
 
     const storage = makeStorage(ns);
     const existing = storage ? await storage.loadLatestAttempt() : null;
+
+    // Initialize adaptive session for practice mode (safe: never throws)
+    const initAdaptive = (att: Attempt, qs: Question[]) => {
+      try {
+        if (mode !== "practice") { set({ adaptiveSession: null }); return; }
+        let session = createAdaptiveSessionState();
+        // Restore from persisted adaptive state if available
+        if (att.adaptiveState) {
+          session = {
+            ...session,
+            consecutiveCorrect: att.adaptiveState.consecutiveCorrect ?? 0,
+            consecutiveWrong: att.adaptiveState.consecutiveWrong ?? 0,
+            targetDifficulty: att.adaptiveState.targetDifficulty ?? DEFAULT_DIFFICULTY,
+            recentQuestionIds: att.adaptiveState.recentQuestionIds ?? [],
+            recentDomains: (att.adaptiveState.recentDomains ?? []) as Domain[],
+          };
+        }
+        // Rebuild weakness maps from current progress
+        session = rebuildAdaptiveWeakness(att, qs, session);
+        set({ adaptiveSession: session });
+        adaptiveDebug.dumpState("Init adaptive session", {
+          targetDifficulty: session.targetDifficulty,
+          streak: `${session.consecutiveCorrect}✓ ${session.consecutiveWrong}✗`,
+          domainWeakness: session.domainWeakness,
+        });
+      } catch (e) {
+        // Never let adaptive init failure block the main exam flow
+        console.warn("[Adaptive] Init failed, continuing without adaptive state:", e);
+        set({ adaptiveSession: null });
+      }
+    };
 
     // stale-attempt guard
     if (existing && isStaleAttempt(existing, bank)) {
@@ -166,6 +248,7 @@ export const useExamSession = create<State>((set, get) => ({
         picked: created.questions,
         questions: filtered,
       });
+      initAdaptive(nextAttempt, created.questions);
 
       if (storage) await storage.saveAttempt(nextAttempt);
       return;
@@ -186,6 +269,7 @@ export const useExamSession = create<State>((set, get) => ({
         picked,
         questions: filtered,
       });
+      initAdaptive(nextAttempt, bank);
 
       storage?.saveAttempt(nextAttempt);
       return;
@@ -205,6 +289,7 @@ export const useExamSession = create<State>((set, get) => ({
       picked: created.questions,
       questions: filtered,
     });
+    initAdaptive(nextAttempt, created.questions);
 
     if (storage) await storage.saveAttempt(nextAttempt);
   },
@@ -252,6 +337,7 @@ export const useExamSession = create<State>((set, get) => ({
       attempt: nextAttempt,
       picked: created.questions,
       questions: filtered,
+      adaptiveSession: mode === "practice" ? createAdaptiveSessionState() : null,
     });
 
     await storage?.saveAttempt(nextAttempt);
@@ -278,6 +364,7 @@ export const useExamSession = create<State>((set, get) => ({
       attempt: nextAttempt,
       picked: created.questions,
       questions: filtered,
+      adaptiveSession: mode === "practice" ? createAdaptiveSessionState() : null,
     });
 
     makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
@@ -463,6 +550,50 @@ export const useExamSession = create<State>((set, get) => ({
     makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
   },
 
+  recordAdaptiveResult: (qid: string, isCorrect: boolean) => {
+    try {
+      const att = get().attempt;
+      const session = get().adaptiveSession;
+      const bank = get().bank;
+      if (!att || !session || !bank || att.mode !== "practice") return;
+
+      const q = bank.find((bq) => bq.id === qid);
+      if (!q) return;
+
+      // Update streak and difficulty target
+      let nextSession = updateStreakState(session, qid, q.domain, isCorrect);
+
+      // Rebuild weakness maps periodically (every answer in practice mode)
+      nextSession = rebuildAdaptiveWeakness(att, bank, nextSession);
+
+      // Persist adaptive state into the attempt
+      const adaptiveState: AdaptiveState = {
+        consecutiveCorrect: nextSession.consecutiveCorrect,
+        consecutiveWrong: nextSession.consecutiveWrong,
+        targetDifficulty: nextSession.targetDifficulty,
+        recentQuestionIds: nextSession.recentQuestionIds,
+        recentDomains: nextSession.recentDomains,
+      };
+      const nextAttempt = { ...att, adaptiveState };
+
+      set({ adaptiveSession: nextSession, attempt: nextAttempt });
+      makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
+    } catch (e) {
+      console.warn("[Adaptive] recordAdaptiveResult failed:", e);
+    }
+  },
+
+  setConfidence: (qid: string, level: "low" | "medium" | "high") => {
+    const att = get().attempt;
+    if (!att) return;
+
+    const confidenceByQuestionId = { ...(att.confidenceByQuestionId ?? {}), [qid]: level };
+    const nextAttempt = { ...att, confidenceByQuestionId };
+
+    set({ attempt: nextAttempt });
+    makeStorage(get().storageNamespace)?.saveAttempt(nextAttempt);
+  },
+
   resetSession: async () => {
     const att = get().attempt;
     const ns = get().storageNamespace;
@@ -470,6 +601,6 @@ export const useExamSession = create<State>((set, get) => ({
     if (att && !att.submittedAt) {
       await makeStorage(ns)?.clearLatest();
     }
-    set({ attempt: null, picked: null, questions: null, bank: null });
+    set({ attempt: null, picked: null, questions: null, bank: null, adaptiveSession: null });
   },
 }));

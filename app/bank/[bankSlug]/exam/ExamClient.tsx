@@ -6,6 +6,7 @@ import type { Question, Scenario, SetId } from "@/src/exam-engine/core/types";
 import type { BankConfig } from "@/src/exam-engine/data/loadFromSupabase";
 import { EngineRunner } from "@/src/exam-engine/ui/EngineRunner";
 import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
+import { balanceSimulationBlueprint } from "@/src/exam-engine/core/simulationBalance";
 import { pmpBank } from "@/src/exam-engine/data/seed.pmp";
 import { setABank } from "@/src/exam-engine/data/seed.set-a";
 import { setBBank } from "@/src/exam-engine/data/seed.set-b";
@@ -124,11 +125,11 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
       }
       questions={questions}
       scenarios={scenarios}
-      blueprint={{
+      blueprint={balanceSimulationBlueprint({
         total: 180,
         domains: { people: 76, process: 90, business_environment: 14 },
         ...(resolvedSetId ? { setId: resolvedSetId } : {}),
-      }}
+      })}
       mode="exam"
       allowDomainFilter={false}
       storageNamespace={namespaceKey}

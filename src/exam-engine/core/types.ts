@@ -87,6 +87,16 @@ export type Blueprint = {
   passThreshold?: number;
 };
 
+export type ConfidenceLevel = "low" | "medium" | "high";
+
+export type AdaptiveState = {
+  consecutiveCorrect: number;
+  consecutiveWrong: number;
+  targetDifficulty: Difficulty;
+  recentQuestionIds: string[];
+  recentDomains: Domain[];
+};
+
 export type Attempt = {
   id: string;
   mode: Mode;
@@ -102,6 +112,10 @@ export type Attempt = {
   flagged: Record<string, boolean>;
   timeSpentMsByQuestionId: Record<string, number>;
   submittedAt?: string | null;
+  /** Per-question confidence level (optional, keyed by question ID). */
+  confidenceByQuestionId?: Record<string, ConfidenceLevel>;
+  /** Adaptive engine session state, persisted for practice mode continuity. */
+  adaptiveState?: AdaptiveState;
 };
 
 export type ScoreResult = { questionId: string; isCorrect: boolean; score: number; maxScore: number; details?: any };
