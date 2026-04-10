@@ -1,9 +1,17 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+
+/* ── animations ─────────────────────────────────────────────────────────── */
+
+const fadeUp = keyframes`
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
 
 /* ── layout ─────────────────────────────────────────────────────────────── */
 
@@ -11,11 +19,12 @@ const PageWrap = styled.div`
   display: flex;
   justify-content: center;
   padding: 32px 16px 64px;
+  animation: ${fadeUp} 400ms ease both;
 `;
 
 const Card = styled.div`
   width: 100%;
-  max-width: 440px;
+  max-width: 420px;
   background: ${(p) => p.theme.cardBg};
   border: 1px solid ${(p) => p.theme.cardBorder};
   border-radius: 24px;
@@ -64,6 +73,34 @@ const Subtitle = styled.p`
   line-height: 1.5;
 `;
 
+/* ── tabs ────────────────────────────────────────────────────────────────── */
+
+const TabRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin-bottom: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid ${(p) => p.theme.cardBorder};
+`;
+
+const Tab = styled.button<{ $active: boolean }>`
+  padding: 11px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 150ms ease;
+  background: ${(p) => (p.$active ? p.theme.accent : p.theme.buttonBg)};
+  color: ${(p) => (p.$active ? "white" : p.theme.muted)};
+
+  &:hover:not(:disabled) {
+    background: ${(p) => (p.$active ? p.theme.accent : p.theme.buttonHover)};
+    color: ${(p) => (p.$active ? "white" : p.theme.text)};
+  }
+`;
+
 /* ── form fields ─────────────────────────────────────────────────────────── */
 
 const FieldGroup = styled.div`
@@ -85,9 +122,11 @@ const Input = styled.input`
   border: 1px solid ${(p) => p.theme.inputBorder};
   background: ${(p) => p.theme.inputBg};
   color: ${(p) => p.theme.text};
-  padding: 10px 14px;
+  padding: 11px 14px;
   font-size: 14px;
   outline: none;
+  width: 100%;
+  box-sizing: border-box;
   transition: border-color 150ms ease, box-shadow 150ms ease;
 
   &::placeholder {
@@ -102,62 +141,31 @@ const Input = styled.input`
 
 /* ── buttons ─────────────────────────────────────────────────────────────── */
 
-const ButtonRow = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-`;
-
 const PrimaryButton = styled.button`
+  width: 100%;
   border-radius: 12px;
   border: 1px solid transparent;
-  background: ${(p) => p.theme.accent};
+  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
   color: white;
-  padding: 11px 16px;
+  padding: 12px 16px;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  transition: background 150ms ease, transform 100ms ease, opacity 150ms ease;
+  transition: opacity 150ms ease, transform 100ms ease;
 
   &:hover:not(:disabled) {
-    background: ${(p) => p.theme.accentHover};
+    opacity: 0.9;
     transform: translateY(-1px);
   }
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-`;
-
-const SecondaryButton = styled.button`
-  border-radius: 12px;
-  border: 1px solid ${(p) => p.theme.buttonBorder};
-  background: ${(p) => p.theme.buttonBg};
-  color: ${(p) => p.theme.text};
-  padding: 11px 16px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 150ms ease;
-
-  &:hover:not(:disabled) {
-    background: ${(p) => p.theme.buttonHover};
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    transform: none;
   }
 `;
 
 /* ── feedback ────────────────────────────────────────────────────────────── */
-
-const Divider = styled.div`
-  height: 1px;
-  background: ${(p) => p.theme.divider};
-  margin: 24px 0;
-`;
 
 const Msg = styled.div<{ $type?: "success" | "error" | "info" }>`
   padding: 12px 14px;
@@ -165,6 +173,7 @@ const Msg = styled.div<{ $type?: "success" | "error" | "info" }>`
   font-size: 13.5px;
   line-height: 1.5;
   font-weight: 600;
+  margin-top: 14px;
   border: 1px solid ${(p) =>
     p.$type === "success"
       ? p.theme.successBorder
@@ -185,44 +194,45 @@ const Msg = styled.div<{ $type?: "success" | "error" | "info" }>`
       : p.theme.text};
 `;
 
-const SectionTitle = styled.h2`
-  margin: 0 0 14px;
-  font-size: 16px;
-  font-weight: 800;
-  color: ${(p) => p.theme.text};
-  letter-spacing: -0.2px;
+const LinkRow = styled.div`
+  margin-top: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: ${(p) => p.theme.muted};
 `;
 
-const OutlineButton = styled.button`
-  border-radius: 12px;
-  border: 1px solid ${(p) => p.theme.accent}40;
-  background: ${(p) => p.theme.accentSoft};
+const TextLink = styled(Link)`
   color: ${(p) => p.theme.accent};
-  padding: 11px 16px;
-  font-size: 14px;
   font-weight: 700;
-  cursor: pointer;
-  transition: background 150ms ease;
-  width: 100%;
+  text-decoration: none;
 
-  &:hover:not(:disabled) {
-    background: ${(p) => p.theme.accent};
-    color: white;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  &:hover {
+    text-decoration: underline;
   }
 `;
+
+const PasswordHint = styled.div`
+  font-size: 12px;
+  color: ${(p) => p.theme.muted};
+  margin-top: -6px;
+`;
+
+/* ── helpers ─────────────────────────────────────────────────────────────── */
 
 function getMsgType(msg: string): "success" | "error" | "info" {
   if (!msg) return "info";
   const lower = msg.toLowerCase();
-  if (lower.includes("failed") || lower.includes("error") || lower.includes("not signed")) return "error";
-  if (lower.includes("signed in") || lower.includes("reset email sent") || lower.includes("signed up")) return "success";
+  if (lower.includes("failed") || lower.includes("error") || lower.includes("invalid")) return "error";
+  if (lower.includes("check your email") || lower.includes("signed in") || lower.includes("redirecting") || lower.includes("created")) return "success";
   return "info";
 }
+
+function getOrigin() {
+  if (typeof window !== "undefined") return window.location.origin;
+  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+}
+
+/* ── component ──────────────────────────────────────────────────────────── */
 
 export default function LoginClient() {
   const sb = useMemo(() => supabaseBrowser(), []);
@@ -230,9 +240,10 @@ export default function LoginClient() {
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("returnTo");
 
+  const [tab, setTab] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [resetEmail, setResetEmail] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [msg, setMsg] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
@@ -241,10 +252,7 @@ export default function LoginClient() {
     const { data } = await sb.auth.getUser();
     const user = data.user;
 
-    if (!user) {
-      // Not signed in — just stay on login page, no error message needed
-      return;
-    }
+    if (!user) return;
 
     const { data: roles, error } = await sb.from("user_roles").select("role").eq("user_id", user.id);
     if (error) {
@@ -255,18 +263,16 @@ export default function LoginClient() {
     const admin = (roles ?? []).some((r: any) => r.role === "admin");
     setMsg(admin ? "Signed in as admin. Redirecting..." : "Signed in. Redirecting...");
 
-    // Small delay to let the auth state propagate to the provider
     await new Promise((r) => setTimeout(r, 300));
 
-    const destination = admin ? "/admin/questions" : (returnTo ?? "/");
-    // Use window.location for a hard redirect — ensures middleware/auth state is fresh
+    const destination = admin ? "/admin/questions" : (returnTo ?? "/bank/pmp");
     window.location.href = destination;
   }
 
   async function signIn() {
     if (loading) return;
     setLoading(true);
-    setMsg("Signing in…");
+    setMsg("Signing in...");
     const { error } = await sb.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) return setMsg(`Sign in failed: ${error.message}`);
@@ -275,23 +281,30 @@ export default function LoginClient() {
 
   async function signUp() {
     if (loading) return;
+
+    if (password.length < 6) {
+      return setMsg("Password must be at least 6 characters.");
+    }
+
+    if (password !== confirmPassword) {
+      return setMsg("Passwords do not match.");
+    }
+
     setLoading(true);
-    setMsg("Creating account…");
-    const { error } = await sb.auth.signUp({ email, password });
+    setMsg("Creating account...");
+
+    const origin = getOrigin();
+    const { error } = await sb.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${origin}/auth/callback`,
+      },
+    });
+
     setLoading(false);
     if (error) return setMsg(`Sign up failed: ${error.message}`);
-    setMsg("Account created. Check your email to confirm, then sign in.");
-  }
-
-  async function requestPasswordReset() {
-    if (loading || !resetEmail) return;
-    setLoading(true);
-    setMsg("Sending reset email…");
-    const redirectTo = `${window.location.origin}/reset-password`;
-    const { error } = await sb.auth.resetPasswordForEmail(resetEmail, { redirectTo });
-    setLoading(false);
-    if (error) return setMsg(`Reset failed: ${error.message}`);
-    setMsg("Reset email sent. Check your inbox.");
+    setMsg("Check your email for a confirmation link. Once confirmed, come back and sign in.");
   }
 
   React.useEffect(() => {
@@ -299,16 +312,28 @@ export default function LoginClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const hasCredentials = !!email && !!password;
+  const hasSignInFields = !!email && !!password;
+  const hasSignUpFields = !!email && !!password && !!confirmPassword;
 
   return (
     <PageWrap>
       <Card>
-        <CardIcon>🔐</CardIcon>
-        <Title>Sign In</Title>
+        <CardIcon>{tab === "signin" ? "\uD83D\uDD10" : "\uD83D\uDE80"}</CardIcon>
+        <Title>{tab === "signin" ? "Welcome Back" : "Create Account"}</Title>
         <Subtitle>
-          Sign in to access your exams, track progress, and review results.
+          {tab === "signin"
+            ? "Sign in to continue your PMP exam preparation."
+            : "Create a free account to track your progress and access exam simulations."}
         </Subtitle>
+
+        <TabRow>
+          <Tab $active={tab === "signin"} onClick={() => { setTab("signin"); setMsg(""); }}>
+            Sign In
+          </Tab>
+          <Tab $active={tab === "signup"} onClick={() => { setTab("signup"); setMsg(""); }}>
+            Create Account
+          </Tab>
+        </TabRow>
 
         <FieldGroup>
           <Label>
@@ -329,49 +354,70 @@ export default function LoginClient() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              autoComplete="current-password"
-              onKeyDown={(e) => e.key === "Enter" && hasCredentials && signIn()}
+              autoComplete={tab === "signin" ? "current-password" : "new-password"}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && tab === "signin" && hasSignInFields) signIn();
+              }}
             />
           </Label>
+
+          {tab === "signup" && (
+            <>
+              <Label>
+                Confirm password
+                <Input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && hasSignUpFields) signUp();
+                  }}
+                />
+              </Label>
+              <PasswordHint>
+                Minimum 6 characters
+              </PasswordHint>
+            </>
+          )}
         </FieldGroup>
 
-        <ButtonRow>
-          <PrimaryButton onClick={signIn} disabled={!hasCredentials || loading}>
-            {loading ? "Signing in…" : "Sign In"}
+        {tab === "signin" ? (
+          <PrimaryButton onClick={signIn} disabled={!hasSignInFields || loading}>
+            {loading ? "Signing in..." : "Sign In"}
           </PrimaryButton>
-          <SecondaryButton onClick={signUp} disabled={!hasCredentials || loading}>
-            Sign Up
-          </SecondaryButton>
-        </ButtonRow>
-
-        {msg && (
-          <Msg $type={getMsgType(msg)} style={{ marginTop: 14 }}>
-            {msg}
-          </Msg>
+        ) : (
+          <PrimaryButton onClick={signUp} disabled={!hasSignUpFields || loading}>
+            {loading ? "Creating account..." : "Create Free Account"}
+          </PrimaryButton>
         )}
 
-        <Divider />
+        {msg && <Msg $type={getMsgType(msg)}>{msg}</Msg>}
 
-        <SectionTitle>Forgot Password?</SectionTitle>
+        {tab === "signin" && (
+          <LinkRow>
+            <TextLink href="/forgot-password">Forgot your password?</TextLink>
+          </LinkRow>
+        )}
 
-        <Label style={{ marginBottom: 12 }}>
-          Email address
-          <Input
-            type="email"
-            value={resetEmail}
-            onChange={(e) => setResetEmail(e.target.value)}
-            placeholder="you@example.com"
-            autoComplete="email"
-          />
-        </Label>
+        {tab === "signin" && (
+          <LinkRow>
+            Don&apos;t have an account?{" "}
+            <TextLink href="#" onClick={(e) => { e.preventDefault(); setTab("signup"); setMsg(""); }}>
+              Sign up for free
+            </TextLink>
+          </LinkRow>
+        )}
 
-        <OutlineButton onClick={requestPasswordReset} disabled={!resetEmail || loading}>
-          Send Reset Email
-        </OutlineButton>
-
-        <Subtitle style={{ marginTop: 12, marginBottom: 0, fontSize: 12 }}>
-          You'll receive a link that opens <strong>/reset-password</strong> where you can set a new password.
-        </Subtitle>
+        {tab === "signup" && (
+          <LinkRow>
+            Already have an account?{" "}
+            <TextLink href="#" onClick={(e) => { e.preventDefault(); setTab("signin"); setMsg(""); }}>
+              Sign in
+            </TextLink>
+          </LinkRow>
+        )}
       </Card>
     </PageWrap>
   );

@@ -6,13 +6,30 @@ import { AuthProvider } from "@/lib/auth/AuthProvider";
 
 export const metadata: Metadata = {
   title: {
-    default: "ExamEngine — Master Your Exam",
-    template: "%s | ExamEngine",
+    default: "PMP Exam Simulator 2026 — Pass the PMP on Your First Attempt",
+    template: "%s | PMP Exam Simulator",
   },
   description:
-    "A professional exam preparation platform with practice mode, full exam simulations, and immediate answer feedback across multiple question types.",
-  keywords: ["exam preparation", "practice test", "exam simulation", "study tool"],
-  authors: [{ name: "ExamEngine" }],
+    "Free PMP mock exam with adaptive difficulty, real-time weakness targeting, and full timed simulations. 400+ questions, 6 question types, 3 exam simulations. PMBOK 7th Edition aligned.",
+  keywords: [
+    "PMP exam questions 2026",
+    "PMP mock exam free",
+    "PMP exam simulator",
+    "how to pass PMP first try",
+    "PMP practice test",
+    "PMP exam preparation",
+    "PMP study tool",
+    "PMP exam simulation",
+    "PMBOK 7th edition",
+    "PMP certification prep",
+  ],
+  authors: [{ name: "PMP Exam Simulator" }],
+  openGraph: {
+    title: "PMP Exam Simulator 2026 — Pass the PMP on Your First Attempt",
+    description:
+      "Train like the real PMP exam. Adaptive difficulty, weakness targeting, full timed simulations. Free to start.",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {
