@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+// Prevent Next.js from prerendering this route at build time
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/stats
  *
