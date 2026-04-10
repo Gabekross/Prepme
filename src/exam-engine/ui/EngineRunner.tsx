@@ -365,7 +365,7 @@ const LearnMoreBtn = styled.button`
   margin-top: 6px;
   text-align: center;
   transition: background 150ms ease;
-  display: none;
+  display: block;
 
   @media (min-width: 980px) {
     display: block;
@@ -1254,7 +1254,31 @@ export function EngineRunner(props: {
     setTimeRemaining(null);
 
     engine.initIfNeeded({ bank: questions, defaultBlueprint: blueprint, mode, storageNamespace })
-      .then(() => setInitialized(true));
+      .then(() => {
+        // For restored practice sessions, pre-populate revealed/submittedQ
+        // so that explanation buttons appear for previously answered questions.
+        if (mode === "practice") {
+          const att = engine.attempt;
+          if (att) {
+            const restoredRevealed: Record<string, boolean> = {};
+            const restoredSubmitted: Record<string, boolean> = {};
+            const qMap = new Map(questions.map((q) => [q.id, q]));
+            for (const qid of att.questionOrder) {
+              const resp = att.responsesByQuestionId[qid];
+              const q = qMap.get(qid);
+              if (q && resp && isAnswered(q, resp)) {
+                restoredRevealed[qid] = true;
+                restoredSubmitted[qid] = true;
+              }
+            }
+            if (Object.keys(restoredRevealed).length > 0) {
+              setRevealed(restoredRevealed);
+              setSubmittedQ(restoredSubmitted);
+            }
+          }
+        }
+        setInitialized(true);
+      });
 
     return () => {
       if (typeof window !== "undefined") {
@@ -1552,13 +1576,6 @@ export function EngineRunner(props: {
     <Grid>
       {/* ── LEFT SIDEBAR ───────────────────────────────────────── */}
       <Card>
-        <SideTitle>{title}</SideTitle>
-        <SideSubtitle>{subtitle}</SideSubtitle>
-
-        <ModeBadge $mode={mode}>
-          {mode === "practice" ? "Practice Mode" : "Exam Simulation"}
-        </ModeBadge>
-
         <ProgressSection>
           <ProgressHeader>
             <ProgressLabel>Progress</ProgressLabel>
@@ -1641,17 +1658,11 @@ export function EngineRunner(props: {
           </FlagBtn>
         )}
 
-        {mode === "practice" && currentId && submittedQ[currentId] && (
-          <LearnMoreBtn onClick={() => setShowExplain((prev) => ({ ...prev, [currentId]: !prev[currentId] }))}>
-            {showExplain[currentId] ? "▲ Hide Explanation" : "▼ Show Explanation"}
-          </LearnMoreBtn>
-        )}
-
         {/* Question grid toggle (practice only) */}
         {engine.attempt && mode === "practice" && (
           <>
             <Divider />
-            <LearnMoreBtn onClick={() => setShowQuestionGrid((v) => !v)} style={{ display: "block" }}>
+            <LearnMoreBtn onClick={() => setShowQuestionGrid((v) => !v)}>
               {showQuestionGrid ? "Hide Question Map" : "Show Question Map"}
             </LearnMoreBtn>
           </>
@@ -2003,6 +2014,30 @@ export function EngineRunner(props: {
               )}
             </Card>
 
+            {/* Show Explanation toggle — below the question card */}
+            {mode === "practice" && currentId && submittedQ[currentId] && (
+              <LearnMoreBtn onClick={() => setShowExplain((prev) => ({ ...prev, [currentId]: !prev[currentId] }))}>
+                {showExplain[currentId] ? "▲ Hide Explanation" : "▼ Show Explanation"}
+              </LearnMoreBtn>
+            )}
+
+            {mode === "practice" && current && currentId && showExplain[currentId] && (
+              <ExplanationCard>
+                <ExplanationHeader>
+                  <ExplanationIcon>?</ExplanationIcon>
+                  <div>
+                    <ExplanationTitle>Explanation</ExplanationTitle>
+                    <ExplanationSubtitle>Why this answer is correct</ExplanationSubtitle>
+                  </div>
+                </ExplanationHeader>
+                <ExplanationBody>
+                  {current.explanation?.trim()
+                    ? current.explanation
+                    : "No explanation has been provided for this question yet."}
+                </ExplanationBody>
+              </ExplanationCard>
+            )}
+
             {/* Mobile bottom navigation */}
             <MobileNavBar>
               <NavBtn
@@ -2037,23 +2072,6 @@ export function EngineRunner(props: {
                 </NavBtn>
               )}
             </MobileNavBar>
-
-            {mode === "practice" && current && currentId && showExplain[currentId] && (
-              <ExplanationCard>
-                <ExplanationHeader>
-                  <ExplanationIcon>?</ExplanationIcon>
-                  <div>
-                    <ExplanationTitle>Explanation</ExplanationTitle>
-                    <ExplanationSubtitle>Why this answer is correct</ExplanationSubtitle>
-                  </div>
-                </ExplanationHeader>
-                <ExplanationBody>
-                  {current.explanation?.trim()
-                    ? current.explanation
-                    : "No explanation has been provided for this question yet."}
-                </ExplanationBody>
-              </ExplanationCard>
-            )}
           </>
         )}
       </RightCol>
