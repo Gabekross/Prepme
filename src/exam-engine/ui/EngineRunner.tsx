@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import styled, { keyframes } from "styled-components";
 import type { Blueprint, Domain, Question, Scenario, Response } from "../core/types";
 import { useExamSession } from "../hooks/useExamSession";
@@ -701,6 +702,65 @@ const ConfirmReviewBtn = styled.button`
   }
 `;
 
+const ReviewToggleRow = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: ${(p) => p.theme.text};
+  cursor: pointer;
+  user-select: none;
+`;
+
+const ToggleSwitch = styled.div<{ $on: boolean }>`
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  background: ${(p) => (p.$on ? p.theme.accent : p.theme.inputBorder)};
+  position: relative;
+  transition: background 200ms ease;
+  flex-shrink: 0;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: ${(p) => (p.$on ? "20px" : "2px")};
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    transition: left 200ms ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+`;
+
+const SectionToggleBtn = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: none;
+  background: none;
+  color: ${(p) => p.theme.text};
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 8px 0;
+  transition: opacity 150ms ease;
+
+  &:hover { opacity: 0.7; }
+`;
+
+const SectionArrow = styled.span<{ $open: boolean }>`
+  display: inline-block;
+  font-size: 12px;
+  transition: transform 200ms ease;
+  transform: ${(p) => (p.$open ? "rotate(180deg)" : "rotate(0)")};
+`;
+
 /* ── explanation card ────────────────────────────────────────────────────── */
 
 const ExplanationCard = styled.div`
@@ -1201,6 +1261,7 @@ export function EngineRunner(props: {
   const { title, subtitle, questions, scenarios, blueprint, mode, storageNamespace,
           durationMinutes, passThreshold = 70, userId, bankSlug, setId } = props;
   const engine = useExamSession();
+  const router = useRouter();
 
   const [initialized, setInitialized] = useState(false);
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
@@ -1214,6 +1275,10 @@ export function EngineRunner(props: {
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [timerWarning, setTimerWarning] = useState<"none" | "low" | "critical">("none");
   const [showProcessing, setShowProcessing] = useState(false);
+  const [showReviewAfterSubmit, setShowReviewAfterSubmit] = useState(true);
+  const [showDomainSection, setShowDomainSection] = useState(true);
+  const [showInsightsSection, setShowInsightsSection] = useState(false);
+  const [showQuestionList, setShowQuestionList] = useState(false);
 
   const questionEntryRef = useRef<{ qid: string; enteredAt: number } | null>(null);
 
@@ -1515,7 +1580,12 @@ export function EngineRunner(props: {
     engine.submitAttempt();
     persistResult();
     if (mode === "exam") {
-      setShowProcessing(true);
+      if (showReviewAfterSubmit) {
+        setShowProcessing(true);
+      } else {
+        // Skip review — go to dashboard
+        router.push("/dashboard");
+      }
     }
   }
 
@@ -1597,15 +1667,18 @@ export function EngineRunner(props: {
     <Grid>
       {/* ── LEFT SIDEBAR ───────────────────────────────────────── */}
       <Card>
-        <ProgressSection>
-          <ProgressHeader>
-            <ProgressLabel>Progress</ProgressLabel>
-            <ProgressCounter>{x} / {total}</ProgressCounter>
-          </ProgressHeader>
-          <ProgressTrack>
-            <ProgressFill $pct={progressPct} $mode={mode} />
-          </ProgressTrack>
-        </ProgressSection>
+        {/* Hide progress bar after submission */}
+        {!engine.attempt?.submittedAt && (
+          <ProgressSection>
+            <ProgressHeader>
+              <ProgressLabel>Progress</ProgressLabel>
+              <ProgressCounter>{x} / {total}</ProgressCounter>
+            </ProgressHeader>
+            <ProgressTrack>
+              <ProgressFill $pct={progressPct} $mode={mode} />
+            </ProgressTrack>
+          </ProgressSection>
+        )}
 
         {/* ── Timer (exam mode only) ──────────────────────── */}
         {mode === "exam" && !engine.attempt?.submittedAt && timeRemaining !== null && (
@@ -1679,8 +1752,8 @@ export function EngineRunner(props: {
           </FlagBtn>
         )}
 
-        {/* Question grid toggle (practice only) */}
-        {engine.attempt && mode === "practice" && (
+        {/* Question grid toggle (practice, or exam after submission) */}
+        {engine.attempt && (mode === "practice" || (mode === "exam" && !!engine.attempt.submittedAt)) && (
           <>
             <Divider />
             <LearnMoreBtn onClick={() => setShowQuestionGrid((v) => !v)}>
@@ -1689,8 +1762,8 @@ export function EngineRunner(props: {
           </>
         )}
 
-        {/* Question jump grid — practice only, toggled */}
-        {engine.attempt && mode === "practice" && showQuestionGrid && (
+        {/* Question jump grid — practice or exam review, toggled */}
+        {engine.attempt && (mode === "practice" || (mode === "exam" && !!engine.attempt.submittedAt)) && showQuestionGrid && (
           <>
             <SectionTitle style={{ marginTop: 10 }}>Questions</SectionTitle>
             <QGridWrap>
@@ -1856,39 +1929,50 @@ export function EngineRunner(props: {
               </ResultsStatRow>
             )}
 
-            {/* Domain breakdown */}
+            {/* Domain breakdown — collapsible */}
             {result && (
               <>
                 <Divider />
-                <SectionTitle style={{ marginBottom: 10 }}>Score by Domain</SectionTitle>
-                <DomainTable>
-                  {(Object.entries(result.byDomain) as [string, { correct: number; total: number }][])
-                    .filter(([, d]) => d.total > 0)
-                    .map(([domain, d]) => {
-                      const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
-                      const pass = pct >= passThreshold;
-                      return (
-                        <React.Fragment key={domain}>
-                          <DomainRow>
-                            <DomainName>{DOMAIN_LABELS[domain] ?? domain}</DomainName>
-                            <DomainScore>{d.correct}/{d.total}</DomainScore>
-                            <DomainPct $pass={pass}>{pct}%</DomainPct>
-                          </DomainRow>
-                          <DomainTrack>
-                            <DomainFill $pct={pct} $pass={pass} />
-                          </DomainTrack>
-                        </React.Fragment>
-                      );
-                    })}
-                </DomainTable>
+                <SectionToggleBtn onClick={() => setShowDomainSection((v) => !v)}>
+                  Score by Domain
+                  <SectionArrow $open={showDomainSection}>▼</SectionArrow>
+                </SectionToggleBtn>
+                {showDomainSection && (
+                  <DomainTable>
+                    {(Object.entries(result.byDomain) as [string, { correct: number; total: number }][])
+                      .filter(([, d]) => d.total > 0)
+                      .map(([domain, d]) => {
+                        const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
+                        const pass = pct >= passThreshold;
+                        return (
+                          <React.Fragment key={domain}>
+                            <DomainRow>
+                              <DomainName>{DOMAIN_LABELS[domain] ?? domain}</DomainName>
+                              <DomainScore>{d.correct}/{d.total}</DomainScore>
+                              <DomainPct $pass={pass}>{pct}%</DomainPct>
+                            </DomainRow>
+                            <DomainTrack>
+                              <DomainFill $pct={pct} $pass={pass} />
+                            </DomainTrack>
+                          </React.Fragment>
+                        );
+                      })}
+                  </DomainTable>
+                )}
               </>
             )}
 
-            {/* Adaptive insights for exam results */}
+            {/* Adaptive insights — collapsible */}
             {adaptiveSummary && (
               <>
                 <Divider />
-                <AdaptiveResults summary={adaptiveSummary} passThreshold={passThreshold} />
+                <SectionToggleBtn onClick={() => setShowInsightsSection((v) => !v)}>
+                  Adaptive Insights
+                  <SectionArrow $open={showInsightsSection}>▼</SectionArrow>
+                </SectionToggleBtn>
+                {showInsightsSection && (
+                  <AdaptiveResults summary={adaptiveSummary} passThreshold={passThreshold} />
+                )}
               </>
             )}
 
@@ -1898,56 +1982,65 @@ export function EngineRunner(props: {
               <RetakeBtn onClick={retakeExam}>Retake Exam</RetakeBtn>
             </ActionRow>
 
+            {/* Question review — collapsible */}
             <Divider />
+            <SectionToggleBtn onClick={() => setShowQuestionList((v) => !v)}>
+              Question Review ({engine.attempt.questionOrder.length})
+              <SectionArrow $open={showQuestionList}>▼</SectionArrow>
+            </SectionToggleBtn>
 
-            <FilterToggleRow>
-              <FilterToggle $active={!incorrectOnly && !flaggedOnly}>
-                <FilterToggleBox
-                  type="radio"
-                  name="reviewFilter"
-                  checked={!incorrectOnly && !flaggedOnly}
-                  onChange={() => { setIncorrectOnly(false); setFlaggedOnly(false); }}
-                />
-                All ({engine.attempt.questionOrder.length})
-              </FilterToggle>
-              <FilterToggle $active={incorrectOnly}>
-                <FilterToggleBox
-                  type="radio"
-                  name="reviewFilter"
-                  checked={incorrectOnly}
-                  onChange={() => { setIncorrectOnly(true); setFlaggedOnly(false); }}
-                />
-                Incorrect ({incorrectCount})
-              </FilterToggle>
-              {flaggedCount > 0 && (
-                <FilterToggle $active={flaggedOnly}>
-                  <FilterToggleBox
-                    type="radio"
-                    name="reviewFilter"
-                    checked={flaggedOnly}
-                    onChange={() => { setFlaggedOnly(true); setIncorrectOnly(false); }}
-                  />
-                  Flagged ({flaggedCount})
-                </FilterToggle>
-              )}
-            </FilterToggleRow>
+            {showQuestionList && (
+              <>
+                <FilterToggleRow>
+                  <FilterToggle $active={!incorrectOnly && !flaggedOnly}>
+                    <FilterToggleBox
+                      type="radio"
+                      name="reviewFilter"
+                      checked={!incorrectOnly && !flaggedOnly}
+                      onChange={() => { setIncorrectOnly(false); setFlaggedOnly(false); }}
+                    />
+                    All ({engine.attempt.questionOrder.length})
+                  </FilterToggle>
+                  <FilterToggle $active={incorrectOnly}>
+                    <FilterToggleBox
+                      type="radio"
+                      name="reviewFilter"
+                      checked={incorrectOnly}
+                      onChange={() => { setIncorrectOnly(true); setFlaggedOnly(false); }}
+                    />
+                    Incorrect ({incorrectCount})
+                  </FilterToggle>
+                  {flaggedCount > 0 && (
+                    <FilterToggle $active={flaggedOnly}>
+                      <FilterToggleBox
+                        type="radio"
+                        name="reviewFilter"
+                        checked={flaggedOnly}
+                        onChange={() => { setFlaggedOnly(true); setIncorrectOnly(false); }}
+                      />
+                      Flagged ({flaggedCount})
+                    </FilterToggle>
+                  )}
+                </FilterToggleRow>
 
-            <ReviewList>
-              {reviewRows.map((r) => (
-                <ReviewItem key={r.qid} $ok={r.isCorrect} onClick={() => openReviewQuestion(r.idx)}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <ReviewItemMeta>
-                      Q{r.idx + 1} · {r.isCorrect ? "Correct" : "Incorrect"}
-                      {r.isFlagged && <ReviewFlagBadge> Flagged</ReviewFlagBadge>}
-                    </ReviewItemMeta>
-                    {r.promptPreview && <ReviewItemPrompt>{r.promptPreview}{r.promptPreview.length >= 72 ? "…" : ""}</ReviewItemPrompt>}
-                  </div>
-                  <ReviewStatusDot $ok={r.isCorrect}>
-                    {r.isCorrect ? "Correct" : "Wrong"}
-                  </ReviewStatusDot>
-                </ReviewItem>
-              ))}
-            </ReviewList>
+                <ReviewList>
+                  {reviewRows.map((r) => (
+                    <ReviewItem key={r.qid} $ok={r.isCorrect} onClick={() => openReviewQuestion(r.idx)}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <ReviewItemMeta>
+                          Q{r.idx + 1} · {r.isCorrect ? "Correct" : "Incorrect"}
+                          {r.isFlagged && <ReviewFlagBadge> Flagged</ReviewFlagBadge>}
+                        </ReviewItemMeta>
+                        {r.promptPreview && <ReviewItemPrompt>{r.promptPreview}{r.promptPreview.length >= 72 ? "…" : ""}</ReviewItemPrompt>}
+                      </div>
+                      <ReviewStatusDot $ok={r.isCorrect}>
+                        {r.isCorrect ? "Correct" : "Wrong"}
+                      </ReviewStatusDot>
+                    </ReviewItem>
+                  ))}
+                </ReviewList>
+              </>
+            )}
           </Card>
         )}
 
@@ -2133,6 +2226,11 @@ export function EngineRunner(props: {
               </ConfirmStat>
             </ConfirmStatGrid>
 
+            <ReviewToggleRow onClick={() => setShowReviewAfterSubmit((v) => !v)}>
+              <ToggleSwitch $on={showReviewAfterSubmit} />
+              Review answers after submission
+            </ReviewToggleRow>
+
             <ConfirmActions>
               {flaggedCount > 0 && (
                 <ConfirmReviewBtn onClick={() => {
@@ -2147,7 +2245,7 @@ export function EngineRunner(props: {
                 </ConfirmReviewBtn>
               )}
               <ConfirmSubmitBtn onClick={confirmSubmit}>
-                Submit Exam →
+                {showReviewAfterSubmit ? "Submit & Review →" : "Submit & Exit →"}
               </ConfirmSubmitBtn>
               <ConfirmCancelBtn onClick={() => setShowSubmitConfirm(false)}>
                 Cancel — Keep Reviewing
