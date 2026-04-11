@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import Link from "next/link";
+import { useUpgrade } from "@/lib/useUpgrade";
 
 /* ── animations ─────────────────────────────────────────────────────────── */
 
@@ -541,6 +542,27 @@ const PricingCTA = styled(Link)<{ $featured?: boolean }>`
   }
 `;
 
+const PricingCTABtn = styled.button<{ $featured?: boolean }>`
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: ${(p) =>
+    p.$featured
+      ? `linear-gradient(135deg, ${p.theme.accent}, #7c3aed)`
+      : p.theme.buttonBg};
+  border: 1px solid ${(p) => (p.$featured ? "transparent" : p.theme.buttonBorder)};
+  color: ${(p) => (p.$featured ? "white" : p.theme.text)};
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 150ms ease, transform 100ms ease;
+
+  &:hover { opacity: 0.9; transform: translateY(-1px); }
+  &:disabled { opacity: 0.5; cursor: wait; }
+`;
+
 /* ── growth hook CTA ────────────────────────────────────────────────────── */
 
 const CTABanner = styled.div`
@@ -762,6 +784,7 @@ const FAQ_DATA = [
 /* ── component ──────────────────────────────────────────────────────────── */
 
 export default function HomeClient() {
+  const { startCheckout, loading: checkoutLoading } = useUpgrade();
   const [stats, setStats] = useState<PlatformStats | null>(null);
 
   useEffect(() => {
@@ -1018,9 +1041,9 @@ export default function HomeClient() {
                 </PricingItem>
               ))}
             </PricingList>
-            <PricingCTA href="/bank/pmp" $featured>
-              Get Pro Access →
-            </PricingCTA>
+            <PricingCTABtn $featured onClick={startCheckout} disabled={checkoutLoading}>
+              {checkoutLoading ? "Redirecting…" : "Get Pro Access →"}
+            </PricingCTABtn>
           </PricingCard>
         </PricingGrid>
       </Section>

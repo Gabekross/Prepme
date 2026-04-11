@@ -5,6 +5,7 @@ import styled, { keyframes } from "styled-components";
 import Link from "next/link";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { useUpgrade } from "@/lib/useUpgrade";
 
 type Bank = { id: string; slug: string; name: string; description: string | null };
 
@@ -429,6 +430,7 @@ const P = styled.p`
 export default function BankClient({ bankSlug }: { bankSlug: string }) {
   const sb = useMemo(() => supabaseBrowser(), []);
   const { isPro } = useAuth();
+  const { startCheckout, loading: checkoutLoading } = useUpgrade();
   const [bank, setBank] = useState<Bank | null>(null);
   const [msg, setMsg] = useState("Loading…");
   const [showUpgrade, setShowUpgrade] = useState(false);
@@ -654,8 +656,8 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
             </UpgradeFeature>
             <UpgradePrice>$29</UpgradePrice>
             <UpgradePriceNote>One-time payment · Lifetime access</UpgradePriceNote>
-            <UpgradeBtn onClick={() => { /* TODO: Stripe checkout */ alert("Stripe checkout coming soon!"); }}>
-              Upgrade Now
+            <UpgradeBtn onClick={startCheckout} disabled={checkoutLoading}>
+              {checkoutLoading ? "Redirecting…" : "Upgrade Now"}
             </UpgradeBtn>
             <UpgradeCloseBtn onClick={() => setShowUpgrade(false)}>
               Maybe later

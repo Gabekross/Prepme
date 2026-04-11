@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { useUpgrade } from "@/lib/useUpgrade";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import type { AttemptResult, Domain, QuestionType } from "@/src/exam-engine/core/types";
 
@@ -424,7 +425,7 @@ const UpsellSub = styled.div`
   line-height: 1.5;
 `;
 
-const UpsellBtn = styled(Link)`
+const UpsellBtn = styled.button`
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -432,12 +433,14 @@ const UpsellBtn = styled(Link)`
   border-radius: 12px;
   font-size: 13.5px;
   font-weight: 800;
-  text-decoration: none;
+  border: none;
+  cursor: pointer;
   background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
   color: white;
   white-space: nowrap;
   transition: opacity 150ms ease;
   &:hover { opacity: 0.85; }
+  &:disabled { opacity: 0.5; cursor: wait; }
 `;
 
 const ProGateWrap = styled.div`
@@ -512,6 +515,7 @@ function formatMs(ms: number): string {
 
 export default function ResultsClient({ attemptId }: { attemptId: string }) {
   const { user, loading: authLoading, isPro } = useAuth();
+  const { startCheckout, loading: checkoutLoading } = useUpgrade();
   const sb = useMemo(() => supabaseBrowser(), []);
   const [attempt, setAttempt] = useState<AttemptFullRow | null>(null);
   const [loading, setLoading] = useState(true);
@@ -611,7 +615,9 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
                 : "Unlock adaptive difficulty that targets your weak areas, 2 additional exam sets, and personalized study recommendations."}
             </UpsellSub>
           </UpsellText>
-          <UpsellBtn href="/bank/pmp">Upgrade to Pro — $29</UpsellBtn>
+          <UpsellBtn onClick={startCheckout} disabled={checkoutLoading}>
+            {checkoutLoading ? "Redirecting…" : "Upgrade to Pro — $29"}
+          </UpsellBtn>
         </UpsellBanner>
       )}
 
@@ -707,7 +713,7 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
             <ProGateOverlay>
               <ProGateBadge>PRO</ProGateBadge>
               <ProGateLabel>Unlock question type breakdown</ProGateLabel>
-              <UpsellBtn href="/bank/pmp" style={{ marginTop: 4 }}>Upgrade</UpsellBtn>
+              <UpsellBtn onClick={startCheckout} style={{ marginTop: 4 }}>Upgrade</UpsellBtn>
             </ProGateOverlay>
             <ProGateBlur>
               <SectionCard $delay={220}>

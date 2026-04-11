@@ -6,6 +6,7 @@ import type { Question, Scenario } from "@/src/exam-engine/core/types";
 import { EngineRunner } from "@/src/exam-engine/ui/EngineRunner";
 import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { useUpgrade } from "@/lib/useUpgrade";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { LocalAttemptStorage } from "@/src/exam-engine/core/storage";
 import { pmpBank } from "@/src/exam-engine/data/seed.pmp";
@@ -320,6 +321,7 @@ interface InProgressAttempt {
 
 export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
   const { user, isPro } = useAuth();
+  const { startCheckout } = useUpgrade();
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [msg, setMsg] = useState("Loading questions\u2026");
@@ -484,7 +486,7 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
                 return (
                   <LockedPresetBtn
                     key={n}
-                    onClick={() => alert("Upgrade to Pro to unlock longer practice sessions!")}
+                    onClick={startCheckout}
                     title="Pro feature"
                   >
                     {n}

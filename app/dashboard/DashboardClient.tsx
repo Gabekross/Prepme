@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import styled, { keyframes, useTheme } from "styled-components";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { useUpgrade } from "@/lib/useUpgrade";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
 /* ── types ──────────────────────────────────────────────────────────────── */
@@ -396,13 +397,16 @@ const ProGateText = styled.div`
   max-width: 260px;
 `;
 
-const ProGateBtn = styled(Link)`
+const ProGateBtn = styled.button`
   display: inline-block;
   margin-top: 4px;
   font-size: 13px;
   font-weight: 700;
   color: ${(p) => p.theme.accent};
-  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 
   &:hover { text-decoration: underline; }
 `;
@@ -504,6 +508,7 @@ function aggregateResults(results: AttemptResult[]) {
 
 export default function DashboardClient() {
   const { user, loading: authLoading, isPro } = useAuth();
+  const { startCheckout } = useUpgrade();
   const theme = useTheme() as { success: string; warning: string; error: string };
   const sb = useMemo(() => supabaseBrowser(), []);
   const [attempts, setAttempts] = useState<AttemptSummary[]>([]);
@@ -736,7 +741,7 @@ export default function DashboardClient() {
                       <ProGateOverlay>
                         <ProGateLabel>PRO</ProGateLabel>
                         <ProGateText>Unlock question type breakdown</ProGateText>
-                        <ProGateBtn href="/bank/pmp">Upgrade to Pro</ProGateBtn>
+                        <ProGateBtn onClick={startCheckout}>Upgrade to Pro</ProGateBtn>
                       </ProGateOverlay>
                       <ProGateBlur>
                         {typeEntries.map((t) => (
@@ -776,7 +781,7 @@ export default function DashboardClient() {
                     <ProGateOverlay>
                       <ProGateLabel>PRO</ProGateLabel>
                       <ProGateText>Unlock personalized focus areas & study recommendations</ProGateText>
-                      <ProGateBtn href="/bank/pmp">Upgrade to Pro</ProGateBtn>
+                      <ProGateBtn onClick={startCheckout}>Upgrade to Pro</ProGateBtn>
                     </ProGateOverlay>
                     <ProGateBlur>
                       <FocusItem>
