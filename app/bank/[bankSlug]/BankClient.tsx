@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useUpgrade } from "@/lib/useUpgrade";
@@ -421,6 +422,28 @@ const UpgradeCloseBtn = styled.button`
   &:hover { color: ${(p) => p.theme.text}; }
 `;
 
+const SuccessBanner = styled.div`
+  background: ${(p) => p.theme.successSoft};
+  border: 1px solid ${(p) => p.theme.successBorder};
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  text-align: center;
+  animation: ${fadeUp} 400ms ease both;
+`;
+
+const SuccessTitle = styled.div`
+  font-size: 16px;
+  font-weight: 800;
+  color: ${(p) => p.theme.success};
+  margin-bottom: 4px;
+`;
+
+const SuccessText = styled.div`
+  font-size: 13px;
+  color: ${(p) => p.theme.text};
+`;
+
 const P = styled.p`
   margin: 0;
   color: ${(p) => p.theme.muted};
@@ -431,9 +454,65 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
   const sb = useMemo(() => supabaseBrowser(), []);
   const { isPro } = useAuth();
   const { startCheckout, loading: checkoutLoading } = useUpgrade();
+  const searchParams = useSearchParams();
+  const justUpgraded = searchParams.get("upgraded") === "true";
   const [bank, setBank] = useState<Bank | null>(null);
   const [msg, setMsg] = useState("Loading…");
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // After Stripe redirect, verify payment and grant pro role
+  useEffect(() => {
+    if (!justUpgraded || isPro) {
+      if (justUpgraded && isPro) setShowSuccess(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      const { data } = await sb.auth.getUser();
+      if (!data.user || cancelled) return;
+
+      // Call verify endpoint — checks Stripe for completed session and grants pro
+      try {
+        const res = await fetch("/api/verify-upgrade", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: data.user.id }),
+        });
+        const result = await res.json();
+        if (cancelled) return;
+
+        if (result.isPro) {
+          // Force full reload so AuthProvider picks up new "pro" role
+          window.location.href = `/bank/${bankSlug}?upgraded=done`;
+          return;
+        }
+      } catch (err) {
+        console.error("verify-upgrade failed:", err);
+      }
+
+      // Fallback: poll user_roles in case webhook fires slightly later
+      let pollCount = 0;
+      const interval = setInterval(async () => {
+        if (cancelled) { clearInterval(interval); return; }
+        pollCount++;
+        const { data: roles } = await sb
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.user!.id);
+        const hasPro = (roles ?? []).some((r: any) => r.role === "pro" || r.role === "admin");
+        if (hasPro) {
+          clearInterval(interval);
+          window.location.href = `/bank/${bankSlug}?upgraded=done`;
+        }
+        if (pollCount >= 8) clearInterval(interval);
+      }, 2500);
+    })();
+
+    return () => { cancelled = true; };
+  }, [justUpgraded, isPro, sb, bankSlug]);
 
   useEffect(() => {
     (async () => {
@@ -458,6 +537,15 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
 
   return (
     <>
+      {(showSuccess || (justUpgraded && isPro) || searchParams.get("upgraded") === "done") && (
+        <SuccessBanner>
+          <SuccessTitle>Payment successful!</SuccessTitle>
+          <SuccessText>
+            Your Professional Plan is now active. All exam simulations and Pro features are unlocked.
+          </SuccessText>
+        </SuccessBanner>
+      )}
+
       <Breadcrumb>
         <BreadcrumbLink href="/">Exams</BreadcrumbLink>
         <BreadcrumbSep>/</BreadcrumbSep>
