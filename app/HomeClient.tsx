@@ -466,12 +466,18 @@ const PricingBadge = styled.div`
 `;
 
 const PricingTier = styled.div`
+  font-size: 18px;
+  font-weight: 900;
+  color: ${(p) => p.theme.text};
+  letter-spacing: -0.2px;
+  margin-bottom: 2px;
+`;
+
+const PricingTagline = styled.div`
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: ${(p) => p.theme.muted};
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 `;
 
 const PricingPrice = styled.div`
@@ -1002,7 +1008,8 @@ export default function HomeClient() {
 
         <PricingGrid>
           <PricingCard>
-            <PricingTier>Free</PricingTier>
+            <PricingTier>Starter Plan</PricingTier>
+            <PricingTagline>Begin your PMP journey</PricingTagline>
             <PricingPrice>
               $0 <PricingPeriod>forever</PricingPeriod>
             </PricingPrice>
@@ -1024,7 +1031,8 @@ export default function HomeClient() {
 
           <PricingCard $featured>
             <PricingBadge>Most Popular</PricingBadge>
-            <PricingTier>Pro</PricingTier>
+            <PricingTier>Professional Plan</PricingTier>
+            <PricingTagline>Pass with confidence</PricingTagline>
             <PricingPrice>
               $29 <PricingPeriod>one-time</PricingPeriod>
             </PricingPrice>
@@ -1042,7 +1050,7 @@ export default function HomeClient() {
               ))}
             </PricingList>
             <PricingCTABtn $featured onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Get Pro Access →"}
+              {checkoutLoading ? "Redirecting…" : "Get Professional Access →"}
             </PricingCTABtn>
           </PricingCard>
         </PricingGrid>
