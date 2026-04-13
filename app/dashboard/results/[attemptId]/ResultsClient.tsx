@@ -525,23 +525,28 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
     if (authLoading || !user) return;
 
     (async () => {
-      const { data, error: fetchError } = await sb
-        .from("attempts")
-        .select(
-          "id, bank_slug, mode, set_id, status, total_score, max_score, score_percent, passed, result, state, created_at, submitted_at"
-        )
-        .eq("id", attemptId)
-        .eq("user_id", user.id)
-        .single();
+      try {
+        const { data, error: fetchError } = await sb
+          .from("attempts")
+          .select(
+            "id, bank_slug, mode, set_id, status, total_score, max_score, score_percent, passed, result, state, created_at, submitted_at"
+          )
+          .eq("id", attemptId)
+          .eq("user_id", user.id)
+          .single();
 
-      if (fetchError || !data) {
-        setError("Attempt not found.");
+        if (fetchError || !data) {
+          setError("Attempt not found.");
+          return;
+        }
+
+        setAttempt(data as AttemptFullRow);
+      } catch (err) {
+        console.error("[Results] Failed to load attempt:", err);
+        setError("Failed to load results. Please try again.");
+      } finally {
         setLoading(false);
-        return;
       }
-
-      setAttempt(data as AttemptFullRow);
-      setLoading(false);
     })();
   }, [user, authLoading, sb, attemptId]);
 

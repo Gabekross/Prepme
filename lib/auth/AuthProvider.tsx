@@ -5,20 +5,19 @@ import type { User } from "@supabase/supabase-js";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
 /**
- * Auth loading states — distinguishes between initial boot and role refresh.
- *
- *  initializing  → first load, no session info yet
- *  authenticated → session exists, role check may still be running
- *  ready         → session + roles fully resolved
+ * Auth loading phases:
+ *  initializing    → first load, no session info yet
+ *  authenticated   → session exists, role check may still be running
+ *  ready           → session + roles fully resolved
  *  unauthenticated → no session
  */
 type AuthPhase = "initializing" | "authenticated" | "ready" | "unauthenticated";
 
 type AuthState = {
   user: User | null;
-  /** True only during the very first session check (before we know anything). */
+  /** True only during the very first session check. */
   loading: boolean;
-  /** Granular phase for components that need to distinguish states. */
+  /** Granular phase for components that need finer state. */
   phase: AuthPhase;
   isAdmin: boolean;
   isPro: boolean;
@@ -40,77 +39,78 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isPro, setIsPro] = useState(false);
 
-  // Track the latest role-fetch request to avoid stale updates
+  // Guard against stale role-fetch results
   const roleFetchId = useRef(0);
 
-  /**
-   * Fetch roles for a given user. Guarded against stale/concurrent calls
-   * via an incrementing fetch ID.
-   */
   async function fetchRoles(u: User) {
-    const myFetchId = ++roleFetchId.current;
+    const myId = ++roleFetchId.current;
     try {
       const { data: roles, error } = await sb
         .from("user_roles")
         .select("role")
         .eq("user_id", u.id);
 
-      // Bail if a newer fetch has started
-      if (myFetchId !== roleFetchId.current) return;
+      if (myId !== roleFetchId.current) return;
 
       if (error) {
         console.warn("[AuthProvider] Role fetch failed:", error.message);
         setIsAdmin(false);
         setIsPro(false);
       } else {
-        const roleList = (roles ?? []).map((r: any) => r.role);
-        setIsAdmin(roleList.includes("admin"));
-        setIsPro(roleList.includes("pro") || roleList.includes("admin"));
+        const list = (roles ?? []).map((r: any) => r.role);
+        setIsAdmin(list.includes("admin"));
+        setIsPro(list.includes("pro") || list.includes("admin"));
       }
     } catch (err) {
-      if (myFetchId !== roleFetchId.current) return;
+      if (myId !== roleFetchId.current) return;
       console.warn("[AuthProvider] Role fetch error:", err);
       setIsAdmin(false);
       setIsPro(false);
     }
-    if (myFetchId === roleFetchId.current) {
+    if (myId === roleFetchId.current) {
       setPhase("ready");
+    }
+  }
+
+  /**
+   * Resolve user & roles from any source (getUser result or session event).
+   */
+  async function resolveUser(u: User | null) {
+    if (u) {
+      setUser(u);
+      setPhase("authenticated");
+      await fetchRoles(u);
+    } else {
+      setUser(null);
+      setIsAdmin(false);
+      setIsPro(false);
+      setPhase("unauthenticated");
     }
   }
 
   useEffect(() => {
     let mounted = true;
 
-    /**
-     * Use onAuthStateChange as the SOLE source of truth.
-     *
-     * Supabase fires INITIAL_SESSION synchronously when the listener is
-     * registered (with the current session from localStorage, or null).
-     * Subsequent events (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED) fire
-     * as the auth state changes.
-     *
-     * This eliminates the race condition where a separate getUser() call
-     * and the listener could return conflicting results.
-     */
+    // 1. Explicit getUser() — the reliable initial check.
+    //    This validates the token server-side and works on every Supabase version.
+    sb.auth.getUser().then(({ data }) => {
+      if (!mounted) return;
+      resolveUser(data.user ?? null);
+    }).catch(() => {
+      if (!mounted) return;
+      setPhase("unauthenticated");
+    });
+
+    // 2. Subscribe to auth changes for reactivity (sign-in, sign-out, token refresh).
+    //    INITIAL_SESSION is ignored since getUser() already handles the initial state;
+    //    this prevents a duplicate role-fetch race.
     const { data: { subscription } } = sb.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (!mounted) return;
+        if (event === "INITIAL_SESSION") return; // handled by getUser() above
 
-        const u = session?.user ?? null;
-
-        console.log("[AuthProvider] Auth event:", event, u?.email ?? "(no user)");
-
-        if (u) {
-          setUser(u);
-          setPhase("authenticated");
-          // Fetch roles — phase moves to "ready" when done
-          await fetchRoles(u);
-        } else {
-          setUser(null);
-          setIsAdmin(false);
-          setIsPro(false);
-          setPhase("unauthenticated");
-        }
+        console.log("[AuthProvider] Auth event:", event, session?.user?.email ?? "(no user)");
+        resolveUser(session?.user ?? null);
       }
     );
 
@@ -129,7 +129,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setPhase("unauthenticated");
   }
 
-  // loading = true only during initial boot (before we know anything)
   const loading = phase === "initializing";
 
   const value = useMemo(

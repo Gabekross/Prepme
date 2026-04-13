@@ -520,28 +520,32 @@ export default function DashboardClient() {
     if (authLoading || !user) return;
 
     (async () => {
-      const [attemptsRes, resultsRes] = await Promise.all([
-        sb
-          .from("attempts")
-          .select(
-            "id, bank_slug, mode, set_id, status, total_score, max_score, score_percent, passed, created_at, submitted_at"
-          )
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(50),
-        sb
-          .from("attempts")
-          .select("id, mode, set_id, result")
-          .eq("user_id", user.id)
-          .eq("status", "submitted"),
-      ]);
+      try {
+        const [attemptsRes, resultsRes] = await Promise.all([
+          sb
+            .from("attempts")
+            .select(
+              "id, bank_slug, mode, set_id, status, total_score, max_score, score_percent, passed, created_at, submitted_at"
+            )
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(50),
+          sb
+            .from("attempts")
+            .select("id, mode, set_id, result")
+            .eq("user_id", user.id)
+            .eq("status", "submitted"),
+        ]);
 
-      setAttempts((attemptsRes.data as AttemptSummary[]) ?? []);
+        setAttempts((attemptsRes.data as AttemptSummary[]) ?? []);
 
-      const rawResults = (resultsRes.data as AttemptWithResult[]) ?? [];
-      setAllResults(rawResults.filter((r) => r.result !== null));
-
-      setLoading(false);
+        const rawResults = (resultsRes.data as AttemptWithResult[]) ?? [];
+        setAllResults(rawResults.filter((r) => r.result !== null));
+      } catch (err) {
+        console.error("[Dashboard] Failed to load data:", err);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [user, authLoading, sb]);
 
