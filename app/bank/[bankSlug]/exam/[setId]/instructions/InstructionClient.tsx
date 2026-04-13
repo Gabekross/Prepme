@@ -261,19 +261,21 @@ interface Props {
 const PRO_SETS = ["set-b", "set-c"];
 
 export default function InstructionClient({ bankSlug, setSlug }: Props) {
-  const { isPro, loading: authLoading } = useAuth();
+  const { isPro, loading: authLoading, phase } = useAuth();
   const router = useRouter();
   const [bankConfig, setBankConfig] = useState<BankConfig | null>(null);
   const [loading, setLoading] = useState(true);
 
   const setLabel = SET_LABELS[setSlug] ?? setSlug.replace(/-/g, " ").toUpperCase();
 
-  // Redirect free users away from Pro-only sets
+  // Redirect free users away from Pro-only sets.
+  // Wait until phase is "ready" (roles fully loaded) to avoid
+  // prematurely redirecting pro users whose roles haven't loaded yet.
   useEffect(() => {
-    if (!authLoading && !isPro && PRO_SETS.includes(setSlug)) {
+    if (phase === "ready" && !isPro && PRO_SETS.includes(setSlug)) {
       router.replace(`/bank/${bankSlug}`);
     }
-  }, [authLoading, isPro, setSlug, bankSlug, router]);
+  }, [phase, isPro, setSlug, bankSlug, router]);
 
   useEffect(() => {
     (async () => {

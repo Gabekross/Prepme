@@ -211,6 +211,7 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [bankConfig, setBankConfig] = useState<BankConfig | null>(null);
   const [msg, setMsg] = useState("Loading exam\u2026");
+  const [loadError, setLoadError] = useState(false);
 
   // Resume-flow state
   const [inProgressAttempt, setInProgressAttempt] = useState<InProgressAttempt | null>(null);
@@ -226,11 +227,31 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
     : `${bankSlug}__exam`;
 
   useEffect(() => {
+    let cancelled = false;
+
+    // Safety timeout — if data loading takes > 20s, fall back to seed data
+    const timeout = setTimeout(() => {
+      if (cancelled) return;
+      if (!questions && !loadError) {
+        console.warn("[ExamClient] Data load timed out, falling back to seed data");
+        setBankConfig(FALLBACK_BANK_CONFIG);
+        setQuestions(
+          resolvedSetId && SEED_FALLBACKS[resolvedSetId]
+            ? SEED_FALLBACKS[resolvedSetId]!
+            : pmpBank
+        );
+        setScenarios([]);
+        setMsg("");
+      }
+    }, 20_000);
+
     (async () => {
       try {
         const bank = await loadBankBySlug(bankSlug);
+        if (cancelled) return;
         setBankConfig(bank);
         const [qs, scns] = await Promise.all([loadQuestions(bank.id), loadScenarios(bank.id)]);
+        if (cancelled) return;
 
         // When a specific set is requested, check if Supabase actually has
         // enough questions for that set. If not, merge in (or use) the local
@@ -240,19 +261,14 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
           const setQs = qs.filter((q) => (q.setId ?? "free") === resolvedSetId);
           const seedQs = SEED_FALLBACKS[resolvedSetId];
           if (setQs.length >= 180) {
-            // Supabase has enough set questions — use full bank (blueprint will filter)
             finalQs = qs;
           } else if (seedQs) {
-            // Not enough in Supabase — use seed data for this set, plus any
-            // Supabase questions that aren't already in the seed (deduplicate)
             const seedIds = new Set(seedQs.map((q) => q.id));
             finalQs = [...seedQs, ...qs.filter((q) => !seedIds.has(q.id))];
           } else {
-            // No seed data for this set yet — use whatever Supabase returned
             finalQs = qs.length ? qs : pmpBank;
           }
         } else {
-          // No set filter — legacy "random draw" from full bank
           finalQs = qs.length ? qs : pmpBank;
         }
 
@@ -260,6 +276,8 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
         setScenarios(scns);
         setMsg("");
       } catch (e: any) {
+        if (cancelled) return;
+        console.error("[ExamClient] Data load failed, using seed fallback:", e?.message);
         // Supabase unavailable — use seed data so the app stays usable
         setBankConfig(FALLBACK_BANK_CONFIG);
         setQuestions(
@@ -271,6 +289,8 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
         setMsg("");
       }
     })();
+
+    return () => { cancelled = true; clearTimeout(timeout); };
   }, [bankSlug, resolvedSetId]);
 
   // Check for in-progress exam attempt once data is loaded
@@ -279,6 +299,16 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
       setResumeCheckDone(true);
       return;
     }
+
+    let cancelled = false;
+
+    // Timeout: don't let resume check hang forever
+    const timeout = setTimeout(() => {
+      if (!cancelled) {
+        console.warn("[ExamClient] Resume check timed out");
+        setResumeCheckDone(true);
+      }
+    }, 10_000);
 
     (async () => {
       try {
@@ -300,15 +330,18 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
           .limit(1)
           .maybeSingle();
 
-        if (data?.state?.questionOrder) {
+        if (!cancelled && data?.state?.questionOrder) {
           setInProgressAttempt(data as InProgressAttempt);
         }
-      } catch {
-        // Silently ignore — proceed without resume
+      } catch (err) {
+        console.warn("[ExamClient] Resume check failed:", err);
       } finally {
-        setResumeCheckDone(true);
+        if (!cancelled) setResumeCheckDone(true);
+        clearTimeout(timeout);
       }
     })();
+
+    return () => { cancelled = true; clearTimeout(timeout); };
   }, [questions, bankConfig, user?.id, bankSlug, resolvedSetId]);
 
   const handleStartFresh = useCallback(async () => {

@@ -252,7 +252,11 @@ export default function LoginClient() {
     const { data } = await sb.auth.getUser();
     const user = data.user;
 
-    if (!user) return;
+    if (!user) {
+      console.log("[LoginClient] refreshSession: no user session found");
+      return;
+    }
+    console.log("[LoginClient] refreshSession: user found:", user.email);
 
     const { data: roles, error } = await sb.from("user_roles").select("role").eq("user_id", user.id);
     if (error) {
@@ -298,7 +302,7 @@ export default function LoginClient() {
       email,
       password,
       options: {
-        emailRedirectTo: `${origin}/auth/callback`,
+        emailRedirectTo: `${origin}/auth/callback?next=/welcome`,
       },
     });
 
