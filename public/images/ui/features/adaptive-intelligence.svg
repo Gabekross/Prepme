@@ -1,0 +1,25 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <linearGradient id="ai-g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <radialGradient id="ai-hl" cx="35%" cy="28%" r="40%">
+      <stop offset="0%" stop-color="#fff" stop-opacity=".5"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="50" cy="50" r="44" fill="url(#ai-g)"/>
+  <circle cx="50" cy="50" r="44" fill="url(#ai-hl)"/>
+  <!-- Lightbulb -->
+  <path d="M50 18c-14 0-25 11-25 25 0 9 5 17 12 21v6c0 3 3 6 6 6h14c3 0 6-3 6-6v-6c7-4 12-12 12-21 0-14-11-25-25-25z" fill="#fff" opacity=".9"/>
+  <!-- Filament lines -->
+  <g stroke="url(#ai-g)" stroke-width="2.5" stroke-linecap="round" opacity=".5">
+    <line x1="44" y1="38" x2="50" y2="50"/>
+    <line x1="56" y1="38" x2="50" y2="50"/>
+    <line x1="50" y1="28" x2="50" y2="50"/>
+  </g>
+  <!-- Base stripes -->
+  <line x1="40" y1="74" x2="60" y2="74" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
+  <line x1="43" y1="80" x2="57" y2="80" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".45"/>
+</svg>

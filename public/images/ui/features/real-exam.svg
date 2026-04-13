@@ -1,0 +1,29 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <linearGradient id="re-g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+    <radialGradient id="re-hl" cx="35%" cy="28%" r="40%">
+      <stop offset="0%" stop-color="#fff" stop-opacity=".5"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="50" cy="50" r="44" fill="url(#re-g)"/>
+  <circle cx="50" cy="50" r="44" fill="url(#re-hl)"/>
+  <!-- Clock face -->
+  <circle cx="50" cy="50" r="30" stroke="#fff" stroke-width="3" opacity=".3"/>
+  <!-- Tick marks -->
+  <g stroke="#fff" stroke-linecap="round" stroke-width="3" opacity=".7">
+    <line x1="50" y1="23" x2="50" y2="28"/>
+    <line x1="50" y1="72" x2="50" y2="77"/>
+    <line x1="23" y1="50" x2="28" y2="50"/>
+    <line x1="72" y1="50" x2="77" y2="50"/>
+  </g>
+  <!-- Hour hand -->
+  <line x1="50" y1="50" x2="50" y2="32" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>
+  <!-- Minute hand -->
+  <line x1="50" y1="50" x2="65" y2="38" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+  <!-- Center -->
+  <circle cx="50" cy="50" r="4" fill="#fff"/>
+</svg>

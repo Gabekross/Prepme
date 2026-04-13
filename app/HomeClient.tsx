@@ -270,16 +270,33 @@ const FeatureCard = styled.button<{ $expanded: boolean }>`
   }
 `;
 
-const FeatureIcon = styled.div<{ $gradient: string }>`
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: ${(p) => p.$gradient};
+const FeatureIcon = styled.div`
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: ${(p) => p.theme.cardBg2 ?? "rgba(255,255,255,0.04)"};
+  border: 1px solid ${(p) => p.theme.cardBorder};
   display: grid;
   place-items: center;
-  font-size: 22px;
   margin-bottom: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  @media (max-width: 768px) {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+  }
+`;
+
+const FeatureImg = styled.img`
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+
+  @media (max-width: 768px) {
+    width: 24px;
+    height: 24px;
+  }
 `;
 
 const FeatureHeader = styled.div`
@@ -403,9 +420,33 @@ const TypeCard = styled.div`
   text-align: center;
 `;
 
-const TypeIcon = styled.div`
-  font-size: 28px;
-  margin-bottom: 8px;
+const TypeIconWrap = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: ${(p) => p.theme.cardBg2 ?? "rgba(255,255,255,0.04)"};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  display: grid;
+  place-items: center;
+  margin: 0 auto 10px;
+  overflow: hidden;
+
+  @media (max-width: 480px) {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+`;
+
+const TypeImg = styled.img`
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+
+  @media (max-width: 480px) {
+    width: 22px;
+    height: 22px;
+  }
 `;
 
 const TypeName = styled.div`
@@ -752,12 +793,12 @@ const Skeleton = styled.div`
 type PlatformStats = { totalAttempts: number; totalPractice: number; totalExams: number };
 
 const QUESTION_TYPES = [
-  { icon: "\u2753", name: "Single-Select MCQ", tag: "Choose the best answer" },
-  { icon: "\u2705", name: "Multi-Select MCQ", tag: "Select all that apply" },
-  { icon: "\uD83D\uDD00", name: "Drag & Match", tag: "Pair items correctly" },
-  { icon: "\uD83D\uDCCB", name: "Drag & Order", tag: "Arrange the sequence" },
-  { icon: "\uD83D\uDDBC\uFE0F", name: "Hotspot", tag: "Click the correct area" },
-  { icon: "\u270D\uFE0F", name: "Fill-in-the-Blank", tag: "Type your answer" },
+  { img: "/images/ui/question-types/single-select.svg", name: "Single-Select MCQ", tag: "Choose the best answer" },
+  { img: "/images/ui/question-types/multi-select.svg", name: "Multi-Select MCQ", tag: "Select all that apply" },
+  { img: "/images/ui/question-types/drag-match.svg", name: "Drag & Match", tag: "Pair items correctly" },
+  { img: "/images/ui/question-types/drag-order.svg", name: "Drag & Order", tag: "Arrange the sequence" },
+  { img: "/images/ui/question-types/hotspot.svg", name: "Hotspot", tag: "Click the correct area" },
+  { img: "/images/ui/question-types/fill-blank.svg", name: "Fill-in-the-Blank", tag: "Type your answer" },
 ];
 
 const TESTIMONIALS = [
@@ -841,24 +882,24 @@ const FAQ_DATA = [
 
 const FEATURES = [
   {
-    icon: "\u23F1\uFE0F",
-    gradient: "linear-gradient(135deg, #3b82f6, #6366f1)",
+    img: "/images/ui/features/real-exam.svg",
+    alt: "Real exam simulation icon",
     title: "Real Exam Simulation",
     teaser: "Timed, weighted, and formatted like the real PMP.",
     detail:
       "180 questions. 230-minute timer. Domain-weighted scoring that mirrors the actual PMP. Includes all 6 question types you will see on exam day.",
   },
   {
-    icon: "\uD83E\uDDE0",
-    gradient: "linear-gradient(135deg, #8b5cf6, #ec4899)",
+    img: "/images/ui/features/adaptive-intelligence.svg",
+    alt: "Adaptive intelligence icon",
     title: "Adaptive Intelligence",
     teaser: "Targets your weak areas automatically.",
     detail:
       "Questions get harder as you improve. Weak domains are prioritized automatically. Difficulty-weighted scoring means harder questions count more (up to 2.5x).",
   },
   {
-    icon: "\uD83D\uDCCA",
-    gradient: "linear-gradient(135deg, #06b6d4, #10b981)",
+    img: "/images/ui/features/deep-analytics.svg",
+    alt: "Deep analytics icon",
     title: "Deep Analytics",
     teaser: "Know exactly where to focus your study time.",
     detail:
@@ -961,7 +1002,7 @@ export default function HomeClient() {
                 onClick={() => setExpandedCard(isOpen ? null : i)}
                 aria-expanded={isOpen}
               >
-                <FeatureIcon $gradient={f.gradient}>{f.icon}</FeatureIcon>
+                <FeatureIcon><FeatureImg src={f.img} alt={f.alt} loading="lazy" /></FeatureIcon>
                 <FeatureHeader>
                   <FeatureTitle>{f.title}</FeatureTitle>
                   <FeatureChevron $expanded={isOpen}>&#x25BC;</FeatureChevron>
@@ -1029,7 +1070,7 @@ export default function HomeClient() {
         <TypesGrid>
           {QUESTION_TYPES.map((qt) => (
             <TypeCard key={qt.name}>
-              <TypeIcon>{qt.icon}</TypeIcon>
+              <TypeIconWrap><TypeImg src={qt.img} alt={qt.name} loading="lazy" /></TypeIconWrap>
               <TypeName>{qt.name}</TypeName>
               <TypeTag>{qt.tag}</TypeTag>
             </TypeCard>

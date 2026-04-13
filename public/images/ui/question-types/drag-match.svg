@@ -1,0 +1,26 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <linearGradient id="dm-g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+    <radialGradient id="dm-hl" cx="35%" cy="28%" r="40%">
+      <stop offset="0%" stop-color="#fff" stop-opacity=".55"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="50" cy="50" r="44" fill="url(#dm-g)"/>
+  <circle cx="50" cy="50" r="44" fill="url(#dm-hl)"/>
+  <!-- Left items -->
+  <rect x="18" y="26" width="20" height="11" rx="4" fill="#fff" opacity=".85"/>
+  <rect x="18" y="45" width="20" height="11" rx="4" fill="#fff" opacity=".85"/>
+  <rect x="18" y="64" width="20" height="11" rx="4" fill="#fff" opacity=".85"/>
+  <!-- Right items -->
+  <rect x="62" y="29" width="20" height="11" rx="4" fill="#fff" opacity=".55"/>
+  <rect x="62" y="48" width="20" height="11" rx="4" fill="#fff" opacity=".55"/>
+  <rect x="62" y="67" width="20" height="11" rx="4" fill="#fff" opacity=".55"/>
+  <!-- Connectors -->
+  <path d="M38 31c12 0 12 23 24 23" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+  <path d="M38 50c12 0 12-16 24-16" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+  <path d="M38 70c12 0 12 3 24 3" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".45" stroke-dasharray="3 3"/>
+</svg>

@@ -53,12 +53,16 @@ const BankIcon = styled.div`
   width: 56px;
   height: 56px;
   border-radius: 18px;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent} 0%, #7c3aed 100%);
   display: grid;
   place-items: center;
-  font-size: 26px;
   margin-bottom: 16px;
-  box-shadow: 0 4px 16px ${(p) => p.theme.accentSoft};
+  overflow: hidden;
+`;
+
+const BankImg = styled.img`
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
 `;
 
 const H1 = styled.h1`
@@ -166,22 +170,20 @@ const ModeHeader = styled.div`
   gap: 14px;
 `;
 
-const ModeIcon = styled.div<{ $variant: "practice" | "exam" }>`
+const ModeIcon = styled.div`
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  background: ${(p) =>
-    p.$variant === "practice"
-      ? `linear-gradient(135deg, ${p.theme.success}, #06b6d4)`
-      : `linear-gradient(135deg, ${p.theme.accent}, #7c3aed)`};
   display: grid;
   place-items: center;
-  font-size: 24px;
   flex-shrink: 0;
-  box-shadow: ${(p) =>
-    p.$variant === "practice"
-      ? `0 4px 14px ${p.theme.success}35`
-      : `0 4px 14px ${p.theme.accent}35`};
+  overflow: hidden;
+`;
+
+const ModeImg = styled.img`
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
 `;
 
 const ModeTitleGroup = styled.div`
@@ -553,7 +555,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
       </Breadcrumb>
 
       <Header>
-        <BankIcon>📚</BankIcon>
+        <BankIcon><BankImg src="/images/ui/bank/bank-header.svg" alt="Question bank" /></BankIcon>
         <H1>{bank.name}</H1>
         <Desc>
           {bank.description ?? "Choose a study mode to begin. Practice builds knowledge with instant feedback; Exam Simulation tests your readiness under real exam conditions."}
@@ -565,7 +567,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
       <Grid>
         <ModeCard href={`/bank/${bank.slug}/practice`} $variant="practice">
           <ModeHeader>
-            <ModeIcon $variant="practice">✏️</ModeIcon>
+            <ModeIcon><ModeImg src="/images/ui/bank/practice.svg" alt="Practice mode" /></ModeIcon>
             <ModeTitleGroup>
               <ModeTitle>Practice Mode</ModeTitle>
               <ModeSubtitle>Learn at your own pace with guided feedback</ModeSubtitle>
@@ -600,7 +602,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
       <Grid>
         <ModeCard href={`/bank/${bank.slug}/exam/set-a/instructions`} $variant="exam">
           <ModeHeader>
-            <ModeIcon $variant="exam">🅰️</ModeIcon>
+            <ModeIcon><ModeImg src="/images/ui/bank/set-a.svg" alt="Set A" /></ModeIcon>
             <ModeTitleGroup>
               <ModeTitle>Simulation — Set A</ModeTitle>
               <ModeSubtitle>70 questions drawn from Set A question bank</ModeSubtitle>
@@ -624,7 +626,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
         {isPro ? (
           <ModeCard href={`/bank/${bank.slug}/exam/set-b/instructions`} $variant="exam">
             <ModeHeader>
-              <ModeIcon $variant="exam">🅱️</ModeIcon>
+              <ModeIcon><ModeImg src="/images/ui/bank/set-b.svg" alt="Set B" /></ModeIcon>
               <ModeTitleGroup>
                 <ModeTitle>Simulation — Set B</ModeTitle>
                 <ModeSubtitle>70 questions drawn from Set B question bank</ModeSubtitle>
@@ -646,7 +648,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
           <LockedCard onClick={() => setShowUpgrade(true)}>
             <LockBadge>PRO</LockBadge>
             <ModeHeader>
-              <ModeIcon $variant="exam">🅱️</ModeIcon>
+              <ModeIcon><ModeImg src="/images/ui/bank/set-b.svg" alt="Set B" /></ModeIcon>
               <ModeTitleGroup>
                 <ModeTitle>Simulation — Set B</ModeTitle>
                 <ModeSubtitle>70 fresh questions — no overlap with Set A</ModeSubtitle>
@@ -669,7 +671,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
         {isPro ? (
           <ModeCard href={`/bank/${bank.slug}/exam/set-c/instructions`} $variant="exam">
             <ModeHeader>
-              <ModeIcon $variant="exam">🅾️</ModeIcon>
+              <ModeIcon><ModeImg src="/images/ui/bank/set-c.svg" alt="Set C" /></ModeIcon>
               <ModeTitleGroup>
                 <ModeTitle>Simulation — Set C</ModeTitle>
                 <ModeSubtitle>70 questions drawn from Set C question bank</ModeSubtitle>
@@ -691,7 +693,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
           <LockedCard onClick={() => setShowUpgrade(true)}>
             <LockBadge>PRO</LockBadge>
             <ModeHeader>
-              <ModeIcon $variant="exam">🅾️</ModeIcon>
+              <ModeIcon><ModeImg src="/images/ui/bank/set-c.svg" alt="Set C" /></ModeIcon>
               <ModeTitleGroup>
                 <ModeTitle>Simulation — Set C</ModeTitle>
                 <ModeSubtitle>70 fresh questions — no overlap with Sets A or B</ModeSubtitle>

@@ -1,0 +1,24 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <linearGradient id="ss-g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <radialGradient id="ss-hl" cx="35%" cy="28%" r="40%">
+      <stop offset="0%" stop-color="#fff" stop-opacity=".5"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="50" cy="50" r="44" fill="url(#ss-g)"/>
+  <circle cx="50" cy="50" r="44" fill="url(#ss-hl)"/>
+  <!-- Row 1: unselected -->
+  <circle cx="33" cy="32" r="7" stroke="#fff" stroke-width="2.5" opacity=".5"/>
+  <rect x="46" y="28" width="26" height="6" rx="3" fill="#fff" opacity=".4"/>
+  <!-- Row 2: selected -->
+  <circle cx="33" cy="50" r="7" stroke="#fff" stroke-width="2.5" opacity=".9"/>
+  <circle cx="33" cy="50" r="3.5" fill="#fff" opacity=".9"/>
+  <rect x="46" y="46" width="22" height="6" rx="3" fill="#fff" opacity=".7"/>
+  <!-- Row 3: unselected -->
+  <circle cx="33" cy="68" r="7" stroke="#fff" stroke-width="2.5" opacity=".5"/>
+  <rect x="46" y="64" width="24" height="6" rx="3" fill="#fff" opacity=".4"/>
+</svg>
