@@ -743,9 +743,9 @@ export default function DashboardClient() {
                   ) : (
                     <ProGateCard>
                       <ProGateOverlay>
-                        <ProGateLabel>PRO</ProGateLabel>
+                        <ProGateLabel>STUDY MODE</ProGateLabel>
                         <ProGateText>Unlock question type breakdown</ProGateText>
-                        <ProGateBtn onClick={startCheckout}>Upgrade to Pro</ProGateBtn>
+                        <ProGateBtn onClick={startCheckout}>Upgrade to Study Mode</ProGateBtn>
                       </ProGateOverlay>
                       <ProGateBlur>
                         {typeEntries.map((t) => (
@@ -783,9 +783,9 @@ export default function DashboardClient() {
                 ) : (
                   <ProGateCard>
                     <ProGateOverlay>
-                      <ProGateLabel>PRO</ProGateLabel>
+                      <ProGateLabel>STUDY MODE</ProGateLabel>
                       <ProGateText>Unlock personalized focus areas & study recommendations</ProGateText>
-                      <ProGateBtn onClick={startCheckout}>Upgrade to Pro</ProGateBtn>
+                      <ProGateBtn onClick={startCheckout}>Upgrade to Study Mode</ProGateBtn>
                     </ProGateOverlay>
                     <ProGateBlur>
                       <FocusItem>

@@ -543,7 +543,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
         <SuccessBanner>
           <SuccessTitle>Payment successful!</SuccessTitle>
           <SuccessText>
-            Your Professional Plan is now active. All exam simulations and Pro features are unlocked.
+            Your Study Mode is now active. All exam simulations and Study Mode features are unlocked.
           </SuccessText>
         </SuccessBanner>
       )}
@@ -646,7 +646,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
           </ModeCard>
         ) : (
           <LockedCard onClick={() => setShowUpgrade(true)}>
-            <LockBadge>PRO</LockBadge>
+            <LockBadge>STUDY MODE</LockBadge>
             <ModeHeader>
               <ModeIcon><ModeImg src="/images/ui/bank/set-b.svg" alt="Set B" /></ModeIcon>
               <ModeTitleGroup>
@@ -691,7 +691,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
           </ModeCard>
         ) : (
           <LockedCard onClick={() => setShowUpgrade(true)}>
-            <LockBadge>PRO</LockBadge>
+            <LockBadge>STUDY MODE</LockBadge>
             <ModeHeader>
               <ModeIcon><ModeImg src="/images/ui/bank/set-c.svg" alt="Set C" /></ModeIcon>
               <ModeTitleGroup>
@@ -718,7 +718,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
       {showUpgrade && (
         <UpgradeOverlay onClick={() => setShowUpgrade(false)}>
           <UpgradeCard onClick={(e) => e.stopPropagation()}>
-            <UpgradeTitle>Upgrade to Pro</UpgradeTitle>
+            <UpgradeTitle>Upgrade to Study Mode</UpgradeTitle>
             <UpgradeText>
               Unlock the full exam preparation experience and maximize your chances of passing the PMP on your first attempt.
             </UpgradeText>

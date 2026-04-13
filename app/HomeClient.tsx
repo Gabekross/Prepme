@@ -945,7 +945,7 @@ export default function HomeClient() {
           </PrimaryCTA>
           <SecondaryCTA href="#how-it-works">See How It Works</SecondaryCTA>
         </HeroCTAs>
-        <TrustLine>No credit card required &middot; Free tier forever</TrustLine>
+        <TrustLine>No credit card required &middot; Free tier available</TrustLine>
       </Hero>
 
       {/* ── 2. Trust Badges ──────────────────────────────────────────── */}
@@ -1119,7 +1119,7 @@ export default function HomeClient() {
             <PricingTier>Starter Plan</PricingTier>
             <PricingTagline>Begin your PMP journey</PricingTagline>
             <PricingPrice>
-              $0 <PricingPeriod>forever</PricingPeriod>
+              $0 <PricingPeriod>free</PricingPeriod>
             </PricingPrice>
             <PricingDesc>
               Get started with practice mode and one full exam simulation.
@@ -1139,7 +1139,7 @@ export default function HomeClient() {
 
           <PricingCard $featured>
             <PricingBadge>Most Popular</PricingBadge>
-            <PricingTier>Professional Plan</PricingTier>
+            <PricingTier>Study Mode</PricingTier>
             <PricingTagline>Pass with confidence</PricingTagline>
             <PricingPrice>
               $29 <PricingPeriod>one-time</PricingPeriod>
@@ -1158,7 +1158,7 @@ export default function HomeClient() {
               ))}
             </PricingList>
             <PricingCTABtn $featured onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Get Professional Access →"}
+              {checkoutLoading ? "Redirecting…" : "Get Study Mode →"}
             </PricingCTABtn>
           </PricingCard>
         </PricingGrid>

@@ -621,7 +621,7 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
             </UpsellSub>
           </UpsellText>
           <UpsellBtn onClick={startCheckout} disabled={checkoutLoading}>
-            {checkoutLoading ? "Redirecting…" : "Upgrade to Pro — $29"}
+            {checkoutLoading ? "Redirecting…" : "Upgrade to Study Mode — $29"}
           </UpsellBtn>
         </UpsellBanner>
       )}
@@ -716,7 +716,7 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
         ) : (
           <ProGateWrap>
             <ProGateOverlay>
-              <ProGateBadge>PRO</ProGateBadge>
+              <ProGateBadge>STUDY MODE</ProGateBadge>
               <ProGateLabel>Unlock question type breakdown</ProGateLabel>
               <UpsellBtn onClick={startCheckout} style={{ marginTop: 4 }}>Upgrade</UpsellBtn>
             </ProGateOverlay>

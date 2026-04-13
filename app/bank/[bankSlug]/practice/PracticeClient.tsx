@@ -487,10 +487,10 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
                   <LockedPresetBtn
                     key={n}
                     onClick={startCheckout}
-                    title="Pro feature"
+                    title="Study Mode feature"
                   >
                     {n}
-                    <ProTag>PRO</ProTag>
+                    <ProTag>STUDY MODE</ProTag>
                   </LockedPresetBtn>
                 );
               }
