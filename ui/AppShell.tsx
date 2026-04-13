@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth/AuthProvider";
 import { useAppTheme } from "@/ui/ThemeClient";
 import { usePathname } from "next/navigation";
 import { LocalAttemptStorage } from "@/src/exam-engine/core/storage";
+import { supabaseBrowser } from "@/lib/supabase/browser";
 
 const Shell = styled.div`
   min-height: 100vh;
@@ -355,16 +356,39 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setMenuOpen(false);
   }
 
+  /**
+   * Abandon the current in-progress attempt in both localStorage and Supabase.
+   * This prevents the "Resume Session?" modal from showing after an explicit exit.
+   */
+  async function abandonAttempt(ns: string, mode: "exam" | "practice") {
+    const s = new LocalAttemptStorage(ns);
+    // Read the attempt ID from localStorage before clearing it
+    const attempt = await s.loadLatestAttempt();
+    if (s.clearLatest) await s.clearLatest();
+
+    // Mark the attempt as "abandoned" in Supabase so the resume query skips it
+    if (attempt?.id && user?.id) {
+      try {
+        const sb = supabaseBrowser();
+        await sb
+          .from("attempts")
+          .update({ status: "abandoned" })
+          .eq("id", attempt.id)
+          .eq("user_id", user.id);
+      } catch (err) {
+        console.warn("[AppShell] Failed to mark attempt abandoned in DB:", err);
+      }
+    }
+  }
+
   async function exitExam() {
     const ok = window.confirm(
       "Exit exam simulation?\n\nYour current progress will be cleared."
     );
     if (!ok) return;
     if (bankSlug) {
-      // Namespace must match what ExamClient passes to EngineRunner
       const ns = setId ? `${bankSlug}__exam__${setId}` : `${bankSlug}__exam`;
-      const s = new LocalAttemptStorage(ns);
-      if (s.clearLatest) await s.clearLatest();
+      await abandonAttempt(ns, "exam");
     }
     window.location.href = bankSlug ? `/bank/${bankSlug}` : "/";
   }
@@ -375,9 +399,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
     if (!ok) return;
     if (bankSlug) {
-      const ns = `${bankSlug}__practice`;
-      const s = new LocalAttemptStorage(ns);
-      if (s.clearLatest) await s.clearLatest();
+      await abandonAttempt(`${bankSlug}__practice`, "practice");
     }
     window.location.href = bankSlug ? `/bank/${bankSlug}` : "/";
   }

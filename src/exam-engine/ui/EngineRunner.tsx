@@ -8,6 +8,7 @@ import { useExamSession } from "../hooks/useExamSession";
 import { QuestionRenderer } from "./QuestionRenderer";
 import { scoreAttempt, scoreQuestion } from "../core/scoring";
 import { LocalAttemptStorage } from "../core/storage";
+import { supabaseBrowser } from "@/lib/supabase/browser";
 import { computeAdaptiveSummary, type AdaptiveSummary } from "../core/analytics";
 import { AdaptiveResults } from "./AdaptiveResults";
 import { ProcessingOverlay } from "./ProcessingOverlay";
@@ -1375,6 +1376,22 @@ export function EngineRunner(props: {
       if (att && !att.submittedAt) {
         // Fire-and-forget (localStorage ops are synchronous internally)
         new LocalAttemptStorage(ns).clearLatest();
+
+        // Also mark as abandoned in Supabase so resume query won't find it
+        if (att.id && userId) {
+          try {
+            const sb = supabaseBrowser();
+            sb.from("attempts")
+              .update({ status: "abandoned" })
+              .eq("id", att.id)
+              .eq("user_id", userId)
+              .then(({ error }) => {
+                if (error) console.warn("[EngineRunner] Failed to abandon attempt on nav:", error.message);
+              });
+          } catch {
+            // Best-effort — don't block navigation
+          }
+        }
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1449,6 +1466,22 @@ export function EngineRunner(props: {
       const evtSlug = e?.detail?.bankSlug as string | undefined;
       if (!evtSlug) return;
       if (!storageNamespace.startsWith(`${evtSlug}__practice`)) return;
+
+      // Mark the old attempt as abandoned in Supabase before clearing
+      const oldAttempt = latestAttemptRef.current;
+      if (oldAttempt?.id && !oldAttempt.submittedAt && userId) {
+        try {
+          const sb = supabaseBrowser();
+          await sb
+            .from("attempts")
+            .update({ status: "abandoned" })
+            .eq("id", oldAttempt.id)
+            .eq("user_id", userId);
+        } catch (err) {
+          console.warn("[EngineRunner] Failed to abandon old attempt on restart:", err);
+        }
+      }
+
       setRevealed({});
       setSubmittedQ({});
       setShowExplain({});
@@ -1462,7 +1495,7 @@ export function EngineRunner(props: {
     }
     window.addEventListener("practice:restart", handler as any);
     return () => window.removeEventListener("practice:restart", handler as any);
-  }, [mode, storageNamespace, questions, blueprint, engine]);
+  }, [mode, storageNamespace, questions, blueprint, engine, userId]);
 
   const total = engine.attempt?.questionOrder?.length ?? questions.length;
   const index = engine.attempt ? engine.attempt.currentIndex : 0;
