@@ -408,7 +408,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <Shell>
       <Topbar>
         <TopbarInner>
-          <BrandLink href="/">
+          <BrandLink href={signedIn ? "/bank/pmp" : "/"}>
             <BrandIcon aria-hidden="true">🎓</BrandIcon>
             <BrandName>ExamEngine</BrandName>
           </BrandLink>
@@ -416,7 +416,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Nav>
             {!inSession ? (
               <>
-                <NavLink href="/">Exams</NavLink>
+                <NavLink href={signedIn ? "/bank/pmp" : "/"}>Exams</NavLink>
                 {signedIn && <NavLink href="/dashboard">Dashboard</NavLink>}
                 {isAdmin ? <NavLink href="/admin/questions">Admin</NavLink> : null}
                 <NavDivider />
