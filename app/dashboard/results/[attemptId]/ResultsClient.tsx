@@ -205,10 +205,36 @@ const SectionTitle = styled.h2`
   letter-spacing: -0.2px;
 `;
 
+const SectionToggleBtn = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: none;
+  background: none;
+  color: ${(p) => p.theme.text};
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 4px 0;
+  letter-spacing: -0.2px;
+  transition: opacity 150ms ease;
+
+  &:hover { opacity: 0.7; }
+`;
+
+const SectionArrow = styled.span<{ $open: boolean }>`
+  display: inline-block;
+  font-size: 12px;
+  transition: transform 200ms ease;
+  transform: ${(p) => (p.$open ? "rotate(180deg)" : "rotate(0)")};
+`;
+
 /* domain / type rows */
 const BreakdownGrid = styled.div`
   display: grid;
   gap: 10px;
+  margin-top: 12px;
 `;
 
 const BreakdownItem = styled.div`
@@ -272,6 +298,7 @@ const QList = styled.div`
   max-height: 400px;
   overflow-y: auto;
   padding-right: 4px;
+  margin-top: 12px;
 `;
 
 const QRow = styled.div<{ $correct: boolean }>`
@@ -322,6 +349,7 @@ const TimeGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  margin-top: 12px;
 
   @media (min-width: 480px) {
     grid-template-columns: 1fr 1fr 1fr;
@@ -520,6 +548,10 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
   const [attempt, setAttempt] = useState<AttemptFullRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showDomains, setShowDomains] = useState(true);
+  const [showTypes, setShowTypes] = useState(false);
+  const [showTime, setShowTime] = useState(false);
+  const [showQuestions, setShowQuestions] = useState(false);
 
   useEffect(() => {
     if (authLoading || !user) return;
@@ -659,49 +691,23 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
       {/* ── Domain Breakdown ────────────────────────────────── */}
       {result && (
         <SectionCard $delay={160}>
-          <SectionTitle>Performance by Domain</SectionTitle>
-          <BreakdownGrid>
-            {(Object.entries(result.byDomain) as [string, { correct: number; total: number }][])
-              .filter(([, d]) => d.total > 0)
-              .map(([domain, d]) => {
-                const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
-                const pass = pct >= passThreshold;
-                return (
-                  <BreakdownItem key={domain}>
-                    <BreakdownHeader>
-                      <BreakdownName>{DOMAIN_LABELS[domain] ?? domain}</BreakdownName>
-                      <BreakdownValues>
-                        <BreakdownScore>{d.correct}/{d.total}</BreakdownScore>
-                        <BreakdownPct $pass={pass}>{pct}%</BreakdownPct>
-                      </BreakdownValues>
-                    </BreakdownHeader>
-                    <BarTrack>
-                      <BarFill $pct={pct} $pass={pass} />
-                    </BarTrack>
-                  </BreakdownItem>
-                );
-              })}
-          </BreakdownGrid>
-        </SectionCard>
-      )}
-
-      {/* ── Question Type Breakdown ─────────────────────────── */}
-      {result && (
-        isPro ? (
-          <SectionCard $delay={220}>
-            <SectionTitle>Performance by Question Type</SectionTitle>
+          <SectionToggleBtn onClick={() => setShowDomains((v) => !v)}>
+            Performance by Domain
+            <SectionArrow $open={showDomains}>▼</SectionArrow>
+          </SectionToggleBtn>
+          {showDomains && (
             <BreakdownGrid>
-              {(Object.entries(result.byType) as [string, { correct: number; total: number }][])
-                .filter(([, t]) => t.total > 0)
-                .map(([qtype, t]) => {
-                  const pct = t.total > 0 ? Math.round((t.correct / t.total) * 100) : 0;
+              {(Object.entries(result.byDomain) as [string, { correct: number; total: number }][])
+                .filter(([, d]) => d.total > 0)
+                .map(([domain, d]) => {
+                  const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
                   const pass = pct >= passThreshold;
                   return (
-                    <BreakdownItem key={qtype}>
+                    <BreakdownItem key={domain}>
                       <BreakdownHeader>
-                        <BreakdownName>{QTYPE_LABELS[qtype] ?? qtype}</BreakdownName>
+                        <BreakdownName>{DOMAIN_LABELS[domain] ?? domain}</BreakdownName>
                         <BreakdownValues>
-                          <BreakdownScore>{t.correct}/{t.total}</BreakdownScore>
+                          <BreakdownScore>{d.correct}/{d.total}</BreakdownScore>
                           <BreakdownPct $pass={pass}>{pct}%</BreakdownPct>
                         </BreakdownValues>
                       </BreakdownHeader>
@@ -712,6 +718,42 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
                   );
                 })}
             </BreakdownGrid>
+          )}
+        </SectionCard>
+      )}
+
+      {/* ── Question Type Breakdown ─────────────────────────── */}
+      {result && (
+        isPro ? (
+          <SectionCard $delay={220}>
+            <SectionToggleBtn onClick={() => setShowTypes((v) => !v)}>
+              Performance by Question Type
+              <SectionArrow $open={showTypes}>▼</SectionArrow>
+            </SectionToggleBtn>
+            {showTypes && (
+              <BreakdownGrid>
+                {(Object.entries(result.byType) as [string, { correct: number; total: number }][])
+                  .filter(([, t]) => t.total > 0)
+                  .map(([qtype, t]) => {
+                    const pct = t.total > 0 ? Math.round((t.correct / t.total) * 100) : 0;
+                    const pass = pct >= passThreshold;
+                    return (
+                      <BreakdownItem key={qtype}>
+                        <BreakdownHeader>
+                          <BreakdownName>{QTYPE_LABELS[qtype] ?? qtype}</BreakdownName>
+                          <BreakdownValues>
+                            <BreakdownScore>{t.correct}/{t.total}</BreakdownScore>
+                            <BreakdownPct $pass={pass}>{pct}%</BreakdownPct>
+                          </BreakdownValues>
+                        </BreakdownHeader>
+                        <BarTrack>
+                          <BarFill $pct={pct} $pass={pass} />
+                        </BarTrack>
+                      </BreakdownItem>
+                    );
+                  })}
+              </BreakdownGrid>
+            )}
           </SectionCard>
         ) : (
           <ProGateWrap>
@@ -747,54 +789,62 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
       {/* ── Time Analysis ───────────────────────────────────── */}
       {totalTimeMs > 0 && (
         <SectionCard $delay={280}>
-          <SectionTitle>Time Analysis</SectionTitle>
-          <TimeGrid>
-            <TimeStat>
-              <TimeValue>{formatMs(totalTimeMs)}</TimeValue>
-              <TimeLabel>Total Time</TimeLabel>
-            </TimeStat>
-            <TimeStat>
-              <TimeValue>{formatMs(avgTimeMs)}</TimeValue>
-              <TimeLabel>Avg / Question</TimeLabel>
-            </TimeStat>
-            <TimeStat>
-              <TimeValue>{formatMs(maxTimeMs)}</TimeValue>
-              <TimeLabel>Longest Question</TimeLabel>
-            </TimeStat>
-          </TimeGrid>
+          <SectionToggleBtn onClick={() => setShowTime((v) => !v)}>
+            Time Analysis
+            <SectionArrow $open={showTime}>▼</SectionArrow>
+          </SectionToggleBtn>
+          {showTime && (
+            <TimeGrid>
+              <TimeStat>
+                <TimeValue>{formatMs(totalTimeMs)}</TimeValue>
+                <TimeLabel>Total Time</TimeLabel>
+              </TimeStat>
+              <TimeStat>
+                <TimeValue>{formatMs(avgTimeMs)}</TimeValue>
+                <TimeLabel>Avg / Question</TimeLabel>
+              </TimeStat>
+              <TimeStat>
+                <TimeValue>{formatMs(maxTimeMs)}</TimeValue>
+                <TimeLabel>Longest Question</TimeLabel>
+              </TimeStat>
+            </TimeGrid>
+          )}
         </SectionCard>
       )}
 
       {/* ── Question-by-Question ────────────────────────────── */}
       {result && result.scoreResults.length > 0 && (
         <SectionCard $delay={340}>
-          <SectionTitle>
+          <SectionToggleBtn onClick={() => setShowQuestions((v) => !v)}>
             Question Breakdown ({correctCount} of {result.scoreResults.length} correct)
-          </SectionTitle>
-          <QList>
-            {result.scoreResults.map((sr, idx) => {
-              const domain = attempt.state?.questionOrder
-                ? (() => {
-                    // Try to find domain from the state
-                    return "";
-                  })()
-                : "";
-              return (
-                <QRow key={sr.questionId} $correct={sr.isCorrect}>
-                  <QIcon $correct={sr.isCorrect}>
-                    {sr.isCorrect ? "\u2713" : "\u2717"}
-                  </QIcon>
-                  <QNumber>Q{idx + 1}</QNumber>
-                  <QDomain>
-                    {sr.score}/{sr.maxScore} pts
-                    {timeSpent[sr.questionId]
-                      ? ` \u00B7 ${formatMs(timeSpent[sr.questionId])}`
-                      : ""}
-                  </QDomain>
-                </QRow>
-              );
-            })}
-          </QList>
+            <SectionArrow $open={showQuestions}>▼</SectionArrow>
+          </SectionToggleBtn>
+          {showQuestions && (
+            <QList>
+              {result.scoreResults.map((sr, idx) => {
+                const domain = attempt.state?.questionOrder
+                  ? (() => {
+                      // Try to find domain from the state
+                      return "";
+                    })()
+                  : "";
+                return (
+                  <QRow key={sr.questionId} $correct={sr.isCorrect}>
+                    <QIcon $correct={sr.isCorrect}>
+                      {sr.isCorrect ? "\u2713" : "\u2717"}
+                    </QIcon>
+                    <QNumber>Q{idx + 1}</QNumber>
+                    <QDomain>
+                      {sr.score}/{sr.maxScore} pts
+                      {timeSpent[sr.questionId]
+                        ? ` \u00B7 ${formatMs(timeSpent[sr.questionId])}`
+                        : ""}
+                    </QDomain>
+                  </QRow>
+                );
+              })}
+            </QList>
+          )}
         </SectionCard>
       )}
 

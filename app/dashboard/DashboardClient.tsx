@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styled, { keyframes, useTheme } from "styled-components";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useUpgrade } from "@/lib/useUpgrade";
 import { supabaseBrowser } from "@/lib/supabase/browser";
@@ -146,9 +147,7 @@ const AttemptList = styled.div`
   animation: ${fadeUp} 400ms 140ms ease both;
 `;
 
-const AttemptCard = styled(Link)`
-  text-decoration: none;
-  color: inherit;
+const AttemptCard = styled.div`
   background: ${(p) => p.theme.cardBg};
   border: 1px solid ${(p) => p.theme.cardBorder};
   border-radius: 16px;
@@ -170,6 +169,24 @@ const AttemptCard = styled(Link)`
     align-items: flex-start;
     gap: 10px;
     padding: 14px 16px;
+  }
+`;
+
+const DeleteBtn = styled.button`
+  border: none;
+  background: none;
+  color: ${(p) => p.theme.muted};
+  font-size: 16px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  transition: color 150ms ease, background 150ms ease;
+  line-height: 1;
+
+  &:hover {
+    color: ${(p) => p.theme.error};
+    background: ${(p) => p.theme.errorSoft};
   }
 `;
 
@@ -509,6 +526,7 @@ function aggregateResults(results: AttemptResult[]) {
 export default function DashboardClient() {
   const { user, loading: authLoading, isPro } = useAuth();
   const { startCheckout } = useUpgrade();
+  const router = useRouter();
   const theme = useTheme() as { success: string; warning: string; error: string };
   const sb = useMemo(() => supabaseBrowser(), []);
   const [attempts, setAttempts] = useState<AttemptSummary[]>([]);
@@ -630,6 +648,19 @@ export default function DashboardClient() {
       return { setId, label, pct, correct: totalCorrect, total: totalQ, attempts: results.length };
     });
   }, [allResults, analyticsTab]);
+
+  const deleteAttempt = useCallback(async (attemptId: string) => {
+    if (!user) return;
+    const ok = window.confirm("Delete this attempt? This cannot be undone.");
+    if (!ok) return;
+    try {
+      await sb.from("attempts").delete().eq("id", attemptId).eq("user_id", user.id);
+      setAttempts((prev) => prev.filter((a) => a.id !== attemptId));
+      setAllResults((prev) => prev.filter((r) => r.id !== attemptId));
+    } catch (err) {
+      console.error("[Dashboard] Failed to delete attempt:", err);
+    }
+  }, [user, sb]);
 
   /* ── early returns (after all hooks) ───────────────────────────────── */
 
@@ -816,7 +847,10 @@ export default function DashboardClient() {
           <SectionTitle>Recent Attempts</SectionTitle>
           <AttemptList>
             {submitted.map((a) => (
-              <AttemptCard key={a.id} href={`/dashboard/results/${a.id}`}>
+              <AttemptCard
+                key={a.id}
+                onClick={() => router.push(`/dashboard/results/${a.id}`)}
+              >
                 <AttemptInfo>
                   <AttemptTitle>
                     {a.mode === "exam" ? "Exam Simulation" : "Practice Session"}
@@ -834,6 +868,12 @@ export default function DashboardClient() {
                       ? "In Progress"
                       : "—"}
                 </ScoreBadge>
+                <DeleteBtn
+                  onClick={(e) => { e.stopPropagation(); deleteAttempt(a.id); }}
+                  title="Delete attempt"
+                >
+                  ✕
+                </DeleteBtn>
               </AttemptCard>
             ))}
           </AttemptList>
