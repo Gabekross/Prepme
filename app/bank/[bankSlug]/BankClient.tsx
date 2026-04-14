@@ -335,6 +335,8 @@ const LockBadge = styled.div`
 const UpgradeOverlay = styled.div`
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 9000;
   display: grid; place-items: center;
   padding: 20px;
@@ -342,7 +344,8 @@ const UpgradeOverlay = styled.div`
 `;
 
 const UpgradeCard = styled.div`
-  background: ${(p) => p.theme.cardBg};
+  background: ${(p) =>
+    p.theme.name === "dark" ? "#111827" : p.theme.cardBg};
   border: 1px solid ${(p) => p.theme.cardBorder};
   border-radius: 24px;
   padding: 32px;
