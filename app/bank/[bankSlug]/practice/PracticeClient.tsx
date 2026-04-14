@@ -122,66 +122,32 @@ const PresetBtn = styled.button<{ $active: boolean }>`
 `;
 
 const LockedPresetBtn = styled.button`
-  padding: 10px 18px;
+  padding: 8px 16px;
   border-radius: 12px;
   border: 1px solid ${(p) => p.theme.cardBorder};
   background: ${(p) => p.theme.buttonBg};
   color: ${(p) => p.theme.muted};
-  font-size: 15px;
   font-weight: 800;
   cursor: pointer;
   transition: all 150ms ease;
   min-width: 54px;
-  position: relative;
   opacity: 0.6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 
   &:hover { opacity: 1; border-color: ${(p) => p.theme.warningBorder}; }
 `;
 
-const ProTag = styled.span`
-  position: absolute;
-  top: -6px; right: -6px;
-  background: ${(p) => p.theme.warningSoft};
-  border: 1px solid ${(p) => p.theme.warningBorder};
-  color: ${(p) => p.theme.warning};
-  font-size: 8px;
-  font-weight: 900;
-  padding: 1px 5px;
-  border-radius: 4px;
-  letter-spacing: 0.5px;
-`;
-
-const CustomRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 24px;
-`;
-
-const CustomLabel = styled.span`
-  font-size: 13px;
-  font-weight: 600;
-  color: ${(p) => p.theme.muted};
-`;
-
-const CustomInput = styled.input`
-  width: 70px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid ${(p) => p.theme.inputBorder};
-  background: ${(p) => p.theme.inputBg};
-  color: ${(p) => p.theme.text};
+const LockNum = styled.span`
   font-size: 15px;
-  font-weight: 700;
-  text-align: center;
-  outline: none;
-  transition: border-color 150ms ease;
+  line-height: 1.2;
+`;
 
-  &:focus {
-    border-color: ${(p) => p.theme.success};
-    box-shadow: 0 0 0 3px ${(p) => p.theme.successSoft};
-  }
+const LockIcon = styled.span`
+  font-size: 10px;
+  line-height: 1;
 `;
 
 const StartBtn = styled.button`
@@ -489,8 +455,8 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
                     onClick={startCheckout}
                     title="Study Mode feature"
                   >
-                    {n}
-                    <ProTag>STUDY MODE</ProTag>
+                    <LockNum>{n}</LockNum>
+                    <LockIcon>🔒</LockIcon>
                   </LockedPresetBtn>
                 );
               }
@@ -505,20 +471,6 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
               );
             })}
           </PresetsRow>
-
-          <CustomRow>
-            <CustomLabel>Or enter custom:</CustomLabel>
-            <CustomInput
-              type="number"
-              min={1}
-              max={maxQuestions}
-              value={questionCount}
-              onChange={(e) => {
-                const v = parseInt(e.target.value, 10);
-                if (!isNaN(v)) setQuestionCount(v);
-              }}
-            />
-          </CustomRow>
 
           <StartBtn
             onClick={() => setStarted(true)}

@@ -75,8 +75,10 @@ const BrandName = styled.span`
   letter-spacing: -0.2px;
   color: ${(p) => p.theme.text};
   white-space: nowrap;
+  display: none;
 
   @media (min-width: 400px) {
+    display: inline;
     font-size: 15px;
   }
 `;
@@ -84,8 +86,8 @@ const BrandName = styled.span`
 const Nav = styled.nav`
   display: flex;
   align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
+  gap: 2px;
+  min-width: 0;
 
   @media (min-width: 480px) {
     gap: 6px;
@@ -95,9 +97,9 @@ const Nav = styled.nav`
 const NavLink = styled(Link)`
   color: ${(p) => p.theme.mutedStrong};
   text-decoration: none;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 7px 10px;
+  padding: 6px 6px;
   border-radius: 10px;
   white-space: nowrap;
   transition: color 150ms ease, background 150ms ease;
@@ -117,7 +119,11 @@ const NavDivider = styled.div`
   width: 1px;
   height: 20px;
   background: ${(p) => p.theme.divider};
-  margin: 0 4px;
+  margin: 0 1px;
+
+  @media (min-width: 480px) {
+    margin: 0 4px;
+  }
 `;
 
 const NavButton = styled.button`
@@ -125,9 +131,9 @@ const NavButton = styled.button`
   border: 1px solid ${(p) => p.theme.buttonBorder};
   background: ${(p) => p.theme.buttonBg};
   color: ${(p) => p.theme.mutedStrong};
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 7px 10px;
+  padding: 6px 8px;
   cursor: pointer;
   white-space: nowrap;
   transition: color 150ms ease, background 150ms ease;
@@ -150,16 +156,21 @@ const ThemePill = styled.button`
   color: ${(p) => p.theme.text};
   font-size: 13px;
   font-weight: 700;
-  padding: 7px 14px;
+  padding: 6px 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
   transition: background 150ms ease, border-color 150ms ease;
 
   &:hover {
     background: ${(p) => p.theme.buttonHover};
     border-color: ${(p) => p.theme.accent};
+  }
+
+  @media (min-width: 480px) {
+    padding: 7px 14px;
   }
 `;
 

@@ -319,11 +319,17 @@ const LockBadge = styled.div`
   background: ${(p) => p.theme.warningSoft};
   border: 1px solid ${(p) => p.theme.warningBorder};
   color: ${(p) => p.theme.warning};
-  font-size: 11px; font-weight: 800;
-  padding: 4px 10px;
-  border-radius: 8px;
+  font-size: 9px; font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 6px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
+
+  @media (min-width: 480px) {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 8px;
+  }
 `;
 
 const UpgradeOverlay = styled.div`
@@ -600,28 +606,50 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
       <SectionLabel style={{ marginTop: 36 }}>Exam Simulations</SectionLabel>
 
       <Grid>
-        <ModeCard href={`/bank/${bank.slug}/exam/set-a/instructions`} $variant="exam">
-          <ModeHeader>
-            <ModeIcon><ModeImg src="/images/ui/bank/set-a.svg" alt="Set A" /></ModeIcon>
-            <ModeTitleGroup>
-              <ModeTitle>Simulation — Set A</ModeTitle>
-              <ModeSubtitle>70 questions drawn from Set A question bank</ModeSubtitle>
-            </ModeTitleGroup>
-          </ModeHeader>
-
-          <FeatureList>
-            <FeatureItem>
-              <FeatureDot $variant="exam">✓</FeatureDot>
-              Timed simulation under real exam conditions
-            </FeatureItem>
-            <FeatureItem>
-              <FeatureDot $variant="exam">✓</FeatureDot>
-              Score breakdown by domain and question type
-            </FeatureItem>
-          </FeatureList>
-
-          <CardCta $variant="exam">Start Set A →</CardCta>
-        </ModeCard>
+        {isPro ? (
+          <ModeCard href={`/bank/${bank.slug}/exam/set-a/instructions`} $variant="exam">
+            <ModeHeader>
+              <ModeIcon><ModeImg src="/images/ui/bank/set-a.svg" alt="Set A" /></ModeIcon>
+              <ModeTitleGroup>
+                <ModeTitle>Simulation — Set A</ModeTitle>
+                <ModeSubtitle>70 questions drawn from Set A question bank</ModeSubtitle>
+              </ModeTitleGroup>
+            </ModeHeader>
+            <FeatureList>
+              <FeatureItem>
+                <FeatureDot $variant="exam">✓</FeatureDot>
+                Timed simulation under real exam conditions
+              </FeatureItem>
+              <FeatureItem>
+                <FeatureDot $variant="exam">✓</FeatureDot>
+                Score breakdown by domain and question type
+              </FeatureItem>
+            </FeatureList>
+            <CardCta $variant="exam">Start Set A →</CardCta>
+          </ModeCard>
+        ) : (
+          <LockedCard onClick={() => setShowUpgrade(true)}>
+            <LockBadge>STUDY MODE</LockBadge>
+            <ModeHeader>
+              <ModeIcon><ModeImg src="/images/ui/bank/set-a.svg" alt="Set A" /></ModeIcon>
+              <ModeTitleGroup>
+                <ModeTitle>Simulation — Set A</ModeTitle>
+                <ModeSubtitle>70 questions drawn from Set A question bank</ModeSubtitle>
+              </ModeTitleGroup>
+            </ModeHeader>
+            <FeatureList>
+              <FeatureItem>
+                <FeatureDot $variant="exam">✓</FeatureDot>
+                Timed simulation under real exam conditions
+              </FeatureItem>
+              <FeatureItem>
+                <FeatureDot $variant="exam">✓</FeatureDot>
+                Score breakdown by domain and question type
+              </FeatureItem>
+            </FeatureList>
+            <CardCta $variant="exam">Unlock Set A</CardCta>
+          </LockedCard>
+        )}
 
         {isPro ? (
           <ModeCard href={`/bank/${bank.slug}/exam/set-b/instructions`} $variant="exam">
