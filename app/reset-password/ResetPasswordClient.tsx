@@ -22,6 +22,11 @@ const Card = styled.div`
   position: relative;
   overflow: hidden;
 
+  @media (max-width: 480px) {
+    padding: 28px 20px;
+    border-radius: 20px;
+  }
+
   &::before {
     content: "";
     position: absolute;
@@ -60,6 +65,7 @@ const Subtitle = styled.p`
   font-size: 14px;
   color: ${(p) => p.theme.muted};
   line-height: 1.5;
+  overflow-wrap: break-word;
 `;
 
 const Label = styled.label`

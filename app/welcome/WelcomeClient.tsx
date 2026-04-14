@@ -46,6 +46,11 @@ const Card = styled.div`
   text-align: center;
   animation: ${fadeUp} 500ms ease both;
 
+  @media (max-width: 480px) {
+    padding: 32px 20px;
+    border-radius: 22px;
+  }
+
   &::before {
     content: "";
     position: absolute;
@@ -102,12 +107,16 @@ const Subtitle = styled.p`
   font-size: 15px;
   color: ${(p) => p.theme.muted};
   line-height: 1.65;
+  overflow-wrap: break-word;
+  word-break: break-word;
   animation: ${fadeUp} 500ms 200ms ease both;
 `;
 
 const UserEmail = styled.span`
   color: ${(p) => p.theme.accent};
   font-weight: 700;
+  overflow-wrap: break-word;
+  word-break: break-all;
 `;
 
 /* ── checklist ──────────────────────────────────────────────────────────── */
@@ -147,7 +156,10 @@ const CheckCircle = styled.div`
 const CtaButton = styled(Link)`
   display: block;
   width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
   padding: 14px 24px;
+  box-sizing: border-box;
   border-radius: 14px;
   border: none;
   background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
