@@ -169,11 +169,12 @@ const Badge = styled.div`
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 14px;
 
-  @media (max-width: 600px) {
-    grid-template-columns: repeat(2, 1fr);
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
   }
 `;
 
@@ -966,12 +967,6 @@ export default function HomeClient() {
           <StatCard>
             <StatValue>6</StatValue>
             <StatLabel>Question Types</StatLabel>
-          </StatCard>
-          <StatCard>
-            <StatValue>
-              {stats ? stats.totalAttempts.toLocaleString() : "..."}
-            </StatValue>
-            <StatLabel>Sessions Completed</StatLabel>
           </StatCard>
         </StatsGrid>
       </Section>
