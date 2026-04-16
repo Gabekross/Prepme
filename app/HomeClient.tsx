@@ -397,71 +397,6 @@ const StepDesc = styled.p`
   margin: 0 auto;
 `;
 
-/* ── question types grid ────────────────────────────────────────────────── */
-
-const TypesGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const TypeCard = styled.div`
-  background: ${(p) => p.theme.cardBg};
-  border: 1px solid ${(p) => p.theme.cardBorder};
-  border-radius: 16px;
-  padding: 18px 16px;
-  text-align: center;
-`;
-
-const TypeIconWrap = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: ${(p) => p.theme.cardBg2 ?? "rgba(255,255,255,0.04)"};
-  border: 1px solid ${(p) => p.theme.cardBorder};
-  display: grid;
-  place-items: center;
-  margin: 0 auto 10px;
-  overflow: hidden;
-
-  @media (max-width: 480px) {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-  }
-`;
-
-const TypeImg = styled.img`
-  width: 26px;
-  height: 26px;
-  object-fit: contain;
-
-  @media (max-width: 480px) {
-    width: 22px;
-    height: 22px;
-  }
-`;
-
-const TypeName = styled.div`
-  font-size: 13px;
-  font-weight: 800;
-  color: ${(p) => p.theme.text};
-  margin-bottom: 4px;
-`;
-
-const TypeTag = styled.div`
-  font-size: 11px;
-  color: ${(p) => p.theme.muted};
-`;
-
 /* ── testimonials ───────────────────────────────────────────────────────── */
 
 const TestimonialGrid = styled.div`
@@ -793,14 +728,6 @@ const Skeleton = styled.div`
 
 type PlatformStats = { totalAttempts: number; totalPractice: number; totalExams: number };
 
-const QUESTION_TYPES = [
-  { img: "/images/ui/question-types/single-select.svg", name: "Single-Select MCQ", tag: "Choose the best answer" },
-  { img: "/images/ui/question-types/multi-select.svg", name: "Multi-Select MCQ", tag: "Select all that apply" },
-  { img: "/images/ui/question-types/drag-match.svg", name: "Drag & Match", tag: "Pair items correctly" },
-  { img: "/images/ui/question-types/drag-order.svg", name: "Drag & Order", tag: "Arrange the sequence" },
-  { img: "/images/ui/question-types/hotspot.svg", name: "Hotspot", tag: "Click the correct area" },
-  { img: "/images/ui/question-types/fill-blank.svg", name: "Fill-in-the-Blank", tag: "Type your answer" },
-];
 
 const TESTIMONIALS = [
   {
@@ -1045,26 +972,6 @@ export default function HomeClient() {
             </StepDesc>
           </StepCard>
         </StepsRow>
-      </Section>
-
-      <Divider />
-
-      {/* ── 6. Question Types ────────────────────────────────────────── */}
-      <Section $delay={240}>
-        <SectionHeading>All 6 PMP Question Types</SectionHeading>
-        <SectionSub>
-          Practice every format you will see on exam day. No surprises.
-        </SectionSub>
-
-        <TypesGrid>
-          {QUESTION_TYPES.map((qt) => (
-            <TypeCard key={qt.name}>
-              <TypeIconWrap><TypeImg src={qt.img} alt={qt.name} loading="lazy" /></TypeIconWrap>
-              <TypeName>{qt.name}</TypeName>
-              <TypeTag>{qt.tag}</TypeTag>
-            </TypeCard>
-          ))}
-        </TypesGrid>
       </Section>
 
       <Divider />
