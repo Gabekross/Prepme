@@ -16,6 +16,11 @@ const GlobalStyle = createGlobalStyle`
     margin: 0;
     background: ${(p: any) => p.theme.pageBg};
     color: ${(p: any) => p.theme.text};
+    overflow-x: hidden;
+  }
+
+  html {
+    overflow-x: hidden;
   }
 `;
 

@@ -466,45 +466,12 @@ const MobileNavBar = styled.div`
   }
 `;
 
-/* ── timer ───────────────────────────────────────────────────────────────── */
-
-const TimerBlock = styled.div<{ $warning: "none" | "low" | "critical" }>`
-  border-radius: 14px;
-  border: 1px solid ${(p) =>
-    p.$warning === "critical"
-      ? p.theme.errorBorder
-      : p.$warning === "low"
-      ? p.theme.warningBorder
-      : p.theme.cardBorder};
-  background: ${(p) =>
-    p.$warning === "critical"
-      ? p.theme.errorSoft
-      : p.$warning === "low"
-      ? p.theme.warningSoft
-      : p.theme.name === "dark"
-      ? "rgba(255,255,255,0.04)"
-      : "#f8fafc"};
-  padding: 10px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 2px;
-  transition: background 400ms ease, border-color 400ms ease;
-`;
-
-const TimerLabel = styled.div`
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  color: ${(p) => p.theme.muted};
-`;
+/* ── timer (inline in progress row) ─────────────────────────────────────── */
 
 const TimerValue = styled.div<{ $warning: "none" | "low" | "critical" }>`
-  font-size: 20px;
+  font-size: 15px;
   font-weight: 900;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
   font-variant-numeric: tabular-nums;
   color: ${(p) =>
     p.$warning === "critical"
@@ -512,6 +479,7 @@ const TimerValue = styled.div<{ $warning: "none" | "low" | "critical" }>`
       : p.$warning === "low"
       ? p.theme.warning
       : p.theme.text};
+  transition: color 400ms ease;
 `;
 
 /* ── unanswered badge ─────────────────────────────────────────────────────── */
@@ -1700,25 +1668,22 @@ export function EngineRunner(props: {
     <Grid>
       {/* ── LEFT SIDEBAR ───────────────────────────────────────── */}
       <Card>
-        {/* Hide progress bar after submission */}
+        {/* Progress bar + inline timer */}
         {!engine.attempt?.submittedAt && (
           <ProgressSection>
             <ProgressHeader>
               <ProgressLabel>Progress</ProgressLabel>
-              <ProgressCounter>{x} / {total}</ProgressCounter>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <ProgressCounter>{x} / {total}</ProgressCounter>
+                {mode === "exam" && timeRemaining !== null && (
+                  <TimerValue $warning={timerWarning}>{formatTime(timeRemaining)}</TimerValue>
+                )}
+              </div>
             </ProgressHeader>
             <ProgressTrack>
               <ProgressFill $pct={progressPct} $mode={mode} />
             </ProgressTrack>
           </ProgressSection>
-        )}
-
-        {/* ── Timer (exam mode only) ──────────────────────── */}
-        {mode === "exam" && !engine.attempt?.submittedAt && timeRemaining !== null && (
-          <TimerBlock $warning={timerWarning}>
-            <TimerLabel>Time Remaining</TimerLabel>
-            <TimerValue $warning={timerWarning}>{formatTime(timeRemaining)}</TimerValue>
-          </TimerBlock>
         )}
 
         {/* ── Unanswered counter (exam mode only) ────────── */}

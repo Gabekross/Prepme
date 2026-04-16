@@ -15,6 +15,7 @@ const Shell = styled.div`
   background-image: ${(p) => p.theme.pageBg2};
   color: ${(p) => p.theme.text};
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
 `;
 
 const Topbar = styled.header`
@@ -178,6 +179,7 @@ const Main = styled.main`
   max-width: 1180px;
   margin: 0 auto;
   padding: 16px 14px 64px;
+  overflow-x: hidden;
 
   @media (min-width: 480px) {
     padding: 20px 16px 72px;
