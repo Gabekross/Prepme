@@ -1785,8 +1785,8 @@ export function EngineRunner(props: {
           </FlagBtn>
         )}
 
-        {/* Question grid toggle (practice, or exam after submission) */}
-        {engine.attempt && (mode === "practice" || (mode === "exam" && !!engine.attempt.submittedAt)) && (
+        {/* Question grid toggle — exam review only (not practice) */}
+        {engine.attempt && mode === "exam" && !!engine.attempt.submittedAt && (
           <>
             <Divider />
             <LearnMoreBtn onClick={() => setShowQuestionGrid((v) => !v)}>
@@ -1795,8 +1795,8 @@ export function EngineRunner(props: {
           </>
         )}
 
-        {/* Question jump grid — practice or exam review, toggled */}
-        {engine.attempt && (mode === "practice" || (mode === "exam" && !!engine.attempt.submittedAt)) && showQuestionGrid && (
+        {/* Question jump grid — exam review only, toggled */}
+        {engine.attempt && mode === "exam" && !!engine.attempt.submittedAt && showQuestionGrid && (
           <>
             <SectionTitle style={{ marginTop: 10 }}>Questions</SectionTitle>
             <QGridWrap>
