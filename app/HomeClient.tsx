@@ -826,25 +826,19 @@ const TESTIMONIALS = [
 ];
 
 const FREE_FEATURES = [
-  { text: "Practice mode with immediate feedback", included: true },
-  { text: "20 questions per session (configurable)", included: true },
-  { text: "1 exam simulation (Set A)", included: true },
-  { text: "Basic results + pass/fail", included: true },
-  { text: "Domain performance breakdown", included: true },
-  { text: "Full exam simulations (Set B, C)", included: false },
-  { text: "Adaptive weakness targeting", included: false },
-  { text: "Advanced topic-level analytics", included: false },
+  { text: "Real PMP questions across all 6 question types", included: true },
+  { text: "Detailed explanation for every answer in real time", included: true },
+  { text: "Instant pass/fail verdict with score by domain", included: true },
+  { text: "See your domain score breakdown after each session", included: true },
 ];
 
 const PRO_FEATURES = [
-  { text: "Everything in Free, plus:", included: true },
-  { text: "All 3 exam simulations (A, B, C)", included: true },
-  { text: "Adaptive difficulty engine", included: true },
-  { text: "Weakness targeting per domain & topic", included: true },
-  { text: "Weighted scoring (difficulty-adjusted)", included: true },
-  { text: "Topic-level mastery insights", included: true },
-  { text: "Personalized study recommendations", included: true },
-  { text: "Difficulty performance matrix", included: true },
+  { text: "3 full 180-question simulations", included: true },
+  { text: "Adapts to your level — harder questions as you improve", included: true },
+  { text: "Auto-targets your weakest domains each session", included: true },
+  { text: "Know exactly which topics to study before exam day", included: true },
+  { text: "Harder questions score higher — just like the real PMP", included: true },
+  { text: "Personalized study recommendations based on your gaps", included: true },
 ];
 
 const FAQ_DATA = [
@@ -1117,12 +1111,12 @@ export default function HomeClient() {
         <PricingGrid>
           <PricingCard>
             <PricingTier>Starter Plan</PricingTier>
-            <PricingTagline>Begin your PMP journey</PricingTagline>
+            <PricingTagline>Get your first score in 5 minutes</PricingTagline>
             <PricingPrice>
               $0 <PricingPeriod>free</PricingPeriod>
             </PricingPrice>
             <PricingDesc>
-              Get started with practice mode and one full exam simulation.
+              Try real PMP questions with detailed explanations after every answer. No credit card, no setup.
             </PricingDesc>
             <PricingList>
               {FREE_FEATURES.map((f) => (
@@ -1134,18 +1128,18 @@ export default function HomeClient() {
                 </PricingItem>
               ))}
             </PricingList>
-            <PricingCTA href="/bank/pmp">Start Free →</PricingCTA>
+            <PricingCTA href="/bank/pmp">Try It Free — No Card Needed →</PricingCTA>
           </PricingCard>
 
           <PricingCard $featured>
             <PricingBadge>Most Popular</PricingBadge>
             <PricingTier>Study Mode</PricingTier>
-            <PricingTagline>Pass with confidence</PricingTagline>
+            <PricingTagline>Everything you need to pass first time</PricingTagline>
             <PricingPrice>
               $29 <PricingPeriod>one-time</PricingPeriod>
             </PricingPrice>
             <PricingDesc>
-              Full access to every simulation, adaptive engine, and analytics.
+              3 full 180-question simulations plus an adaptive engine that learns your weak spots and targets them every session.
             </PricingDesc>
             <PricingList>
               {PRO_FEATURES.map((f) => (
@@ -1158,7 +1152,7 @@ export default function HomeClient() {
               ))}
             </PricingList>
             <PricingCTABtn $featured onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Get Study Mode →"}
+              {checkoutLoading ? "Redirecting…" : "Unlock Study Mode — $29 →"}
             </PricingCTABtn>
           </PricingCard>
         </PricingGrid>
