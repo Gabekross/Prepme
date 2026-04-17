@@ -377,6 +377,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     const s = new LocalAttemptStorage(ns);
     // Read the attempt ID from localStorage before clearing it
     const attempt = await s.loadLatestAttempt();
+    if (attempt?.submittedAt) return; // Never abandon/clear submitted attempts
     if (s.clearLatest) await s.clearLatest();
 
     // Mark the attempt as "abandoned" in Supabase so the resume query skips it

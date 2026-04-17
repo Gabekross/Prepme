@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import styled, { keyframes } from "styled-components";
 import type { Blueprint, Domain, Question, Scenario, Response } from "../core/types";
@@ -2357,7 +2357,7 @@ export function EngineRunner(props: {
       {showProcessing && (
         <ProcessingOverlay
           minDuration={3000}
-          onComplete={() => setShowProcessing(false)}
+          onComplete={useCallback(() => setShowProcessing(false), [])}
         />
       )}
 
