@@ -1174,6 +1174,43 @@ const CompleteSecondaryBtn = styled.button`
   &:hover { background: ${(p) => p.theme.success}18; }
 `;
 
+/* ── review question nav row (below explanation) ─────────────────────────── */
+
+const ReviewNavRow = styled.div`
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+`;
+
+const ReviewNavBtn = styled.button<{ $primary?: boolean; $muted?: boolean }>`
+  flex: 1;
+  min-width: 80px;
+  border-radius: 10px;
+  border: 1px solid ${(p) =>
+    p.$primary ? "transparent" : p.theme.buttonBorder};
+  background: ${(p) =>
+    p.$primary ? p.theme.accent : p.theme.buttonBg};
+  color: ${(p) =>
+    p.$primary ? p.theme.accentText : p.$muted ? p.theme.muted : p.theme.text};
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: center;
+  transition: background 150ms ease, opacity 150ms ease;
+
+  &:hover:not(:disabled) {
+    background: ${(p) =>
+      p.$primary ? p.theme.accentHover : p.theme.buttonHover};
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+`;
+
 /* ── desktop-only wrapper (hidden on mobile + tablet) ────────────────────── */
 
 const DesktopOnly = styled.div`
@@ -1500,6 +1537,12 @@ export function EngineRunner(props: {
       questionEntryRef.current = null;
       return;
     }
+    // Never track time during review — the attempt is already submitted and
+    // calling recordTimeOnQuestion would trigger unnecessary Zustand updates.
+    if (engine.attempt.submittedAt) {
+      questionEntryRef.current = null;
+      return;
+    }
     const prev = questionEntryRef.current;
     if (prev && prev.qid !== currentId) {
       const elapsed = Date.now() - prev.enteredAt;
@@ -1588,7 +1631,12 @@ export function EngineRunner(props: {
 
   useEffect(() => {
     if (mode !== "exam") return;
-    if (engine.attempt?.submittedAt) setExamView("review_list");
+    // Only transition take → review_list on first submission.
+    // Never override review_question — that would cause a blank screen
+    // during the Zustand re-render triggered by goToIndex / recordTimeOnQuestion.
+    if (engine.attempt?.submittedAt) {
+      setExamView((prev) => (prev === "take" ? "review_list" : prev));
+    }
   }, [mode, engine.attempt?.submittedAt]);
 
   const examPercent = useMemo(() => {
@@ -2146,26 +2194,6 @@ export function EngineRunner(props: {
               ) : (
                 <Subtle>Loading…</Subtle>
               )}
-
-              {/* Prev / Next navigation */}
-              <ActionRow style={{ marginTop: 14 }}>
-                <NavBtn
-                  onClick={() => openReviewQuestion(engine.attempt!.currentIndex - 1)}
-                  disabled={engine.attempt!.currentIndex <= 0}
-                  style={{ flex: 1 }}
-                >
-                  ← Prev
-                </NavBtn>
-                <NavBtn
-                  $primary
-                  onClick={() => openReviewQuestion(engine.attempt!.currentIndex + 1)}
-                  disabled={engine.attempt!.currentIndex >= total - 1}
-                  style={{ flex: 1 }}
-                >
-                  Next →
-                </NavBtn>
-              </ActionRow>
-              <BackBtn onClick={() => setExamView("review_list")}>↩ Back to Results</BackBtn>
             </Card>
 
             <ExplanationCard>
@@ -2182,6 +2210,29 @@ export function EngineRunner(props: {
                   : "No explanation has been provided for this question yet."}
               </ExplanationBody>
             </ExplanationCard>
+
+            {/* Compact nav row — sits below explanation */}
+            <ReviewNavRow>
+              <ReviewNavBtn
+                onClick={() => openReviewQuestion(engine.attempt!.currentIndex - 1)}
+                disabled={engine.attempt!.currentIndex <= 0}
+              >
+                ← Prev
+              </ReviewNavBtn>
+              <ReviewNavBtn
+                $muted
+                onClick={() => setExamView("review_list")}
+              >
+                ↩ Results
+              </ReviewNavBtn>
+              <ReviewNavBtn
+                $primary
+                onClick={() => openReviewQuestion(engine.attempt!.currentIndex + 1)}
+                disabled={engine.attempt!.currentIndex >= total - 1}
+              >
+                Next →
+              </ReviewNavBtn>
+            </ReviewNavRow>
           </>
         )}
 
