@@ -27,6 +27,8 @@ const Grid = styled.div`
   gap: 16px;
   grid-template-columns: 1fr;
   align-items: start;
+  min-width: 0;
+  width: 100%;
 
   @media (min-width: 980px) {
     grid-template-columns: 280px 1fr;
@@ -37,6 +39,7 @@ const Grid = styled.div`
 const RightCol = styled.div`
   display: grid;
   gap: 16px;
+  min-width: 0;
 `;
 
 /* ── shared card ─────────────────────────────────────────────────────────── */
@@ -458,11 +461,42 @@ const QGridBtn = styled.button<{ $state: "current" | "answered" | "flagged" | "u
 
 const MobileNavBar = styled.div`
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
 
   @media (min-width: 980px) {
     display: none;
+  }
+`;
+
+const MobileSubmitBtn = styled.button`
+  display: flex;
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid ${(p) => p.theme.errorBorder};
+  background: ${(p) => p.theme.errorSoft};
+  color: ${(p) => p.theme.error};
+  padding: 10px 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 150ms ease;
+
+  @media (min-width: 980px) {
+    display: none;
+  }
+
+  &:hover {
+    background: ${(p) => p.theme.errorBorder};
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 `;
 
@@ -2228,7 +2262,7 @@ export function EngineRunner(props: {
               </ExplanationCard>
             )}
 
-            {/* Mobile bottom navigation */}
+            {/* Mobile bottom navigation — matches 3-button practice layout */}
             <MobileNavBar>
               <NavBtn
                 onClick={() => reviewingFlagged ? goPrevFlagged() : engine.prev()}
@@ -2248,20 +2282,17 @@ export function EngineRunner(props: {
                   aria-label="Flag question"
                   title={engine.attempt.flagged[currentId] ? "Unflag" : "Flag for review"}
                 >
-                  {engine.attempt.flagged[currentId] ? "Flagged" : "Flag"}
-                </NavBtn>
-              )}
-              {mode === "exam" && !engine.attempt?.submittedAt && (
-                <NavBtn
-                  $danger
-                  onClick={initiateSubmit}
-                  disabled={!engine.attempt}
-                  style={{ flex: "0 0 auto" }}
-                >
-                  Submit
+                  {engine.attempt.flagged[currentId] ? "✓ Flagged" : "Flag"}
                 </NavBtn>
               )}
             </MobileNavBar>
+
+            {/* Mobile Submit — exam only, separate full-width row below nav */}
+            {mode === "exam" && !engine.attempt?.submittedAt && (
+              <MobileSubmitBtn onClick={initiateSubmit} disabled={!engine.attempt}>
+                Submit Exam
+              </MobileSubmitBtn>
+            )}
           </>
         )}
       </RightCol>
