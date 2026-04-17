@@ -1982,49 +1982,9 @@ export function EngineRunner(props: {
           </DesktopOnly>
         )}
 
-        {result && mode === "practice" && (
-          <>
-            <Divider />
-            <SectionTitle>Session Results</SectionTitle>
-            <StatGrid>
-              <StatBox $variant="success">
-                <StatLabel>Correct</StatLabel>
-                <StatValue $variant="success">{correctCount}</StatValue>
-              </StatBox>
-              <StatBox $variant="error">
-                <StatLabel>Incorrect</StatLabel>
-                <StatValue $variant="error">{incorrectCount}</StatValue>
-              </StatBox>
-              <StatBox>
-                <StatLabel>Score</StatLabel>
-                <StatValue>{result.totalScore}/{result.maxScore}</StatValue>
-              </StatBox>
-              <StatBox>
-                <StatLabel>Accuracy</StatLabel>
-                <StatValue>{result.maxScore > 0 ? Math.round((result.totalScore / result.maxScore) * 100) : 0}%</StatValue>
-              </StatBox>
-            </StatGrid>
-            {adaptiveSummary && (
-              <StatGrid style={{ marginTop: 8 }}>
-                <StatBox $variant="neutral">
-                  <StatLabel>Weighted</StatLabel>
-                  <StatValue>{adaptiveSummary.weighted.weightedPercent}%</StatValue>
-                </StatBox>
-                <StatBox $variant="neutral">
-                  <StatLabel>Avg Diff</StatLabel>
-                  <StatValue>{adaptiveSummary.weighted.avgDifficulty}</StatValue>
-                </StatBox>
-              </StatGrid>
-            )}
-            <Divider />
-            <ActionRow>
-              <RetakeBtn onClick={retakePractice} style={{ flex: 1 }}>New Session</RetakeBtn>
-              {incorrectCount > 0 && (
-                <RetakeBtn onClick={retryIncorrect} style={{ flex: 1 }}>Retry Wrong</RetakeBtn>
-              )}
-            </ActionRow>
-          </>
-        )}
+        {/* Session Results block removed — all metrics are already shown in the
+            right-column Performance Overview, and action buttons live in the
+            CompleteCard banner. */}
       </Card>
 
       {/* ── RIGHT COLUMN ───────────────────────────────────────── */}
@@ -2248,9 +2208,6 @@ export function EngineRunner(props: {
                 ? "Good Progress!"
                 : "Keep Studying!"}
             </CompleteTitle>
-            <CompleteSubtitle>
-              {correctCount} / {total} correct — {result.maxScore > 0 ? Math.round((result.totalScore / result.maxScore) * 100) : 0}% accuracy
-            </CompleteSubtitle>
             <CompleteActions>
               <CompletePrimaryBtn onClick={retakePractice}>New Session</CompletePrimaryBtn>
               {incorrectCount > 0 && (

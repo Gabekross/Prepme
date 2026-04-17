@@ -127,60 +127,60 @@ function buildDifficultyInsight(result: WeightedAttemptResult): string {
   return `Your performance is fairly consistent across difficulty levels (avg ${result.weightedPercent}% weighted).`;
 }
 
+/** Minimum attempts per topic before we include it in recommendations.
+ *  Below this, topic accuracy is noise (e.g. 0/1 or 1/2). */
+const TOPIC_MIN_ATTEMPTS = 3;
+
 function buildRecommendations(
   domains: DomainFeedback[],
   insights: TopicInsights,
 ): string[] {
   const recs: string[] = [];
 
-  // Weak domains
-  const weakDomains = domains.filter((d) => d.masteryBand === "Needs Focus" || d.masteryBand === "Developing");
-  for (const d of weakDomains.slice(0, 2)) {
-    recs.push(`Focus on ${d.label} domain — currently at ${d.masteryBand} level (${d.weightedPercent}% weighted).`);
-  }
-
-  // Weak topics
-  for (const t of insights.weakest.slice(0, 3)) {
+  // Weak topics — only include topics with enough attempts to be meaningful.
+  // Domain-level "Focus on X — currently at Needs Focus level" lines are
+  // deliberately omitted: that info is already conveyed by the Mastery card
+  // badges and color-coded bars right above, so repeating it adds noise.
+  const meaningfulWeak = insights.weakest.filter((t) => t.attempted >= TOPIC_MIN_ATTEMPTS);
+  for (const t of meaningfulWeak.slice(0, 3)) {
     recs.push(`Improve ${topicLabel(t.tag)} — ${t.weightedAccuracy}% accuracy across ${t.attempted} questions.`);
   }
 
+  // Fallback: if there are no meaningful topic recs, offer one general hint
+  // based on domain signal so the section isn't empty.
   if (recs.length === 0) {
-    recs.push("Maintain your strong performance across all areas. Consider attempting higher-difficulty questions.");
+    const weakDomains = domains.filter((d) => d.masteryBand === "Needs Focus" || d.masteryBand === "Developing");
+    if (weakDomains.length > 0) {
+      const names = weakDomains.slice(0, 2).map((d) => d.label).join(" and ");
+      recs.push(`Practice more questions in the ${names} domain${weakDomains.length > 1 ? "s" : ""}.`);
+    } else {
+      recs.push("Maintain your strong performance across all areas. Consider attempting higher-difficulty questions.");
+    }
   }
 
   return recs;
 }
 
 function buildSummaryLines(
-  result: WeightedAttemptResult,
-  domains: DomainFeedback[],
+  _result: WeightedAttemptResult,
+  _domains: DomainFeedback[],
   insights: TopicInsights,
 ): string[] {
   const lines: string[] = [];
 
-  // Strong domains
-  const strong = domains.filter((d) => d.masteryBand === "Strong");
-  if (strong.length > 0) {
-    const names = strong.map((d) => d.label).join(" and ");
-    lines.push(`You are strong in ${names} domain${strong.length > 1 ? "s" : ""}.`);
-  }
-
-  // Weak domains
-  const weak = domains.filter((d) => d.masteryBand === "Needs Focus" || d.masteryBand === "Developing");
-  if (weak.length > 0) {
-    const names = weak.map((d) => d.label).join(" and ");
-    lines.push(`You are underperforming in ${names} domain${weak.length > 1 ? "s" : ""}.`);
-  }
-
-  // Strong topics
-  if (insights.strongest.length > 0) {
-    const topicNames = insights.strongest.slice(0, 2).map((t) => topicLabel(t.tag)).join(", ");
+  // Domain-level summary lines ("You are strong in X", "underperforming in Y")
+  // are omitted because the Mastery cards above already communicate that.
+  // Only topic lines survive, and only when the topic has enough attempts
+  // to be meaningful (same threshold as buildRecommendations).
+  const meaningfulStrong = insights.strongest.filter((t) => t.attempted >= TOPIC_MIN_ATTEMPTS);
+  if (meaningfulStrong.length > 0) {
+    const topicNames = meaningfulStrong.slice(0, 2).map((t) => topicLabel(t.tag)).join(", ");
     lines.push(`Your strongest topics include ${topicNames}.`);
   }
 
-  // Weak topics
-  if (insights.weakest.length > 0) {
-    const topicNames = insights.weakest.slice(0, 2).map((t) => topicLabel(t.tag)).join(" and ");
+  const meaningfulWeak = insights.weakest.filter((t) => t.attempted >= TOPIC_MIN_ATTEMPTS);
+  if (meaningfulWeak.length > 0) {
+    const topicNames = meaningfulWeak.slice(0, 2).map((t) => topicLabel(t.tag)).join(" and ");
     lines.push(`Your recent results suggest improving ${topicNames}.`);
   }
 
