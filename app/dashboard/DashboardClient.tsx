@@ -638,38 +638,47 @@ export default function DashboardClient() {
   const [loading, setLoading] = useState(true);
   const [analyticsTab, setAnalyticsTab] = useState<"practice" | "exam">("practice");
 
+  // Single user-scoped source of truth for both summary cards and analytics.
+  // Called on mount and after any mutation (delete) so both slices stay in sync.
+  const loadData = useCallback(async () => {
+    if (!user) return;
+    try {
+      const [attemptsRes, resultsRes] = await Promise.all([
+        sb
+          .from("attempts")
+          .select(
+            "id, bank_slug, mode, set_id, status, total_score, max_score, score_percent, passed, created_at, submitted_at"
+          )
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(50),
+        sb
+          .from("attempts")
+          .select("id, mode, set_id, result")
+          .eq("user_id", user.id)
+          .eq("status", "submitted"),
+      ]);
+
+      setAttempts((attemptsRes.data as AttemptSummary[]) ?? []);
+
+      const rawResults = (resultsRes.data as AttemptWithResult[]) ?? [];
+      setAllResults(rawResults.filter((r) => r.result !== null));
+    } catch (err) {
+      console.error("[Dashboard] Failed to load data:", err);
+    }
+  }, [user, sb]);
+
   useEffect(() => {
     if (authLoading || !user) return;
-
+    let cancelled = false;
     (async () => {
-      try {
-        const [attemptsRes, resultsRes] = await Promise.all([
-          sb
-            .from("attempts")
-            .select(
-              "id, bank_slug, mode, set_id, status, total_score, max_score, score_percent, passed, created_at, submitted_at"
-            )
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: false })
-            .limit(50),
-          sb
-            .from("attempts")
-            .select("id, mode, set_id, result")
-            .eq("user_id", user.id)
-            .eq("status", "submitted"),
-        ]);
-
-        setAttempts((attemptsRes.data as AttemptSummary[]) ?? []);
-
-        const rawResults = (resultsRes.data as AttemptWithResult[]) ?? [];
-        setAllResults(rawResults.filter((r) => r.result !== null));
-      } catch (err) {
-        console.error("[Dashboard] Failed to load data:", err);
-      } finally {
-        setLoading(false);
-      }
+      await loadData();
+      if (!cancelled) setLoading(false);
     })();
-  }, [user, authLoading, sb]);
+    return () => {
+      cancelled = true;
+    };
+  }, [user, authLoading, loadData]);
 
   /* ── derived data (all hooks MUST run before any early return) ──────── */
 
@@ -758,13 +767,24 @@ export default function DashboardClient() {
     const ok = window.confirm("Delete this attempt? This cannot be undone.");
     if (!ok) return;
     try {
-      await sb.from("attempts").delete().eq("id", attemptId).eq("user_id", user.id);
+      const { error } = await sb
+        .from("attempts")
+        .delete()
+        .eq("id", attemptId)
+        .eq("user_id", user.id);
+      if (error) throw error;
+
+      // Optimistic update for snappy UI...
       setAttempts((prev) => prev.filter((a) => a.id !== attemptId));
       setAllResults((prev) => prev.filter((r) => r.id !== attemptId));
+
+      // ...then refetch so summary cards AND analytics are guaranteed to match
+      // the DB (covers cascades and any rows filtered out of allResults at load).
+      await loadData();
     } catch (err) {
       console.error("[Dashboard] Failed to delete attempt:", err);
     }
-  }, [user, sb]);
+  }, [user, sb, loadData]);
 
   /* ── early returns (after all hooks) ───────────────────────────────── */
 
