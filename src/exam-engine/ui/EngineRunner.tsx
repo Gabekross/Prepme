@@ -1140,6 +1140,41 @@ const CompleteSecondaryBtn = styled.button`
   &:hover { background: ${(p) => p.theme.success}18; }
 `;
 
+/* ── flagged review banner ───────────────────────────────────────────────── */
+
+const FlaggedReviewBanner = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: ${(p) => p.theme.warningSoft};
+  border: 1px solid ${(p) => p.theme.warningBorder};
+  color: ${(p) => p.theme.warning};
+  font-size: 13px;
+  font-weight: 700;
+  animation: ${slideIn} 200ms ease both;
+`;
+
+const FlaggedReviewExitBtn = styled.button`
+  border: 1px solid ${(p) => p.theme.warningBorder};
+  background: transparent;
+  color: ${(p) => p.theme.warning};
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: background 150ms ease;
+
+  &:hover {
+    background: ${(p) => p.theme.warningBorder};
+  }
+`;
+
 /* ── "loading" state ─────────────────────────────────────────────────────── */
 
 const Subtle = styled.p`
@@ -1248,6 +1283,7 @@ export function EngineRunner(props: {
   const [showDomainSection, setShowDomainSection] = useState(true);
   const [showInsightsSection, setShowInsightsSection] = useState(false);
   const [showQuestionList, setShowQuestionList] = useState(false);
+  const [reviewingFlagged, setReviewingFlagged] = useState(false);
 
   const questionEntryRef = useRef<{ qid: string; enteredAt: number } | null>(null);
 
@@ -1294,6 +1330,7 @@ export function EngineRunner(props: {
     setShowSubmitConfirm(false);
     setExamView("take");
     setTimeRemaining(null);
+    setReviewingFlagged(false);
 
     engine.initIfNeeded({ bank: questions, defaultBlueprint: blueprint, mode, storageNamespace, userId, bankSlug, setId })
       .then(() => {
@@ -1471,7 +1508,7 @@ export function EngineRunner(props: {
   const progressPct = total ? Math.round((x / total) * 100) : 0;
   // Compute canNext/canPrev directly from functions to avoid stale Zustand getter issue
   const isLast = !engine.canNext();
-  const canPrevNav = engine.canPrev();
+  const canPrevNav = reviewingFlagged ? flaggedIndices.length > 1 : engine.canPrev();
   const practiceSubmitted = mode === "practice" && !!engine.attempt?.submittedAt;
   const domain = engine.filters.domain as Domain | "all";
 
@@ -1530,6 +1567,15 @@ export function EngineRunner(props: {
     return Object.values(engine.attempt.flagged).filter(Boolean).length;
   }, [engine.attempt]);
 
+  /** Ordered indices of flagged questions in the current attempt */
+  const flaggedIndices = useMemo(() => {
+    if (!engine.attempt) return [] as number[];
+    return engine.attempt.questionOrder.reduce<number[]>((acc, qid, idx) => {
+      if (engine.attempt!.flagged[qid]) acc.push(idx);
+      return acc;
+    }, []);
+  }, [engine.attempt]);
+
   const reviewRows = useMemo(() => {
     if (mode !== "exam") return [];
     if (!result || !engine.attempt) return [];
@@ -1557,6 +1603,7 @@ export function EngineRunner(props: {
     if (!engine.attempt) return "Loading…";
     // After practice is fully submitted, navigate freely
     if (practiceSubmitted) return isLast ? "← First Question" : "Next Question →";
+    if (reviewingFlagged) return "Next Flagged →";
     if (mode === "practice") {
       const isRevealed = !!(currentId && revealed[currentId]);
       if (!isRevealed && answered) return "Submit Answer";
@@ -1565,7 +1612,7 @@ export function EngineRunner(props: {
       return isLast ? "Skip & Finish" : "Skip Question";
     }
     return isLast ? "Finish Exam" : "Next Question →";
-  }, [engine.attempt, mode, answered, currentId, revealed, isLast, practiceSubmitted]);
+  }, [engine.attempt, mode, answered, currentId, revealed, isLast, practiceSubmitted, reviewingFlagged]);
 
   const primaryDisabled = useMemo(() => {
     if (!engine.attempt) return true;
@@ -1625,6 +1672,11 @@ export function EngineRunner(props: {
       engine.next();
       return;
     }
+    // Exam mode — flagged-only navigation
+    if (reviewingFlagged) {
+      goNextFlagged();
+      return;
+    }
     // Exam mode — show confirm dialog before submitting
     if (isLast) { initiateSubmit(); return; }
     engine.next();
@@ -1659,6 +1711,22 @@ export function EngineRunner(props: {
     if (s.clearLatest) await s.clearLatest();
     await engine.hardRestart({ bank: questions, blueprint, mode, reshuffleQuestions: true, storageNamespace });
     setExamView("take");
+  }
+
+  /** Advance to next flagged question, wrapping around if at the end */
+  function goNextFlagged() {
+    if (!engine.attempt || flaggedIndices.length === 0) return;
+    const cur = engine.attempt.currentIndex;
+    const next = flaggedIndices.find((i) => i > cur);
+    engine.goToIndex(next !== undefined ? next : flaggedIndices[0]);
+  }
+
+  /** Go back to previous flagged question, wrapping around if at the start */
+  function goPrevFlagged() {
+    if (!engine.attempt || flaggedIndices.length === 0) return;
+    const cur = engine.attempt.currentIndex;
+    const prev = [...flaggedIndices].reverse().find((i) => i < cur);
+    engine.goToIndex(prev !== undefined ? prev : flaggedIndices[flaggedIndices.length - 1]);
   }
 
   const correctCount = result ? result.scoreResults.filter((r) => r.isCorrect).length : 0;
@@ -1717,7 +1785,7 @@ export function EngineRunner(props: {
 
         <NavRow>
           <NavBtn
-            onClick={() => engine.prev()}
+            onClick={() => reviewingFlagged ? goPrevFlagged() : engine.prev()}
             disabled={!canPrevNav}
             aria-label="Previous question"
           >
@@ -2108,6 +2176,16 @@ export function EngineRunner(props: {
           </Card>
         )}
 
+        {/* Flagged-only review banner */}
+        {reviewingFlagged && !engine.attempt?.submittedAt && (
+          <FlaggedReviewBanner>
+            <span>🚩 Reviewing {flaggedIndices.length} flagged question{flaggedIndices.length !== 1 ? "s" : ""} only</span>
+            <FlaggedReviewExitBtn onClick={() => setReviewingFlagged(false)}>
+              ✕ Show All
+            </FlaggedReviewExitBtn>
+          </FlaggedReviewBanner>
+        )}
+
         {/* NORMAL mode: practice or pre-submit exam */}
         {initialized && !(mode === "exam" && engine.attempt?.submittedAt) && (
           <>
@@ -2153,7 +2231,7 @@ export function EngineRunner(props: {
             {/* Mobile bottom navigation */}
             <MobileNavBar>
               <NavBtn
-                onClick={() => engine.prev()}
+                onClick={() => reviewingFlagged ? goPrevFlagged() : engine.prev()}
                 disabled={!canPrevNav}
                 style={{ flex: "0 0 auto" }}
               >
@@ -2233,6 +2311,7 @@ export function EngineRunner(props: {
               {flaggedCount > 0 && (
                 <ConfirmReviewBtn onClick={() => {
                   setShowSubmitConfirm(false);
+                  setReviewingFlagged(true);
                   // Jump to first flagged question
                   const firstFlagged = engine.attempt?.questionOrder.findIndex(
                     (qid) => engine.attempt!.flagged[qid]
