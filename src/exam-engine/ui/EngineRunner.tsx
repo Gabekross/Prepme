@@ -1174,6 +1174,50 @@ const CompleteSecondaryBtn = styled.button`
   &:hover { background: ${(p) => p.theme.success}18; }
 `;
 
+/* ── sticky mobile action bar (practice complete) ─────────────────────────── */
+
+const StickyActionBar = styled.div`
+  display: none;
+
+  @media (max-width: 767px) {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    gap: 8px;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    background: ${(p) => p.theme.cardBg};
+    border-top: 1px solid ${(p) => p.theme.cardBorder};
+    box-shadow: 0 -4px 16px ${(p) => p.theme.name === "dark" ? "rgba(0,0,0,0.4)" : "rgba(0,0,0,0.08)"};
+  }
+`;
+
+const StickyActionBtn = styled.button<{ $primary?: boolean }>`
+  flex: 1;
+  border-radius: 12px;
+  border: 1px solid ${(p) => p.$primary ? `${p.theme.success}55` : p.theme.successBorder};
+  background: ${(p) => p.$primary ? p.theme.success : "transparent"};
+  color: ${(p) => p.$primary ? "white" : p.theme.success};
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 150ms ease, transform 100ms ease;
+  &:hover { transform: translateY(-1px); }
+`;
+
+/* Bottom spacer so the sticky bar doesn't cover the last bit of page
+   content on mobile. Matches the bar's approximate height + padding. */
+const StickyActionSpacer = styled.div`
+  display: none;
+  @media (max-width: 767px) {
+    display: block;
+    height: calc(72px + env(safe-area-inset-bottom));
+  }
+`;
+
 /* ── review question nav row (below explanation) ─────────────────────────── */
 
 const ReviewNavRow = styled.div`
@@ -2217,12 +2261,30 @@ export function EngineRunner(props: {
           </CompleteCard>
         )}
 
+        {/* Sticky mobile action bar — only when practice is submitted.
+            Keeps New Session / Retry Wrong reachable after the user scrolls
+            through Overview → Mastery → accordions on a phone viewport.
+            Hidden on desktop via a media query; a matching spacer below the
+            results content prevents the bar from covering the last card. */}
+        {practiceSubmitted && result && (
+          <StickyActionBar>
+            <StickyActionBtn $primary onClick={retakePractice}>New Session</StickyActionBtn>
+            {incorrectCount > 0 && (
+              <StickyActionBtn onClick={retryIncorrect}>Retry {incorrectCount} Wrong</StickyActionBtn>
+            )}
+          </StickyActionBar>
+        )}
+
         {/* ADAPTIVE RESULTS — practice complete */}
         {practiceSubmitted && adaptiveSummary && (
           <Card>
             <AdaptiveResults summary={adaptiveSummary} passThreshold={passThreshold} />
           </Card>
         )}
+
+        {/* Bottom spacer so the sticky mobile action bar doesn't overlap
+            the last card on phone viewports. No-op on desktop. */}
+        {practiceSubmitted && <StickyActionSpacer />}
 
         {/* Flagged-only review banner */}
         {reviewingFlagged && !engine.attempt?.submittedAt && (
