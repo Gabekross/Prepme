@@ -1174,6 +1174,16 @@ const CompleteSecondaryBtn = styled.button`
   &:hover { background: ${(p) => p.theme.success}18; }
 `;
 
+/* ── desktop-only wrapper (hidden on mobile + tablet) ────────────────────── */
+
+const DesktopOnly = styled.div`
+  display: none;
+
+  @media (min-width: 980px) {
+    display: block;
+  }
+`;
+
 /* ── flagged review banner ───────────────────────────────────────────────── */
 
 const FlaggedReviewBanner = styled.div`
@@ -1854,19 +1864,17 @@ export function EngineRunner(props: {
           </FlagBtn>
         )}
 
-        {/* Question grid toggle — exam review only (not practice) */}
+        {/* Question map — exam review, desktop only (hidden on mobile/tablet) */}
         {engine.attempt && mode === "exam" && !!engine.attempt.submittedAt && (
-          <>
+          <DesktopOnly>
             <Divider />
             <LearnMoreBtn onClick={() => setShowQuestionGrid((v) => !v)}>
               {showQuestionGrid ? "Hide Question Map" : "Show Question Map"}
             </LearnMoreBtn>
-          </>
+          </DesktopOnly>
         )}
-
-        {/* Question jump grid — exam review only, toggled */}
         {engine.attempt && mode === "exam" && !!engine.attempt.submittedAt && showQuestionGrid && (
-          <>
+          <DesktopOnly>
             <SectionTitle style={{ marginTop: 10 }}>Questions</SectionTitle>
             <QGridWrap>
               {engine.attempt.questionOrder.map((qid, idx) => {
@@ -1882,7 +1890,6 @@ export function EngineRunner(props: {
                   if (resp.type === "fill_blank") return Object.values(resp.values).some(v => String(v ?? "").trim().length > 0);
                   return false;
                 })() : false;
-                // In review mode, reflect correct/incorrect; else answered/flagged/unanswered
                 const isSubmitted = !!engine.attempt!.submittedAt;
                 const gridState = isCurrent ? "current"
                   : isSubmitted ? (
@@ -1902,51 +1909,28 @@ export function EngineRunner(props: {
                       engine.goToIndex(idx);
                       if (isSubmitted) setExamView("review_question");
                     }}
-                    title={`Q${idx + 1}${isFlagged ? " · flagged" : ""}${isAns && !isSubmitted ? " · answered" : ""}${isSubmitted ? (scoreById.get(qid) ? " · correct" : " · incorrect") : ""}`}
+                    title={`Q${idx + 1}${isFlagged ? " · flagged" : ""}${isSubmitted ? (scoreById.get(qid) ? " · correct" : " · incorrect") : ""}`}
                   >
                     {idx + 1}
                   </QGridBtn>
                 );
               })}
             </QGridWrap>
-
-            {/* Grid legend */}
-            {!engine.attempt.submittedAt ? (
-              <GridLegend>
-                <GridLegendItem>
-                  <GridLegendDot $color="var(--accent, #6366f1)" $border="var(--accent, #6366f1)" />
-                  Current
-                </GridLegendItem>
-                <GridLegendItem>
-                  <GridLegendDot $color="#dcfce7" $border="#86efac" />
-                  Answered
-                </GridLegendItem>
-                <GridLegendItem>
-                  <GridLegendDot $color="#fef9c3" $border="#fde047" />
-                  Flagged
-                </GridLegendItem>
-                <GridLegendItem>
-                  <GridLegendDot $color="transparent" $border="#d1d5db" />
-                  Unanswered
-                </GridLegendItem>
-              </GridLegend>
-            ) : (
-              <GridLegend>
-                <GridLegendItem>
-                  <GridLegendDot $color="var(--accent, #6366f1)" $border="var(--accent, #6366f1)" />
-                  Current
-                </GridLegendItem>
-                <GridLegendItem>
-                  <GridLegendDot $color="#dcfce7" $border="#86efac" />
-                  Correct
-                </GridLegendItem>
-                <GridLegendItem>
-                  <GridLegendDot $color="#fee2e2" $border="#fca5a5" />
-                  Incorrect
-                </GridLegendItem>
-              </GridLegend>
-            )}
-          </>
+            <GridLegend>
+              <GridLegendItem>
+                <GridLegendDot $color="var(--accent, #6366f1)" $border="var(--accent, #6366f1)" />
+                Current
+              </GridLegendItem>
+              <GridLegendItem>
+                <GridLegendDot $color="#dcfce7" $border="#86efac" />
+                Correct
+              </GridLegendItem>
+              <GridLegendItem>
+                <GridLegendDot $color="#fee2e2" $border="#fca5a5" />
+                Incorrect
+              </GridLegendItem>
+            </GridLegend>
+          </DesktopOnly>
         )}
 
         {result && mode === "practice" && (
@@ -2162,7 +2146,26 @@ export function EngineRunner(props: {
               ) : (
                 <Subtle>Loading…</Subtle>
               )}
-              <BackBtn onClick={() => setExamView("review_list")}>← Back to Results</BackBtn>
+
+              {/* Prev / Next navigation */}
+              <ActionRow style={{ marginTop: 14 }}>
+                <NavBtn
+                  onClick={() => openReviewQuestion(engine.attempt!.currentIndex - 1)}
+                  disabled={engine.attempt!.currentIndex <= 0}
+                  style={{ flex: 1 }}
+                >
+                  ← Prev
+                </NavBtn>
+                <NavBtn
+                  $primary
+                  onClick={() => openReviewQuestion(engine.attempt!.currentIndex + 1)}
+                  disabled={engine.attempt!.currentIndex >= total - 1}
+                  style={{ flex: 1 }}
+                >
+                  Next →
+                </NavBtn>
+              </ActionRow>
+              <BackBtn onClick={() => setExamView("review_list")}>↩ Back to Results</BackBtn>
             </Card>
 
             <ExplanationCard>
