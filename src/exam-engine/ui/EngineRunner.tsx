@@ -1360,6 +1360,7 @@ export function EngineRunner(props: {
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [timerWarning, setTimerWarning] = useState<"none" | "low" | "critical">("none");
   const [showProcessing, setShowProcessing] = useState(false);
+  const handleProcessingComplete = useCallback(() => setShowProcessing(false), []);
   const [showReviewAfterSubmit, setShowReviewAfterSubmit] = useState(true);
   const [showDomainSection, setShowDomainSection] = useState(true);
   const [showInsightsSection, setShowInsightsSection] = useState(false);
@@ -2357,7 +2358,7 @@ export function EngineRunner(props: {
       {showProcessing && (
         <ProcessingOverlay
           minDuration={3000}
-          onComplete={useCallback(() => setShowProcessing(false), [])}
+          onComplete={handleProcessingComplete}
         />
       )}
 
