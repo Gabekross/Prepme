@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useUpgrade } from "@/lib/useUpgrade";
 import { supabaseBrowser } from "@/lib/supabase/browser";
+import { loadBankBySlug, loadQuestions } from "@/src/exam-engine/data/loadFromSupabase";
+import { TOPICS_BY_DOMAIN, buildTopicIndex } from "@/src/exam-engine/core/topicLabels";
 
 /* ── types ──────────────────────────────────────────────────────────────── */
 
@@ -25,13 +27,6 @@ type AttemptSummary = {
 };
 
 type DomainKey = "people" | "process" | "business_environment";
-type QuestionTypeKey =
-  | "mcq_single"
-  | "mcq_multi"
-  | "dnd_match"
-  | "dnd_order"
-  | "hotspot"
-  | "fill_blank";
 
 type BucketStats = {
   score: number;
@@ -40,31 +35,28 @@ type BucketStats = {
   total: number;
 };
 
+type ScoreResultLite = { questionId: string; isCorrect: boolean };
+
 type AttemptResult = {
   byDomain: Partial<Record<DomainKey, BucketStats>>;
-  byType: Partial<Record<QuestionTypeKey, BucketStats>>;
+  /** Present on all modern attempts; used for per-topic aggregation. */
+  scoreResults?: ScoreResultLite[];
 };
 
 type AttemptWithResult = {
   id: string;
   mode: "practice" | "exam";
   set_id: string | null;
+  bank_slug: string;
   result: AttemptResult | null;
 };
+
+type QuestionMeta = { domain: DomainKey; tags: string[] };
 
 const DOMAIN_LABELS: Record<DomainKey, string> = {
   people: "People",
   process: "Process",
   business_environment: "Business Environment",
-};
-
-const TYPE_LABELS: Record<QuestionTypeKey, string> = {
-  mcq_single: "MCQ Single",
-  mcq_multi: "MCQ Multi",
-  dnd_match: "Drag & Match",
-  dnd_order: "Drag & Order",
-  hotspot: "Hotspot",
-  fill_blank: "Fill Blank",
 };
 
 /* ── animations ─────────────────────────────────────────────────────────── */
@@ -330,6 +322,14 @@ const BarFill = styled.div<{ $pct: number; $color: string }>`
   border-radius: 4px;
   background: ${(p) => p.$color};
   transition: width 600ms ease;
+`;
+
+/* ── shared empty/loading state for the Topic Performance card ─────────── */
+
+const TopicEmpty = styled.div`
+  font-size: 12px;
+  color: ${(p) => p.theme.muted};
+  padding: 6px 0;
 `;
 
 const FocusCard = styled.div`
@@ -600,7 +600,6 @@ type AggBucket = { correct: number; total: number };
 
 function aggregateResults(results: AttemptResult[]) {
   const byDomain: Record<string, AggBucket> = {};
-  const byType: Record<string, AggBucket> = {};
 
   for (const r of results) {
     if (r.byDomain) {
@@ -611,17 +610,9 @@ function aggregateResults(results: AttemptResult[]) {
         byDomain[k].total += v.total;
       }
     }
-    if (r.byType) {
-      for (const [k, v] of Object.entries(r.byType)) {
-        if (!v) continue;
-        if (!byType[k]) byType[k] = { correct: 0, total: 0 };
-        byType[k].correct += v.correct;
-        byType[k].total += v.total;
-      }
-    }
   }
 
-  return { byDomain, byType };
+  return { byDomain };
 }
 
 /* ── component ──────────────────────────────────────────────────────────── */
@@ -635,6 +626,8 @@ export default function DashboardClient() {
   const sb = useMemo(() => supabaseBrowser(), []);
   const [attempts, setAttempts] = useState<AttemptSummary[]>([]);
   const [allResults, setAllResults] = useState<AttemptWithResult[]>([]);
+  const [questionMeta, setQuestionMeta] = useState<Map<string, QuestionMeta>>(new Map());
+  const [loadedBankSlugs, setLoadedBankSlugs] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [analyticsTab, setAnalyticsTab] = useState<"practice" | "exam">("practice");
 
@@ -659,7 +652,13 @@ export default function DashboardClient() {
       setAllResults(
         rows
           .filter((r) => r.status === "submitted" && r.result !== null)
-          .map((r) => ({ id: r.id, mode: r.mode, set_id: r.set_id, result: r.result }))
+          .map((r) => ({
+            id: r.id,
+            mode: r.mode,
+            set_id: r.set_id,
+            bank_slug: r.bank_slug,
+            result: r.result,
+          }))
       );
     } catch (err) {
       console.error("[Dashboard] Failed to load data:", err);
@@ -677,6 +676,46 @@ export default function DashboardClient() {
       cancelled = true;
     };
   }, [user, authLoading, loadData]);
+
+  // Lazy-load the question bank(s) needed to resolve questionId → tags for
+  // per-topic aggregation. Only loads banks we haven't already fetched.
+  useEffect(() => {
+    if (!user || allResults.length === 0) return;
+    const slugs = Array.from(new Set(allResults.map((r) => r.bank_slug).filter(Boolean)));
+    const missing = slugs.filter((s) => !loadedBankSlugs.has(s));
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const merged = new Map(questionMeta);
+        await Promise.all(
+          missing.map(async (slug) => {
+            const bank = await loadBankBySlug(slug);
+            const qs = await loadQuestions(bank.id);
+            for (const q of qs) {
+              merged.set(q.id, { domain: q.domain as DomainKey, tags: q.tags ?? [] });
+            }
+          })
+        );
+        if (cancelled) return;
+        setQuestionMeta(merged);
+        setLoadedBankSlugs((prev) => {
+          const next = new Set(prev);
+          for (const s of missing) next.add(s);
+          return next;
+        });
+      } catch (err) {
+        console.error("[Dashboard] Failed to load question bank(s) for topic analytics:", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // questionMeta is intentionally excluded: we read it as a starting point
+    // but don't want to re-run when we write to it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, allResults, loadedBankSlugs]);
 
   /* ── derived data (all hooks MUST run before any early return) ──────── */
 
@@ -719,26 +758,152 @@ export default function DashboardClient() {
       });
   }, [agg]);
 
-  const typeEntries = useMemo(() => {
-    return (Object.keys(TYPE_LABELS) as QuestionTypeKey[])
-      .filter((k) => agg.byType[k] && agg.byType[k].total > 0)
-      .map((k) => {
-        const b = agg.byType[k];
-        const pct = b.total > 0 ? Math.round((b.correct / b.total) * 100) : 0;
-        return { key: k, label: TYPE_LABELS[k], pct, correct: b.correct, total: b.total };
-      });
-  }, [agg]);
+  // Per-domain topic breakdown. Derived from scoreResults (questionId +
+  // isCorrect) cross-referenced with the loaded question bank's tags,
+  // bucketed via TOPICS_BY_DOMAIN. Anything that doesn't match a curated
+  // bucket falls into an "Other" group so the user always sees their data.
+  const OTHER_TOPIC_ID = "__other__";
+  const topicEntriesByDomain = useMemo(() => {
+    const out: Record<DomainKey, { id: string; label: string; correct: number; total: number; pct: number }[]> = {
+      people: [],
+      process: [],
+      business_environment: [],
+    };
 
+    const modeResults = analyticsTab === "practice"
+      ? allResults.filter((r) => r.mode === "practice")
+      : allResults.filter((r) => r.mode === "exam");
+    if (modeResults.length === 0 || questionMeta.size === 0) return out;
+
+    const topicIndex = buildTopicIndex();
+    const buckets: Record<DomainKey, Record<string, { correct: number; total: number }>> = {
+      people: {},
+      process: {},
+      business_environment: {},
+    };
+
+    for (const row of modeResults) {
+      const sr = row.result?.scoreResults;
+      if (!sr || sr.length === 0) continue;
+      for (const s of sr) {
+        const meta = questionMeta.get(s.questionId);
+        if (!meta) continue;
+        const idx = topicIndex[meta.domain];
+        const matched = new Set<string>();
+        if (idx) {
+          for (const rawTag of meta.tags) {
+            const hit = idx.get(rawTag.toLowerCase());
+            if (!hit) continue;
+            for (const topicId of hit) matched.add(topicId);
+          }
+        }
+        // Fallback: if no curated topic matched, put this question under "Other"
+        // so the user still sees it. A question contributes to either its
+        // curated topic(s) or Other — never both.
+        if (matched.size === 0) matched.add(OTHER_TOPIC_ID);
+
+        for (const topicId of matched) {
+          const b = (buckets[meta.domain][topicId] ||= { correct: 0, total: 0 });
+          b.total += 1;
+          if (s.isCorrect) b.correct += 1;
+        }
+      }
+    }
+
+    (Object.keys(out) as DomainKey[]).forEach((d) => {
+      const ordered = TOPICS_BY_DOMAIN[d];
+      const curated = ordered
+        .map((t) => {
+          const b = buckets[d][t.id];
+          if (!b || b.total === 0) return null;
+          const pct = Math.round((b.correct / b.total) * 100);
+          return { id: t.id, label: t.label, correct: b.correct, total: b.total, pct };
+        })
+        .filter((x): x is { id: string; label: string; correct: number; total: number; pct: number } => x !== null);
+
+      const otherBucket = buckets[d][OTHER_TOPIC_ID];
+      const other = otherBucket && otherBucket.total > 0
+        ? [{
+            id: OTHER_TOPIC_ID,
+            label: "Other",
+            correct: otherBucket.correct,
+            total: otherBucket.total,
+            pct: Math.round((otherBucket.correct / otherBucket.total) * 100),
+          }]
+        : [];
+
+      out[d] = [...curated, ...other];
+    });
+    return out;
+  }, [allResults, analyticsTab, questionMeta]);
+
+  // True once we've fetched the question bank(s) needed for tag lookup —
+  // used to distinguish "loading" from "genuinely no topic data".
+  const topicsReady = questionMeta.size > 0;
+
+  // Flat topic list across all domains for the active tab — feeds the
+  // Topic Performance card and the Focus Areas pick for Pro users.
+  const topicEntriesFlat = useMemo(() => {
+    const domOrder: Record<string, number> = { people: 0, process: 1, business_environment: 2 };
+    const flat = (Object.keys(topicEntriesByDomain) as DomainKey[]).flatMap((d) =>
+      topicEntriesByDomain[d].map((t) => ({
+        key: `${d}:${t.id}`,
+        label: t.label,
+        domain: d,
+        domainLabel: DOMAIN_LABELS[d],
+        correct: t.correct,
+        total: t.total,
+        pct: t.pct,
+      }))
+    );
+    flat.sort((a, b) => {
+      const dd = (domOrder[a.domain] ?? 9) - (domOrder[b.domain] ?? 9);
+      if (dd !== 0) return dd;
+      return b.total - a.total;
+    });
+    return flat;
+  }, [topicEntriesByDomain]);
+
+  // Focus Areas: for Pro, pick the 3 weakest topics with at least 2 attempts
+  // of signal. For free users (who can't see topics), fall back to weakest
+  // domains. Requires at least 2 attempts in the active mode to show at all.
   const weakAreas = useMemo(() => {
     const modeAttempts = analyticsTab === "practice" ? practiceAttempts : examAttempts;
     if (modeAttempts.length < 2) return [];
-    const all = [
-      ...domainEntries.map((d) => ({ label: d.label, pct: d.pct, kind: "domain" as const })),
-      ...typeEntries.map((t) => ({ label: t.label, pct: t.pct, kind: "type" as const })),
-    ];
-    all.sort((a, b) => a.pct - b.pct);
-    return all.slice(0, 3);
-  }, [domainEntries, typeEntries, practiceAttempts, examAttempts, analyticsTab]);
+
+    if (isPro && topicEntriesFlat.length > 0) {
+      const candidates = topicEntriesFlat.filter((t) => t.total >= 2);
+      const pool = candidates.length > 0 ? candidates : topicEntriesFlat;
+      return [...pool]
+        .sort((a, b) => a.pct - b.pct)
+        .slice(0, 3)
+        .map((t) => ({
+          label: t.label,
+          pct: t.pct,
+          kind: "topic" as const,
+          domainLabel: t.domainLabel,
+          isOther: t.key.endsWith(`:${OTHER_TOPIC_ID}`),
+        }));
+    }
+
+    return [...domainEntries]
+      .sort((a, b) => a.pct - b.pct)
+      .slice(0, 3)
+      .map((d) => ({
+        label: d.label,
+        pct: d.pct,
+        kind: "domain" as const,
+        domainLabel: undefined,
+        isOther: false,
+      }));
+  }, [
+    isPro,
+    topicEntriesFlat,
+    domainEntries,
+    practiceAttempts,
+    examAttempts,
+    analyticsTab,
+  ]);
 
   // Exam set breakdown
   const examSetBreakdown = useMemo(() => {
@@ -875,33 +1040,42 @@ export default function DashboardClient() {
                     ))}
                   </AnalyticsCard>
                 )}
-                {typeEntries.length > 0 && (
+                {domainEntries.length > 0 && (
                   isPro ? (
                     <AnalyticsCard>
-                      <AnalyticsCardTitle>Question Type Performance</AnalyticsCardTitle>
-                      {typeEntries.map((t) => (
-                        <BarRow key={t.key}>
-                          <BarLabel>
-                            <span>{t.label}</span>
-                            <BarLabelRight>
-                              {t.pct}% ({t.correct}/{t.total})
-                            </BarLabelRight>
-                          </BarLabel>
-                          <BarTrack>
-                            <BarFill $pct={t.pct} $color={pctColor(t.pct, theme)} />
-                          </BarTrack>
-                        </BarRow>
-                      ))}
+                      <AnalyticsCardTitle>Topic Performance</AnalyticsCardTitle>
+                      {!topicsReady ? (
+                        <TopicEmpty>Loading topic data…</TopicEmpty>
+                      ) : topicEntriesFlat.length === 0 ? (
+                        <TopicEmpty>No topic data available yet.</TopicEmpty>
+                      ) : (
+                        topicEntriesFlat.map((t) => (
+                          <BarRow key={t.key}>
+                            <BarLabel>
+                              <span>
+                                {t.label}{" "}
+                                <SetBadge>{t.domainLabel}</SetBadge>
+                              </span>
+                              <BarLabelRight>
+                                {t.pct}% ({t.correct}/{t.total})
+                              </BarLabelRight>
+                            </BarLabel>
+                            <BarTrack>
+                              <BarFill $pct={t.pct} $color={pctColor(t.pct, theme)} />
+                            </BarTrack>
+                          </BarRow>
+                        ))
+                      )}
                     </AnalyticsCard>
                   ) : (
                     <ProGateCard>
                       <ProGateOverlay>
                         <ProGateLabel>STUDY MODE</ProGateLabel>
-                        <ProGateText>Unlock question type breakdown</ProGateText>
+                        <ProGateText>Unlock per-topic performance breakdown</ProGateText>
                         <ProGateBtn onClick={() => setShowUpgrade(true)}>Upgrade to Study Mode</ProGateBtn>
                       </ProGateOverlay>
                       <ProGateBlur>
-                        {typeEntries.map((t) => (
+                        {(topicsReady ? topicEntriesFlat.slice(0, 6) : []).map((t) => (
                           <BarRow key={t.key}>
                             <BarLabel><span>{t.label}</span></BarLabel>
                             <BarTrack><BarFill $pct={t.pct} $color="#666" /></BarTrack>
@@ -921,14 +1095,24 @@ export default function DashboardClient() {
                       <SetBadge>{analyticsTab === "practice" ? "Practice" : "Exam"}</SetBadge>
                     </AnalyticsCardTitle>
                     {weakAreas.map((w) => (
-                      <FocusItem key={w.label}>
+                      <FocusItem key={`${w.kind}:${w.domainLabel ?? ""}:${w.label}`}>
                         <FocusIcon>{w.pct < 50 ? "\u26A0" : "\u25CB"}</FocusIcon>
                         <FocusText>
-                          <FocusPercent $color={pctColor(w.pct, theme)}>
-                            {w.pct}%
-                          </FocusPercent>{" "}
-                          accuracy in {w.label} &mdash; Practice more{" "}
-                          {w.kind === "domain" ? `${w.label} domain` : `${w.label}`} questions
+                          {w.isOther && w.domainLabel ? (
+                            <>Practice more of the {w.domainLabel} domain</>
+                          ) : (
+                            <>
+                              <FocusPercent $color={pctColor(w.pct, theme)}>
+                                {w.pct}%
+                              </FocusPercent>{" "}
+                              accuracy in {w.label}
+                              {w.kind === "topic" && w.domainLabel ? ` (${w.domainLabel})` : ""}
+                              {" "}&mdash; Practice more{" "}
+                              {w.kind === "domain"
+                                ? `${w.label} domain questions`
+                                : `${w.label} questions`}
+                            </>
+                          )}
                         </FocusText>
                       </FocusItem>
                     ))}

@@ -6,7 +6,9 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useUpgrade } from "@/lib/useUpgrade";
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import type { AttemptResult, Domain, QuestionType } from "@/src/exam-engine/core/types";
+import type { AttemptResult, Domain } from "@/src/exam-engine/core/types";
+import { loadBankBySlug, loadQuestions } from "@/src/exam-engine/data/loadFromSupabase";
+import { TOPICS_BY_DOMAIN, buildTopicIndex } from "@/src/exam-engine/core/topicLabels";
 
 /* ── types ──────────────────────────────────────────────────────────────── */
 
@@ -34,14 +36,6 @@ const DOMAIN_LABELS: Record<string, string> = {
   business_environment: "Business Environment",
 };
 
-const QTYPE_LABELS: Record<string, string> = {
-  mcq_single: "Single Choice",
-  mcq_multi: "Multiple Choice",
-  dnd_match: "Drag & Drop Match",
-  dnd_order: "Drag & Drop Order",
-  hotspot: "Hotspot",
-  fill_blank: "Fill in the Blank",
-};
 
 /* ── animations ─────────────────────────────────────────────────────────── */
 
@@ -549,9 +543,12 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showDomains, setShowDomains] = useState(true);
-  const [showTypes, setShowTypes] = useState(false);
+  const [showTopics, setShowTopics] = useState(false);
   const [showTime, setShowTime] = useState(false);
   const [showQuestions, setShowQuestions] = useState(false);
+  const [questionMeta, setQuestionMeta] = useState<Map<string, { domain: Domain; tags: string[] }>>(
+    new Map()
+  );
 
   useEffect(() => {
     if (authLoading || !user) return;
@@ -581,6 +578,88 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
       }
     })();
   }, [user, authLoading, sb, attemptId]);
+
+  // Load the attempt's question bank once so we can resolve questionId → tags
+  // for the per-topic breakdown.
+  useEffect(() => {
+    if (!attempt?.bank_slug) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const bank = await loadBankBySlug(attempt.bank_slug);
+        const qs = await loadQuestions(bank.id);
+        if (cancelled) return;
+        const m = new Map<string, { domain: Domain; tags: string[] }>();
+        for (const q of qs) m.set(q.id, { domain: q.domain, tags: q.tags ?? [] });
+        setQuestionMeta(m);
+      } catch (err) {
+        console.error("[Results] Failed to load question bank for topic analytics:", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [attempt?.bank_slug]);
+
+  // Per-topic breakdown for this single attempt. Mirrors the dashboard logic:
+  // map each scoreResult's questionId → tags → topic bucket(s), with an
+  // "Other" fallback per domain for tags that don't map to any bucket.
+  const topicEntries = useMemo(() => {
+    const sr = attempt?.result?.scoreResults;
+    if (!sr || sr.length === 0 || questionMeta.size === 0) return [];
+
+    const topicIndex = buildTopicIndex();
+    const buckets: Record<
+      string,
+      { domain: Domain; label: string; correct: number; total: number }
+    > = {};
+
+    for (const s of sr) {
+      const meta = questionMeta.get(s.questionId);
+      if (!meta) continue;
+      const idx = topicIndex[meta.domain];
+      const matched = new Set<string>();
+      if (idx) {
+        for (const rawTag of meta.tags) {
+          const hit = idx.get(rawTag.toLowerCase());
+          if (!hit) continue;
+          for (const topicId of hit) matched.add(topicId);
+        }
+      }
+      if (matched.size === 0) matched.add("__other__");
+
+      for (const topicId of matched) {
+        const label =
+          topicId === "__other__"
+            ? `Other — ${DOMAIN_LABELS[meta.domain] ?? meta.domain}`
+            : TOPICS_BY_DOMAIN[meta.domain].find((t) => t.id === topicId)?.label ?? topicId;
+        const key = `${meta.domain}:${topicId}`;
+        const b = (buckets[key] ||= { domain: meta.domain, label, correct: 0, total: 0 });
+        b.total += 1;
+        if (s.isCorrect) b.correct += 1;
+      }
+    }
+
+    const domOrder: Record<string, number> = { people: 0, process: 1, business_environment: 2 };
+    return Object.entries(buckets)
+      .map(([key, b]) => ({
+        key,
+        label: b.label,
+        domain: b.domain,
+        domainLabel: DOMAIN_LABELS[b.domain] ?? b.domain,
+        isOther: key.endsWith(":__other__"),
+        correct: b.correct,
+        total: b.total,
+        pct: b.total > 0 ? Math.round((b.correct / b.total) * 100) : 0,
+      }))
+      .sort((a, b) => {
+        // Keep "Other" rows at the bottom of their domain group.
+        const dd = (domOrder[a.domain] ?? 9) - (domOrder[b.domain] ?? 9);
+        if (dd !== 0) return dd;
+        if (a.isOther !== b.isOther) return a.isOther ? 1 : -1;
+        return b.total - a.total;
+      });
+  }, [attempt, questionMeta]);
 
   if (authLoading || loading) return <P>Loading results...</P>;
   if (error) return <P>{error}</P>;
@@ -722,36 +801,58 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
         </SectionCard>
       )}
 
-      {/* ── Question Type Breakdown ─────────────────────────── */}
+      {/* ── Topic Breakdown (replaces Question Type) ────────── */}
       {result && (
         isPro ? (
           <SectionCard $delay={220}>
-            <SectionToggleBtn onClick={() => setShowTypes((v) => !v)}>
-              Performance by Question Type
-              <SectionArrow $open={showTypes}>▼</SectionArrow>
+            <SectionToggleBtn onClick={() => setShowTopics((v) => !v)}>
+              Performance by Topic
+              <SectionArrow $open={showTopics}>▼</SectionArrow>
             </SectionToggleBtn>
-            {showTypes && (
+            {showTopics && (
               <BreakdownGrid>
-                {(Object.entries(result.byType) as [string, { correct: number; total: number }][])
-                  .filter(([, t]) => t.total > 0)
-                  .map(([qtype, t]) => {
-                    const pct = t.total > 0 ? Math.round((t.correct / t.total) * 100) : 0;
-                    const pass = pct >= passThreshold;
+                {questionMeta.size === 0 ? (
+                  <BreakdownItem>
+                    <BreakdownHeader>
+                      <BreakdownName>Loading topic data…</BreakdownName>
+                    </BreakdownHeader>
+                  </BreakdownItem>
+                ) : topicEntries.length === 0 ? (
+                  <BreakdownItem>
+                    <BreakdownHeader>
+                      <BreakdownName>No topic data available for this attempt.</BreakdownName>
+                    </BreakdownHeader>
+                  </BreakdownItem>
+                ) : (
+                  topicEntries.map((t) => {
+                    if (t.isOther) {
+                      return (
+                        <BreakdownItem key={t.key}>
+                          <BreakdownHeader>
+                            <BreakdownName>
+                              Practice more of the {t.domainLabel} domain
+                            </BreakdownName>
+                          </BreakdownHeader>
+                        </BreakdownItem>
+                      );
+                    }
+                    const pass = t.pct >= passThreshold;
                     return (
-                      <BreakdownItem key={qtype}>
+                      <BreakdownItem key={t.key}>
                         <BreakdownHeader>
-                          <BreakdownName>{QTYPE_LABELS[qtype] ?? qtype}</BreakdownName>
+                          <BreakdownName>{t.label}</BreakdownName>
                           <BreakdownValues>
                             <BreakdownScore>{t.correct}/{t.total}</BreakdownScore>
-                            <BreakdownPct $pass={pass}>{pct}%</BreakdownPct>
+                            <BreakdownPct $pass={pass}>{t.pct}%</BreakdownPct>
                           </BreakdownValues>
                         </BreakdownHeader>
                         <BarTrack>
-                          <BarFill $pct={pct} $pass={pass} />
+                          <BarFill $pct={t.pct} $pass={pass} />
                         </BarTrack>
                       </BreakdownItem>
                     );
-                  })}
+                  })
+                )}
               </BreakdownGrid>
             )}
           </SectionCard>
@@ -759,26 +860,21 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
           <ProGateWrap>
             <ProGateOverlay>
               <ProGateBadge>STUDY MODE</ProGateBadge>
-              <ProGateLabel>Unlock question type breakdown</ProGateLabel>
+              <ProGateLabel>Unlock per-topic breakdown</ProGateLabel>
               <UpsellBtn onClick={startCheckout} style={{ marginTop: 4 }}>Upgrade</UpsellBtn>
             </ProGateOverlay>
             <ProGateBlur>
               <SectionCard $delay={220}>
-                <SectionTitle>Performance by Question Type</SectionTitle>
+                <SectionTitle>Performance by Topic</SectionTitle>
                 <BreakdownGrid>
-                  {(Object.entries(result.byType) as [string, { correct: number; total: number }][])
-                    .filter(([, t]) => t.total > 0)
-                    .map(([qtype, t]) => {
-                      const pct = t.total > 0 ? Math.round((t.correct / t.total) * 100) : 0;
-                      return (
-                        <BreakdownItem key={qtype}>
-                          <BreakdownHeader>
-                            <BreakdownName>{QTYPE_LABELS[qtype] ?? qtype}</BreakdownName>
-                          </BreakdownHeader>
-                          <BarTrack><BarFill $pct={pct} $pass={false} /></BarTrack>
-                        </BreakdownItem>
-                      );
-                    })}
+                  {topicEntries.slice(0, 6).map((t) => (
+                    <BreakdownItem key={t.key}>
+                      <BreakdownHeader>
+                        <BreakdownName>{t.label}</BreakdownName>
+                      </BreakdownHeader>
+                      <BarTrack><BarFill $pct={t.pct} $pass={false} /></BarTrack>
+                    </BreakdownItem>
+                  ))}
                 </BreakdownGrid>
               </SectionCard>
             </ProGateBlur>
