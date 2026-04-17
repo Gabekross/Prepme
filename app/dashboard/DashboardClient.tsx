@@ -638,31 +638,29 @@ export default function DashboardClient() {
   const [loading, setLoading] = useState(true);
   const [analyticsTab, setAnalyticsTab] = useState<"practice" | "exam">("practice");
 
-  // Single user-scoped source of truth for both summary cards and analytics.
-  // Called on mount and after any mutation (delete) so both slices stay in sync.
+  // Single user-scoped query powers both summary cards and analytics so the
+  // two sections can never drift. Called on mount and after every delete.
   const loadData = useCallback(async () => {
     if (!user) return;
     try {
-      const [attemptsRes, resultsRes] = await Promise.all([
-        sb
-          .from("attempts")
-          .select(
-            "id, bank_slug, mode, set_id, status, total_score, max_score, score_percent, passed, created_at, submitted_at"
-          )
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(50),
-        sb
-          .from("attempts")
-          .select("id, mode, set_id, result")
-          .eq("user_id", user.id)
-          .eq("status", "submitted"),
-      ]);
+      const { data, error } = await sb
+        .from("attempts")
+        .select(
+          "id, bank_slug, mode, set_id, status, total_score, max_score, score_percent, passed, created_at, submitted_at, result"
+        )
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
 
-      setAttempts((attemptsRes.data as AttemptSummary[]) ?? []);
+      const rows = (data as (AttemptSummary & { result: AttemptResult | null })[]) ?? [];
 
-      const rawResults = (resultsRes.data as AttemptWithResult[]) ?? [];
-      setAllResults(rawResults.filter((r) => r.result !== null));
+      setAttempts(rows.map(({ result: _r, ...rest }) => rest));
+
+      setAllResults(
+        rows
+          .filter((r) => r.status === "submitted" && r.result !== null)
+          .map((r) => ({ id: r.id, mode: r.mode, set_id: r.set_id, result: r.result }))
+      );
     } catch (err) {
       console.error("[Dashboard] Failed to load data:", err);
     }
