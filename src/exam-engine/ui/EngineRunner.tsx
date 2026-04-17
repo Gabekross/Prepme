@@ -1540,6 +1540,17 @@ export function EngineRunner(props: {
   const index = engine.attempt ? engine.attempt.currentIndex : 0;
   const x = total ? Math.min(total, index + 1) : 0;
   const progressPct = total ? Math.round((x / total) * 100) : 0;
+
+  /** Ordered indices of flagged questions in the current attempt — must be
+   *  declared before canPrevNav which depends on it. */
+  const flaggedIndices = useMemo(() => {
+    if (!engine.attempt) return [] as number[];
+    return engine.attempt.questionOrder.reduce<number[]>((acc, qid, idx) => {
+      if (engine.attempt!.flagged[qid]) acc.push(idx);
+      return acc;
+    }, []);
+  }, [engine.attempt]);
+
   // Compute canNext/canPrev directly from functions to avoid stale Zustand getter issue
   const isLast = !engine.canNext();
   const canPrevNav = reviewingFlagged ? flaggedIndices.length > 1 : engine.canPrev();
@@ -1599,15 +1610,6 @@ export function EngineRunner(props: {
   const flaggedCount = useMemo(() => {
     if (!engine.attempt) return 0;
     return Object.values(engine.attempt.flagged).filter(Boolean).length;
-  }, [engine.attempt]);
-
-  /** Ordered indices of flagged questions in the current attempt */
-  const flaggedIndices = useMemo(() => {
-    if (!engine.attempt) return [] as number[];
-    return engine.attempt.questionOrder.reduce<number[]>((acc, qid, idx) => {
-      if (engine.attempt!.flagged[qid]) acc.push(idx);
-      return acc;
-    }, []);
   }, [engine.attempt]);
 
   const reviewRows = useMemo(() => {
