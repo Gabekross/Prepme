@@ -135,29 +135,6 @@ const ProgressLabel = styled.div`
   color: ${(p) => p.theme.muted};
 `;
 
-const ProgressCounter = styled.div`
-  font-size: 13px;
-  font-weight: 800;
-  color: ${(p) => p.theme.text};
-`;
-
-const ProgressTrack = styled.div`
-  height: 6px;
-  background: ${(p) => p.theme.divider};
-  border-radius: 999px;
-  overflow: hidden;
-`;
-
-const ProgressFill = styled.div<{ $pct: number; $mode: "practice" | "exam" }>`
-  height: 100%;
-  border-radius: 999px;
-  width: ${(p) => p.$pct}%;
-  background: ${(p) =>
-    p.$mode === "practice"
-      ? `linear-gradient(90deg, ${p.theme.success}, #06b6d4)`
-      : `linear-gradient(90deg, ${p.theme.accent}, #7c3aed)`};
-  transition: width 300ms ease;
-`;
 
 /* ── stats ───────────────────────────────────────────────────────────────── */
 
@@ -1765,21 +1742,13 @@ export function EngineRunner(props: {
     <Grid>
       {/* ── LEFT SIDEBAR ───────────────────────────────────────── */}
       <Card>
-        {/* Progress bar + inline timer */}
-        {!engine.attempt?.submittedAt && (
+        {/* Timer (exam mode only) */}
+        {mode === "exam" && !engine.attempt?.submittedAt && timeRemaining !== null && (
           <ProgressSection>
             <ProgressHeader>
-              <ProgressLabel>Progress</ProgressLabel>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <ProgressCounter>{x} / {total}</ProgressCounter>
-                {mode === "exam" && timeRemaining !== null && (
-                  <TimerValue $warning={timerWarning}>{formatTime(timeRemaining)}</TimerValue>
-                )}
-              </div>
+              <ProgressLabel>Time Remaining</ProgressLabel>
+              <TimerValue $warning={timerWarning}>{formatTime(timeRemaining)}</TimerValue>
             </ProgressHeader>
-            <ProgressTrack>
-              <ProgressFill $pct={progressPct} $mode={mode} />
-            </ProgressTrack>
           </ProgressSection>
         )}
 
