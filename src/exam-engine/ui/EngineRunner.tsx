@@ -48,7 +48,7 @@ const Card = styled.div`
   background: ${(p) => p.theme.cardBg};
   border: 1px solid ${(p) => p.theme.cardBorder};
   border-radius: 20px;
-  padding: 18px;
+  padding: 12px 18px 18px;
   box-shadow: ${(p) => p.theme.shadow};
   position: relative;
   overflow: hidden;
