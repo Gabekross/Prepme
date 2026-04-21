@@ -574,7 +574,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
       <SectionLabel>Practice</SectionLabel>
 
       <Grid>
-        <ModeCard href={`/bank/${bank.slug}/practice`} $variant="practice">
+        <ModeCard href={`/bank/${bank.slug}/practice/intro`} $variant="practice">
           <ModeHeader>
             <ModeIcon><ModeImg src="/images/ui/bank/practice.svg" alt="Practice mode" /></ModeIcon>
             <ModeTitleGroup>

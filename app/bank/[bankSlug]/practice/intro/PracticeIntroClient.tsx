@@ -5,6 +5,7 @@ import styled, { keyframes, css } from "styled-components";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { useUpgrade } from "@/lib/useUpgrade";
 import { loadBankBySlug } from "@/src/exam-engine/data/loadFromSupabase";
 import type { BankConfig } from "@/src/exam-engine/data/loadFromSupabase";
 
@@ -20,12 +21,7 @@ const fadeIn = keyframes`
   to   { opacity: 1; }
 `;
 
-const slideIn = keyframes`
-  from { opacity: 0; transform: translateX(-8px); }
-  to   { opacity: 1; transform: translateX(0); }
-`;
-
-/* ── sample questions (inline mini-quiz) ─────────────────────────────────── */
+/* ── sample questions (shared with exam intro) ───────────────────────────── */
 
 interface SampleQ {
   id: number;
@@ -159,9 +155,9 @@ const ModeBadge = styled.div`
   font-weight: 700;
   letter-spacing: 0.6px;
   text-transform: uppercase;
-  background: ${(p) => p.theme.accentSoft};
-  color: ${(p) => p.theme.accent};
-  border: 1px solid ${(p) => p.theme.accent}33;
+  background: ${(p) => p.theme.successSoft};
+  color: ${(p) => p.theme.success};
+  border: 1px solid ${(p) => p.theme.success}33;
   margin-bottom: 16px;
 `;
 
@@ -175,26 +171,21 @@ const Title = styled.h1`
 `;
 
 const Subtitle = styled.p`
-  margin: 0;
+  margin: 0 auto;
   color: ${(p) => p.theme.muted};
   font-size: 15px;
   line-height: 1.6;
   max-width: 540px;
-  margin: 0 auto;
 `;
 
 /* ── stats row ───────────────────────────────────────────────────────────── */
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 10px;
   margin-bottom: 28px;
   animation: ${fadeUp} 400ms 100ms ease both;
-
-  @media (min-width: 480px) {
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-  }
 `;
 
 const StatCard = styled.div`
@@ -221,210 +212,121 @@ const StatLabel = styled.div`
   letter-spacing: 0.4px;
 `;
 
-/* ── tabs ────────────────────────────────────────────────────────────────── */
+/* ── count selector ──────────────────────────────────────────────────────── */
 
-const TabBar = styled.div`
-  display: flex;
-  gap: 4px;
-  background: ${(p) => p.theme.cardBg};
-  border: 1px solid ${(p) => p.theme.cardBorder};
-  border-radius: 16px;
-  padding: 5px;
-  margin-bottom: 16px;
-  animation: ${fadeUp} 400ms 130ms ease both;
-  overflow-x: auto;
-  scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
-`;
-
-const TabBtn = styled.button<{ $active: boolean }>`
-  flex: 1;
-  min-width: 80px;
-  padding: 9px 14px;
-  border-radius: 11px;
-  border: none;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 150ms ease;
-  white-space: nowrap;
-
-  ${(p) =>
-    p.$active
-      ? css`
-          background: ${p.theme.accent};
-          color: ${p.theme.accentText};
-          box-shadow: 0 2px 8px ${p.theme.accent}40;
-        `
-      : css`
-          background: transparent;
-          color: ${p.theme.muted};
-          &:hover { background: ${p.theme.cardBorder}; color: ${p.theme.text}; }
-        `}
-`;
-
-/* ── tab panels ──────────────────────────────────────────────────────────── */
-
-const Panel = styled.div`
+const Section = styled.div`
   background: ${(p) => p.theme.cardBg};
   border: 1px solid ${(p) => p.theme.cardBorder};
   border-radius: 18px;
   padding: 22px 20px;
   margin-bottom: 16px;
-  animation: ${slideIn} 200ms ease both;
+  animation: ${fadeUp} 400ms 130ms ease both;
 
   @media (min-width: 480px) {
     padding: 26px 26px;
   }
 `;
 
-const PanelTitle = styled.h2`
-  margin: 0 0 16px;
+const SectionTitle = styled.h2`
+  margin: 0 0 14px;
   font-size: 15px;
   font-weight: 800;
-  letter-spacing: -0.1px;
   color: ${(p) => p.theme.text};
 `;
 
-/* overview tab */
+const SectionSub = styled.p`
+  margin: -8px 0 16px;
+  font-size: 13px;
+  color: ${(p) => p.theme.muted};
+  line-height: 1.5;
+`;
 
-const DomainGrid = styled.div`
+const PresetsRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const PresetBtn = styled.button<{ $active: boolean }>`
+  padding: 11px 20px;
+  border-radius: 12px;
+  border: 1.5px solid ${(p) => p.$active ? p.theme.success : p.theme.cardBorder};
+  background: ${(p) => p.$active ? p.theme.successSoft : p.theme.buttonBg};
+  color: ${(p) => p.$active ? p.theme.success : p.theme.text};
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 150ms ease;
+  min-width: 60px;
+  text-align: center;
+
+  &:hover {
+    border-color: ${(p) => p.theme.success};
+    background: ${(p) => p.theme.successSoft};
+    color: ${(p) => p.theme.success};
+  }
+`;
+
+const LockedPresetBtn = styled.button`
+  padding: 8px 18px;
+  border-radius: 12px;
+  border: 1.5px dashed ${(p) => p.theme.cardBorder};
+  background: transparent;
+  color: ${(p) => p.theme.muted};
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.65;
+  transition: all 150ms ease;
+
+  &:hover {
+    opacity: 1;
+    border-color: ${(p) => p.theme.accent};
+    color: ${(p) => p.theme.accent};
+  }
+`;
+
+const LockBadge = styled.span`
+  font-size: 10px;
+  background: ${(p) => p.theme.accentSoft};
+  color: ${(p) => p.theme.accent};
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+`;
+
+/* ── what you'll practice ────────────────────────────────────────────────── */
+
+const FeatureGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-bottom: 20px;
 
   @media (max-width: 480px) {
     grid-template-columns: 1fr;
   }
 `;
 
-const DomainCard = styled.div<{ $color: string }>`
-  background: ${(p) => p.theme.cardBg};
-  border: 1px solid ${(p) => p.$color}33;
-  border-radius: 14px;
-  padding: 14px 16px;
-  text-align: center;
-`;
-
-const DomainPct = styled.div<{ $color: string }>`
-  font-size: 24px;
-  font-weight: 900;
-  color: ${(p) => p.$color};
-  letter-spacing: -0.5px;
-`;
-
-const DomainName = styled.div`
-  font-size: 12px;
-  font-weight: 700;
-  color: ${(p) => p.theme.text};
-  margin: 4px 0 2px;
-`;
-
-const DomainCount = styled.div`
-  font-size: 11px;
-  color: ${(p) => p.theme.muted};
-`;
-
-const WhatToExpect = styled.div`
-  display: grid;
-  gap: 10px;
-`;
-
-const ExpectItem = styled.div`
+const FeatureItem = styled.div`
   display: flex;
   align-items: flex-start;
   gap: 10px;
   font-size: 13.5px;
-  line-height: 1.55;
   color: ${(p) => p.theme.mutedStrong};
-`;
-
-const ExpectDot = styled.div`
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: ${(p) => p.theme.accent};
-  flex-shrink: 0;
-  margin-top: 7px;
-`;
-
-/* rules tab */
-
-const RuleList = styled.ol`
-  margin: 0;
-  padding: 0 0 0 20px;
-  display: grid;
-  gap: 12px;
-`;
-
-const RuleItem = styled.li`
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: ${(p) => p.theme.mutedStrong};
-`;
-
-/* navigation tab */
-
-const NavGrid = styled.div`
-  display: grid;
-  gap: 12px;
-`;
-
-const NavItem = styled.div`
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-`;
-
-const NavIcon = styled.div`
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: ${(p) => p.theme.accentSoft};
-  color: ${(p) => p.theme.accent};
-  font-size: 16px;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-`;
-
-const NavContent = styled.div``;
-const NavLabel = styled.div`
-  font-size: 13.5px;
-  font-weight: 800;
-  color: ${(p) => p.theme.text};
-  margin-bottom: 2px;
-`;
-const NavDesc = styled.div`
-  font-size: 13px;
-  color: ${(p) => p.theme.muted};
   line-height: 1.5;
 `;
 
-/* tips tab */
-
-const TipList = styled.div`
-  display: grid;
-  gap: 14px;
-`;
-
-const TipItem = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  font-size: 13.5px;
-  line-height: 1.55;
-  color: ${(p) => p.theme.mutedStrong};
-`;
-
-const TipNum = styled.div`
-  width: 24px;
-  height: 24px;
-  border-radius: 8px;
-  background: ${(p) => p.theme.accentSoft};
-  color: ${(p) => p.theme.accent};
-  font-size: 11px;
+const FeatureDot = styled.span`
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: ${(p) => p.theme.successSoft};
+  color: ${(p) => p.theme.success};
+  font-size: 10px;
   font-weight: 800;
   display: grid;
   place-items: center;
@@ -456,9 +358,9 @@ const QuizToggleBtn = styled.button`
   transition: all 150ms ease;
 
   &:hover {
-    border-color: ${(p) => p.theme.accent};
-    color: ${(p) => p.theme.accent};
-    background: ${(p) => p.theme.accentSoft};
+    border-color: ${(p) => p.theme.success};
+    color: ${(p) => p.theme.success};
+    background: ${(p) => p.theme.successSoft};
   }
 `;
 
@@ -489,7 +391,7 @@ const QuizTitle = styled.div`
   letter-spacing: 0.6px;
 `;
 
-const QuizProgress = styled.div`
+const QuizProgressLabel = styled.div`
   font-size: 13px;
   font-weight: 700;
   color: ${(p) => p.theme.muted};
@@ -503,8 +405,8 @@ const QuizDomain = styled.div`
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.4px;
-  background: ${(p) => p.theme.accentSoft};
-  color: ${(p) => p.theme.accent};
+  background: ${(p) => p.theme.successSoft};
+  color: ${(p) => p.theme.success};
   margin-bottom: 12px;
 `;
 
@@ -534,14 +436,14 @@ const QuizOption = styled.button<{
   border-radius: 12px;
   border: 1.5px solid ${(p) => {
     if (p.$correct) return p.theme.success;
-    if (p.$wrong) return p.theme.error ?? "#ef4444";
-    if (p.$selected) return p.theme.accent;
+    if (p.$wrong) return (p.theme.error ?? "#ef4444");
+    if (p.$selected) return p.theme.success;
     return p.theme.cardBorder;
   }};
   background: ${(p) => {
     if (p.$correct) return p.theme.successSoft;
     if (p.$wrong) return (p.theme.errorSoft ?? "#fef2f2");
-    if (p.$selected && !p.$revealed) return p.theme.accentSoft;
+    if (p.$selected && !p.$revealed) return p.theme.successSoft;
     return "transparent";
   }};
   color: ${(p) => {
@@ -560,8 +462,8 @@ const QuizOption = styled.button<{
 
   &:hover {
     ${(p) => !p.$revealed && css`
-      border-color: ${p.theme.accent};
-      background: ${p.theme.accentSoft};
+      border-color: ${p.theme.success};
+      background: ${p.theme.successSoft};
     `}
   }
 `;
@@ -580,8 +482,8 @@ const OptionLetter = styled.span`
 `;
 
 const QuizExplanation = styled.div`
-  background: ${(p) => p.theme.accentSoft};
-  border: 1px solid ${(p) => p.theme.accent}33;
+  background: ${(p) => p.theme.successSoft};
+  border: 1px solid ${(p) => p.theme.success}33;
   border-radius: 12px;
   padding: 14px 16px;
   font-size: 13.5px;
@@ -594,7 +496,7 @@ const QuizExplanation = styled.div`
 const QuizExplanationLabel = styled.div`
   font-size: 11px;
   font-weight: 800;
-  color: ${(p) => p.theme.accent};
+  color: ${(p) => p.theme.success};
   text-transform: uppercase;
   letter-spacing: 0.6px;
   margin-bottom: 4px;
@@ -607,23 +509,31 @@ const QuizNavRow = styled.div`
   gap: 10px;
 `;
 
-const QuizNavBtn = styled.button<{ $primary?: boolean }>`
+const QuizCloseBtn = styled.button`
   padding: 10px 20px;
   border-radius: 10px;
-  border: ${(p) => p.$primary ? "none" : `1px solid ${p.theme.cardBorder}`};
-  background: ${(p) => p.$primary ? p.theme.accent : "transparent"};
-  color: ${(p) => p.$primary ? p.theme.accentText : p.theme.muted};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  background: transparent;
+  color: ${(p) => p.theme.muted};
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 150ms ease;
+  &:hover { color: ${(p) => p.theme.text}; border-color: ${(p) => p.theme.text}; }
+`;
+
+const QuizNextBtn = styled.button`
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  background: ${(p) => p.theme.success};
+  color: white;
   font-size: 13px;
   font-weight: 800;
   cursor: pointer;
   transition: all 150ms ease;
 
-  &:hover {
-    ${(p) => p.$primary
-      ? css`background: ${p.theme.accentHover}; transform: translateY(-1px);`
-      : css`color: ${p.theme.text}; border-color: ${p.theme.text};`}
-  }
-
+  &:hover { opacity: 0.9; transform: translateY(-1px); }
   &:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 `;
 
@@ -666,8 +576,84 @@ const QuizRestartBtn = styled.button`
   font-weight: 700;
   cursor: pointer;
   transition: all 150ms ease;
-
   &:hover { color: ${(p) => p.theme.text}; border-color: ${(p) => p.theme.text}; }
+`;
+
+/* ── upgrade overlay ─────────────────────────────────────────────────────── */
+
+const UpgradeOverlay = styled.div`
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9000;
+  display: grid; place-items: center;
+  padding: 20px;
+  animation: ${fadeIn} 200ms ease both;
+`;
+
+const UpgradeCard = styled.div`
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 24px;
+  padding: 32px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: ${(p) => p.theme.shadowLg ?? p.theme.shadow};
+  text-align: center;
+`;
+
+const UpgradeTitle = styled.h2`
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 900;
+  color: ${(p) => p.theme.text};
+`;
+
+const UpgradeText = styled.p`
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: ${(p) => p.theme.muted};
+  line-height: 1.6;
+`;
+
+const UpgradePrice = styled.div`
+  font-size: 32px;
+  font-weight: 900;
+  color: ${(p) => p.theme.text};
+  margin-bottom: 4px;
+`;
+
+const UpgradePriceNote = styled.div`
+  font-size: 13px;
+  color: ${(p) => p.theme.muted};
+  margin-bottom: 20px;
+`;
+
+const UpgradeBtn = styled.button`
+  width: 100%;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
+  color: white;
+  padding: 13px 20px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 150ms ease, transform 100ms ease;
+  margin-bottom: 10px;
+
+  &:hover { opacity: 0.9; transform: translateY(-1px); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+`;
+
+const UpgradeCloseBtn = styled.button`
+  background: none; border: none;
+  color: ${(p) => p.theme.muted};
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  padding: 8px 16px;
+  &:hover { color: ${(p) => p.theme.text}; }
 `;
 
 /* ── CTA ─────────────────────────────────────────────────────────────────── */
@@ -678,29 +664,31 @@ const CtaWrap = styled.div`
   animation: ${fadeUp} 400ms 220ms ease both;
 `;
 
-const BeginBtn = styled(Link)`
+const StartBtn = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   padding: 15px 44px;
   border-radius: 16px;
-  background: ${(p) => p.theme.accent};
-  color: ${(p) => p.theme.accentText};
+  background: linear-gradient(135deg, ${(p) => p.theme.success}, #06b6d4);
+  color: white;
   font-size: 16px;
   font-weight: 800;
-  text-decoration: none;
+  border: none;
+  cursor: pointer;
   letter-spacing: 0.1px;
-  transition: background 150ms ease, transform 100ms ease, box-shadow 150ms ease;
-  box-shadow: 0 4px 20px ${(p) => p.theme.accent}40;
+  transition: opacity 150ms ease, transform 100ms ease, box-shadow 150ms ease;
+  box-shadow: 0 4px 20px ${(p) => p.theme.success}40;
 
   &:hover {
-    background: ${(p) => p.theme.accentHover};
+    opacity: 0.92;
     transform: translateY(-2px);
-    box-shadow: 0 6px 28px ${(p) => p.theme.accent}50;
+    box-shadow: 0 6px 28px ${(p) => p.theme.success}50;
   }
 
   &:active { transform: translateY(0); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 `;
 
 const CtaNote = styled.p`
@@ -716,16 +704,11 @@ const Loading = styled.p`
   padding: 64px 0;
 `;
 
-/* ── set label helpers ───────────────────────────────────────────────────── */
+/* ── presets config ──────────────────────────────────────────────────────── */
 
-const SET_LABELS: Record<string, string> = {
-  "set-a": "Set A",
-  "set-b": "Set B",
-  "set-c": "Set C",
-  set_a: "Set A",
-  set_b: "Set B",
-  set_c: "Set C",
-};
+const FREE_PRESETS = [10, 20, 25, 30];
+const PRO_PRESETS = [50, 90];
+const ALL_PRESETS = [...FREE_PRESETS, ...PRO_PRESETS];
 
 /* ── MiniQuiz component ──────────────────────────────────────────────────── */
 
@@ -770,11 +753,11 @@ function MiniQuiz({ onClose }: { onClose: () => void }) {
       <QuizCard>
         <QuizResult>
           <QuizResultScore $pass={pass}>{score}/{SAMPLE_QUESTIONS.length}</QuizResultScore>
-          <QuizResultLabel>{pass ? "Great work!" : "Keep studying!"}</QuizResultLabel>
+          <QuizResultLabel>{pass ? "Nicely done!" : "Good practice!"}</QuizResultLabel>
           <QuizResultSub>
             {pass
-              ? "You answered most sample questions correctly. You're ready to tackle the full simulation."
-              : "Review the domains and tips above, then give the full simulation a shot — practice makes perfect."}
+              ? "You're handling the concepts well. Jump into a practice session to keep the momentum going."
+              : "Every question you practice builds your understanding. Start a session below to keep improving."}
           </QuizResultSub>
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
             <QuizRestartBtn onClick={handleRestart}>Try Again</QuizRestartBtn>
@@ -789,7 +772,7 @@ function MiniQuiz({ onClose }: { onClose: () => void }) {
     <QuizCard>
       <QuizHeader>
         <QuizTitle>Sample Questions</QuizTitle>
-        <QuizProgress>{idx + 1} / {SAMPLE_QUESTIONS.length}</QuizProgress>
+        <QuizProgressLabel>{idx + 1} / {SAMPLE_QUESTIONS.length}</QuizProgressLabel>
       </QuizHeader>
 
       <QuizDomain>{q.domain}</QuizDomain>
@@ -819,47 +802,26 @@ function MiniQuiz({ onClose }: { onClose: () => void }) {
       )}
 
       <QuizNavRow>
-        <QuizRestartBtn onClick={onClose}>Close quiz</QuizRestartBtn>
-        <QuizNavBtn
-          $primary
-          onClick={handleNext}
-          disabled={!revealed}
-        >
+        <QuizCloseBtn onClick={onClose}>Close quiz</QuizCloseBtn>
+        <QuizNextBtn onClick={handleNext} disabled={!revealed}>
           {idx + 1 >= SAMPLE_QUESTIONS.length ? "See Results →" : "Next Question →"}
-        </QuizNavBtn>
+        </QuizNextBtn>
       </QuizNavRow>
     </QuizCard>
   );
 }
 
-/* ── types ───────────────────────────────────────────────────────────────── */
-
-type Tab = "overview" | "rules" | "navigation" | "tips";
-
-const PRO_SETS = ["set-b", "set-c"];
-
-interface Props {
-  bankSlug: string;
-  setSlug: string;
-}
-
 /* ── component ───────────────────────────────────────────────────────────── */
 
-export default function InstructionClient({ bankSlug, setSlug }: Props) {
-  const { isPro, phase } = useAuth();
+export default function PracticeIntroClient({ bankSlug }: { bankSlug: string }) {
   const router = useRouter();
+  const { isPro } = useAuth();
+  const { startCheckout, loading: checkoutLoading } = useUpgrade();
   const [bankConfig, setBankConfig] = useState<BankConfig | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [questionCount, setQuestionCount] = useState(20);
   const [showQuiz, setShowQuiz] = useState(false);
-
-  const setLabel = SET_LABELS[setSlug] ?? setSlug.replace(/-/g, " ").toUpperCase();
-
-  useEffect(() => {
-    if (phase === "ready" && !isPro && PRO_SETS.includes(setSlug)) {
-      router.replace(`/bank/${bankSlug}`);
-    }
-  }, [phase, isPro, setSlug, bankSlug, router]);
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -874,21 +836,11 @@ export default function InstructionClient({ bankSlug, setSlug }: Props) {
     })();
   }, [bankSlug]);
 
-  if (loading) return <Loading>Preparing exam details...</Loading>;
+  const handleStart = () => {
+    router.push(`/bank/${bankSlug}/practice?count=${questionCount}`);
+  };
 
-  const duration = bankConfig?.durationMinutes ?? 230;
-  const passThreshold = bankConfig?.passThreshold ?? 61;
-  const hours = Math.floor(duration / 60);
-  const mins = duration % 60;
-  const durationStr = hours > 0 ? `${hours}h ${mins > 0 ? `${mins}m` : ""}` : `${mins}m`;
-  const secsPerQ = Math.round((duration / 180) * 60);
-
-  const TABS: { id: Tab; label: string }[] = [
-    { id: "overview", label: "Overview" },
-    { id: "rules", label: "Rules" },
-    { id: "navigation", label: "Navigation" },
-    { id: "tips", label: "Tips" },
-  ];
+  if (loading) return <Loading>Preparing practice session...</Loading>;
 
   return (
     <Page>
@@ -897,202 +849,99 @@ export default function InstructionClient({ bankSlug, setSlug }: Props) {
         <BreadcrumbSep>/</BreadcrumbSep>
         <BreadcrumbLink href={`/bank/${bankSlug}`}>PMP</BreadcrumbLink>
         <BreadcrumbSep>/</BreadcrumbSep>
-        <span>{setLabel}</span>
+        <span>Practice</span>
       </Breadcrumb>
 
       {/* ── hero ── */}
       <Hero>
-        <ModeBadge>Exam Simulation</ModeBadge>
-        <Title>PMP Exam Simulation — {setLabel}</Title>
+        <ModeBadge>Practice Mode</ModeBadge>
+        <Title>PMP Practice Session</Title>
         <Subtitle>
-          A full-length, timed simulation that mirrors the real PMI® exam experience.
-          Read the details below, then begin when you're ready.
+          Randomized questions with immediate feedback after every answer.
+          Learn, identify weak spots, and build confidence at your own pace.
         </Subtitle>
       </Hero>
 
       {/* ── stats ── */}
       <StatsGrid>
         <StatCard>
-          <StatValue>180</StatValue>
-          <StatLabel>Questions</StatLabel>
-        </StatCard>
-        <StatCard>
-          <StatValue>{durationStr}</StatValue>
-          <StatLabel>Time Limit</StatLabel>
-        </StatCard>
-        <StatCard>
-          <StatValue>{passThreshold}%</StatValue>
-          <StatLabel>Pass Mark</StatLabel>
+          <StatValue>180+</StatValue>
+          <StatLabel>Question Pool</StatLabel>
         </StatCard>
         <StatCard>
           <StatValue>3</StatValue>
           <StatLabel>Domains</StatLabel>
         </StatCard>
+        <StatCard>
+          <StatValue>No</StatValue>
+          <StatLabel>Time Limit</StatLabel>
+        </StatCard>
       </StatsGrid>
 
-      {/* ── tabs ── */}
-      <TabBar>
-        {TABS.map((t) => (
-          <TabBtn key={t.id} $active={activeTab === t.id} onClick={() => setActiveTab(t.id)}>
-            {t.label}
-          </TabBtn>
-        ))}
-      </TabBar>
+      {/* ── count selector ── */}
+      <Section>
+        <SectionTitle>How many questions?</SectionTitle>
+        <SectionSub>
+          Questions are randomly drawn from the full pool, balanced across all three PMP domains.
+        </SectionSub>
+        <PresetsRow>
+          {ALL_PRESETS.map((n) => {
+            const isProPreset = PRO_PRESETS.includes(n);
+            if (isProPreset && !isPro) {
+              return (
+                <LockedPresetBtn
+                  key={n}
+                  onClick={() => setShowUpgrade(true)}
+                  title="Pro feature"
+                >
+                  {n}
+                  <LockBadge>PRO</LockBadge>
+                </LockedPresetBtn>
+              );
+            }
+            return (
+              <PresetBtn
+                key={n}
+                $active={questionCount === n}
+                onClick={() => setQuestionCount(n)}
+              >
+                {n}
+              </PresetBtn>
+            );
+          })}
+        </PresetsRow>
+      </Section>
 
-      {/* ── overview panel ── */}
-      {activeTab === "overview" && (
-        <Panel>
-          <PanelTitle>Domain Breakdown</PanelTitle>
-          <DomainGrid>
-            <DomainCard $color="#6366f1">
-              <DomainPct $color="#6366f1">42%</DomainPct>
-              <DomainName>People</DomainName>
-              <DomainCount>~76 questions</DomainCount>
-            </DomainCard>
-            <DomainCard $color="#10b981">
-              <DomainPct $color="#10b981">50%</DomainPct>
-              <DomainName>Process</DomainName>
-              <DomainCount>~90 questions</DomainCount>
-            </DomainCard>
-            <DomainCard $color="#f59e0b">
-              <DomainPct $color="#f59e0b">8%</DomainPct>
-              <DomainName>Business Env.</DomainName>
-              <DomainCount>~14 questions</DomainCount>
-            </DomainCard>
-          </DomainGrid>
-
-          <PanelTitle>What to Expect</PanelTitle>
-          <WhatToExpect>
-            <ExpectItem>
-              <ExpectDot />
-              Scenario-based questions drawn from predictive, agile, and hybrid project environments.
-            </ExpectItem>
-            <ExpectItem>
-              <ExpectDot />
-              Question types include multiple choice, drag-and-drop matching, ordering, and hotspot questions.
-            </ExpectItem>
-            <ExpectItem>
-              <ExpectDot />
-              Results include a domain score breakdown and performance insights immediately after submission.
-            </ExpectItem>
-            <ExpectItem>
-              <ExpectDot />
-              Your progress is saved automatically — if you close the browser, you can resume where you left off.
-            </ExpectItem>
-          </WhatToExpect>
-        </Panel>
-      )}
-
-      {/* ── rules panel ── */}
-      {activeTab === "rules" && (
-        <Panel>
-          <PanelTitle>Exam Rules</PanelTitle>
-          <RuleList>
-            <RuleItem>
-              The timer starts the moment you click <strong>Begin Exam</strong> and cannot be paused or reset.
-            </RuleItem>
-            <RuleItem>
-              You may navigate freely between questions at any time during the exam using the question navigator.
-            </RuleItem>
-            <RuleItem>
-              Use the <strong>Flag</strong> button to mark questions for review. All flagged questions are listed before final submission.
-            </RuleItem>
-            <RuleItem>
-              Unanswered questions are counted as incorrect. Review the summary screen before submitting.
-            </RuleItem>
-            <RuleItem>
-              Once submitted, your answers are final and cannot be changed. Results are calculated immediately.
-            </RuleItem>
-            <RuleItem>
-              A minimum score of <strong>{passThreshold}%</strong> is required to pass. Scores are broken down by domain.
-            </RuleItem>
-          </RuleList>
-        </Panel>
-      )}
-
-      {/* ── navigation panel ── */}
-      {activeTab === "navigation" && (
-        <Panel>
-          <PanelTitle>How to Navigate</PanelTitle>
-          <NavGrid>
-            <NavItem>
-              <NavIcon>&#9776;</NavIcon>
-              <NavContent>
-                <NavLabel>Question Map</NavLabel>
-                <NavDesc>
-                  Open the question map to see all 180 questions at a glance. Answered questions are highlighted; flagged questions are marked. Tap any item to jump directly to it.
-                </NavDesc>
-              </NavContent>
-            </NavItem>
-            <NavItem>
-              <NavIcon>&#9873;</NavIcon>
-              <NavContent>
-                <NavLabel>Flag for Review</NavLabel>
-                <NavDesc>
-                  Not sure about an answer? Flag the question and keep moving. Before you submit, you'll see a list of all flagged questions to review.
-                </NavDesc>
-              </NavContent>
-            </NavItem>
-            <NavItem>
-              <NavIcon>&#8987;</NavIcon>
-              <NavContent>
-                <NavLabel>Timer</NavLabel>
-                <NavDesc>
-                  The countdown timer is visible at all times. With {durationStr} for 180 questions, aim for roughly {secsPerQ} seconds per question on average.
-                </NavDesc>
-              </NavContent>
-            </NavItem>
-            <NavItem>
-              <NavIcon>&#128190;</NavIcon>
-              <NavContent>
-                <NavLabel>Auto-Save</NavLabel>
-                <NavDesc>
-                  Your answers are saved automatically as you go. If you accidentally close your browser, re-open the exam link and choose "Resume" to continue from where you left off.
-                </NavDesc>
-              </NavContent>
-            </NavItem>
-          </NavGrid>
-        </Panel>
-      )}
-
-      {/* ── tips panel ── */}
-      {activeTab === "tips" && (
-        <Panel>
-          <PanelTitle>Tips for Success</PanelTitle>
-          <TipList>
-            <TipItem>
-              <TipNum>1</TipNum>
-              <span>
-                Read each question carefully and identify <em>what is being asked</em> before reviewing the choices. Scenario-based questions often have multiple plausible answers — look for the <strong>best</strong> response.
-              </span>
-            </TipItem>
-            <TipItem>
-              <TipNum>2</TipNum>
-              <span>
-                Manage your time. With approximately {secsPerQ} seconds per question, avoid spending more than 90 seconds on any single item — flag it and come back.
-              </span>
-            </TipItem>
-            <TipItem>
-              <TipNum>3</TipNum>
-              <span>
-                Eliminate wrong answers first. In most scenario questions, two options are clearly off-track. Narrow to two and choose the one most aligned with PMI® principles.
-              </span>
-            </TipItem>
-            <TipItem>
-              <TipNum>4</TipNum>
-              <span>
-                Think like a <strong>proactive, ethical project manager</strong>. PMI® favors answers that address root causes, involve the team, and follow proper processes — not quick fixes or shortcuts.
-              </span>
-            </TipItem>
-            <TipItem>
-              <TipNum>5</TipNum>
-              <span>
-                Before you submit, use the summary screen to ensure every question is answered and all flagged items have been revisited. A final 2-minute review can make a real difference.
-              </span>
-            </TipItem>
-          </TipList>
-        </Panel>
-      )}
+      {/* ── what you'll practice ── */}
+      <Section>
+        <SectionTitle>How practice mode works</SectionTitle>
+        <FeatureGrid>
+          <FeatureItem>
+            <FeatureDot>✓</FeatureDot>
+            Immediate correct/incorrect feedback after each answer
+          </FeatureItem>
+          <FeatureItem>
+            <FeatureDot>✓</FeatureDot>
+            Full explanations for every question
+          </FeatureItem>
+          <FeatureItem>
+            <FeatureDot>✓</FeatureDot>
+            Navigate freely — revisit any answered question
+          </FeatureItem>
+          <FeatureItem>
+            <FeatureDot>✓</FeatureDot>
+            No timer — focus on learning, not speed
+          </FeatureItem>
+          <FeatureItem>
+            <FeatureDot>✓</FeatureDot>
+            Session auto-saved — resume anytime
+          </FeatureItem>
+          <FeatureItem>
+            <FeatureDot>✓</FeatureDot>
+            Domain-balanced question selection
+          </FeatureItem>
+        </FeatureGrid>
+      </Section>
 
       {/* ── mini quiz ── */}
       <QuizSection>
@@ -1108,13 +957,33 @@ export default function InstructionClient({ bankSlug, setSlug }: Props) {
 
       {/* ── CTA ── */}
       <CtaWrap>
-        <BeginBtn href={`/bank/${bankSlug}/exam/${setSlug}`}>
-          Begin Full Simulation →
-        </BeginBtn>
+        <StartBtn onClick={handleStart}>
+          Start Practice ({questionCount} questions) →
+        </StartBtn>
         <CtaNote>
-          Timer starts immediately. Make sure you are in a quiet, distraction-free environment.
+          Questions are randomly selected and balanced across People, Process, and Business Environment.
         </CtaNote>
       </CtaWrap>
+
+      {/* ── upgrade modal ── */}
+      {showUpgrade && (
+        <UpgradeOverlay onClick={() => setShowUpgrade(false)}>
+          <UpgradeCard onClick={(e) => e.stopPropagation()}>
+            <UpgradeTitle>Unlock Extended Sessions</UpgradeTitle>
+            <UpgradeText>
+              50 and 90-question sessions are part of the Professional Plan — designed for deep exam preparation.
+            </UpgradeText>
+            <UpgradePrice>$29</UpgradePrice>
+            <UpgradePriceNote>One-time payment · Lifetime access</UpgradePriceNote>
+            <UpgradeBtn onClick={startCheckout} disabled={checkoutLoading}>
+              {checkoutLoading ? "Redirecting…" : "Upgrade Now →"}
+            </UpgradeBtn>
+            <UpgradeCloseBtn onClick={() => setShowUpgrade(false)}>
+              Maybe later
+            </UpgradeCloseBtn>
+          </UpgradeCard>
+        </UpgradeOverlay>
+      )}
     </Page>
   );
 }

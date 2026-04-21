@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import styled, { keyframes } from "styled-components";
+import { useSearchParams } from "next/navigation";
 import type { Question, Scenario } from "@/src/exam-engine/core/types";
 import { EngineRunner } from "@/src/exam-engine/ui/EngineRunner";
 import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
@@ -391,12 +392,19 @@ interface InProgressAttempt {
 export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
   const { user, isPro } = useAuth();
   const { startCheckout, loading: checkoutLoading } = useUpgrade();
+  const searchParams = useSearchParams();
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [msg, setMsg] = useState("Loading questions\u2026");
-  const [questionCount, setQuestionCount] = useState<number>(20);
-  const [started, setStarted] = useState(false);
+
+  // Read ?count from URL (set by PracticeIntroClient); fall back to 20
+  const countParam = searchParams.get("count");
+  const initialCount = countParam ? Math.max(1, parseInt(countParam, 10)) : 20;
+  const [questionCount, setQuestionCount] = useState<number>(initialCount);
+
+  // If a count was passed via URL, skip the setup screen
+  const [started, setStarted] = useState<boolean>(!!countParam);
 
   // Resume-flow state
   const [inProgressAttempt, setInProgressAttempt] = useState<InProgressAttempt | null>(null);
