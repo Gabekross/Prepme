@@ -114,25 +114,35 @@ const ModeBadge = styled.div<{ $mode: "practice" | "exam" }>`
     p.$mode === "practice" ? p.theme.successBorder : `${p.theme.accent}33`};
 `;
 
-/* ── progress ────────────────────────────────────────────────────────────── */
+/* ── exam status row (progress + unanswered + timer in one line) ─────────── */
 
-const ProgressSection = styled.div`
-  margin-top: 16px;
-`;
-
-const ProgressHeader = styled.div`
+const ExamStatusRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  gap: 8px;
+  margin-top: 14px;
+  margin-bottom: 2px;
 `;
 
-const ProgressLabel = styled.div`
-  font-size: 11.5px;
+const ExamStatusLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+`;
+
+const ExamStatusCounter = styled.div`
+  font-size: 13px;
+  font-weight: 800;
+  color: ${(p) => p.theme.text};
+  font-variant-numeric: tabular-nums;
+`;
+
+const ExamStatusBadge = styled.div<{ $urgent: boolean }>`
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  color: ${(p) => p.theme.muted};
+  color: ${(p) => p.$urgent ? (p.theme.warning ?? "#f59e0b") : p.theme.muted};
 `;
 
 
@@ -493,28 +503,6 @@ const TimerValue = styled.div<{ $warning: "none" | "low" | "critical" }>`
   transition: color 400ms ease;
 `;
 
-/* ── unanswered badge ─────────────────────────────────────────────────────── */
-
-const UnansweredRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 6px;
-`;
-
-const UnansweredBadge = styled.div<{ $urgent: boolean }>`
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 700;
-  background: ${(p) => p.$urgent ? p.theme.errorSoft : p.theme.name === "dark" ? "rgba(255,255,255,0.06)" : "#f1f5f9"};
-  color: ${(p) => p.$urgent ? p.theme.error : p.theme.muted};
-  border: 1px solid ${(p) => p.$urgent ? p.theme.errorBorder : p.theme.cardBorder};
-`;
 
 /* ── grid legend ─────────────────────────────────────────────────────────── */
 
@@ -1742,28 +1730,24 @@ export function EngineRunner(props: {
     <Grid>
       {/* ── LEFT SIDEBAR ───────────────────────────────────────── */}
       <Card>
-        {/* Timer (exam mode only) */}
-        {mode === "exam" && !engine.attempt?.submittedAt && timeRemaining !== null && (
-          <ProgressSection>
-            <ProgressHeader>
-              <ProgressLabel>Time Remaining</ProgressLabel>
-              <TimerValue $warning={timerWarning}>{formatTime(timeRemaining)}</TimerValue>
-            </ProgressHeader>
-          </ProgressSection>
-        )}
-
-        {/* ── Unanswered counter (exam mode only) ────────── */}
+        {/* ── Exam status: progress · unanswered · timer ─── */}
         {mode === "exam" && !engine.attempt?.submittedAt && engine.attempt && (
-          <UnansweredRow>
-            <UnansweredBadge $urgent={(total - answeredCount) > 0}>
-              {total - answeredCount === 0 ? "All answered" : `${total - answeredCount} unanswered`}
-            </UnansweredBadge>
-            {flaggedCount > 0 && (
-              <UnansweredBadge $urgent={false}>
-                {flaggedCount} flagged
-              </UnansweredBadge>
+          <ExamStatusRow>
+            <ExamStatusLeft>
+              <ExamStatusCounter>{x} / {total}</ExamStatusCounter>
+              <ExamStatusBadge $urgent={(total - answeredCount) > 0}>
+                {total - answeredCount === 0 ? "All answered" : `${total - answeredCount} unanswered`}
+              </ExamStatusBadge>
+              {flaggedCount > 0 && (
+                <ExamStatusBadge $urgent={false}>
+                  {flaggedCount} flagged
+                </ExamStatusBadge>
+              )}
+            </ExamStatusLeft>
+            {timeRemaining !== null && (
+              <TimerValue $warning={timerWarning}>{formatTime(timeRemaining)}</TimerValue>
             )}
-          </UnansweredRow>
+          </ExamStatusRow>
         )}
 
         <Divider />
