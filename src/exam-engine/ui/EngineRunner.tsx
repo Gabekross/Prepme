@@ -1381,28 +1381,7 @@ export function EngineRunner(props: {
   useEffect(() => {
     const ns = storageNamespace;
 
-    /**
-     * SESSION GUARD
-     * ─────────────────────────────────────────────────────────────────────────
-     * React useEffect cleanup runs on SPA navigation (component unmounts) but
-     * NOT on a browser hard refresh (browser destroys the JS context first).
-     * `beforeunload` fires on refresh/close/address-bar-nav but NOT on SPA nav.
-     *
-     * Combining both lets us:
-     *   • SPA nav away  → cleanup runs, no beforeunload  → clear in-progress localStorage → fresh start on return ✅
-     *   • Hard refresh  → beforeunload fires, cleanup may not run → localStorage kept → restore on reload ✅
-     *   • Tab close     → beforeunload fires, cleanup may or may not run → flag is set but nobody reads it ✅ (no harm)
-     */
-    const REFRESH_FLAG = `exam_refresh__${ns}`;
-
-    function onBeforeUnload() {
-      try { sessionStorage.setItem(REFRESH_FLAG, "1"); } catch { /* ignore private-mode quota errors */ }
-    }
-    if (typeof window !== "undefined") {
-      window.addEventListener("beforeunload", onBeforeUnload);
-    }
-
-    // Reset all local UI state, then load / create the attempt
+    // Reset all local UI state, then create a fresh attempt
     setInitialized(false);
     setRevealed({});
     setSubmittedQ({});
@@ -1415,69 +1394,24 @@ export function EngineRunner(props: {
     setReviewingFlagged(false);
 
     engine.initIfNeeded({ bank: questions, defaultBlueprint: blueprint, mode, storageNamespace, userId, bankSlug, setId })
-      .then(() => {
-        // For restored practice sessions, pre-populate revealed/submittedQ
-        // so that explanation buttons appear for previously answered questions.
-        if (mode === "practice") {
-          const att = engine.attempt;
-          if (att) {
-            const restoredRevealed: Record<string, boolean> = {};
-            const restoredSubmitted: Record<string, boolean> = {};
-            const qMap = new Map(questions.map((q) => [q.id, q]));
-            for (const qid of att.questionOrder) {
-              const resp = att.responsesByQuestionId[qid];
-              const q = qMap.get(qid);
-              if (q && resp && isAnswered(q, resp)) {
-                restoredRevealed[qid] = true;
-                restoredSubmitted[qid] = true;
-              }
-            }
-            if (Object.keys(restoredRevealed).length > 0) {
-              setRevealed(restoredRevealed);
-              setSubmittedQ(restoredSubmitted);
-            }
-          }
-        }
-        setInitialized(true);
-      });
+      .then(() => { setInitialized(true); });
 
     return () => {
-      if (typeof window !== "undefined") {
-        window.removeEventListener("beforeunload", onBeforeUnload);
-
-        // Check whether the beforeunload event fired (= page refresh / hard nav)
-        const isRefresh = sessionStorage.getItem(REFRESH_FLAG) === "1";
-        // Always remove the flag — it's only meaningful for this single transition
-        sessionStorage.removeItem(REFRESH_FLAG);
-
-        if (isRefresh) {
-          // Page refresh: keep localStorage so the exam can be restored on reload
-          return;
-        }
-      }
-
-      // ── SPA navigation away ──────────────────────────────────────────────
-      // Clear the active in-progress attempt so the user starts fresh next time.
-      // IMPORTANT: do NOT clear submitted attempts — the results review relies on them.
+      // On SPA navigation away, mark any unsubmitted attempt as abandoned
+      // so it does not surface as in_progress in the dashboard.
       const att = latestAttemptRef.current;
-      if (att && !att.submittedAt) {
-        // Fire-and-forget (localStorage ops are synchronous internally)
-        new LocalAttemptStorage(ns).clearLatest();
-
-        // Also mark as abandoned in Supabase so resume query won't find it
-        if (att.id && userId) {
-          try {
-            const sb = supabaseBrowser();
-            sb.from("attempts")
-              .update({ status: "abandoned" })
-              .eq("id", att.id)
-              .eq("user_id", userId)
-              .then(({ error }) => {
-                if (error) console.warn("[EngineRunner] Failed to abandon attempt on nav:", error.message);
-              });
-          } catch {
-            // Best-effort — don't block navigation
-          }
+      if (att && !att.submittedAt && att.id && userId) {
+        try {
+          const sb = supabaseBrowser();
+          sb.from("attempts")
+            .update({ status: "abandoned" })
+            .eq("id", att.id)
+            .eq("user_id", userId)
+            .then(({ error }) => {
+              if (error) console.warn("[EngineRunner] Failed to abandon attempt on nav:", error.message);
+            });
+        } catch {
+          // Best-effort — don't block navigation
         }
       }
     };

@@ -200,22 +200,6 @@ function clampToNearestVisible(att: Attempt, visibleSet: Set<string>) {
   return 0;
 }
 
-/**
- * Detect if a stored attempt is "stale" vs the current bank.
- * Example: you added new Supabase questions, but the old attempt references only old IDs.
- */
-function isStaleAttempt(existing: Attempt, bank: Question[]) {
-  // Empty or broken attempts are always stale
-  if (!existing.questionOrder?.length) return true;
-
-  const bankIds = new Set(bank.map((q) => q.id));
-  const overlap = existing.questionOrder.filter((id) => bankIds.has(id)).length;
-
-  // If the attempt references almost nothing in the current bank, it's stale.
-  // Threshold: must overlap at least 5 questions OR at least 50% of its order, whichever is smaller.
-  const minRequired = Math.min(5, Math.ceil(existing.questionOrder.length * 0.5));
-  return overlap < minRequired;
-}
 
 /** Rebuild adaptive weakness maps from current attempt state. */
 function rebuildAdaptiveWeakness(
@@ -273,82 +257,8 @@ export const useExamSession = create<State>((set, get) => ({
     set({ storageNamespace: ns, _userId: uid, _bankSlug: bSlug, _setId: sId });
 
     const storage = getOrCreateStorage(ns, { userId: uid, bankSlug: bSlug ?? undefined, mode, setId: sId });
-    const existing = storage ? await storage.loadLatestAttempt() : null;
 
-    // Initialize adaptive session for practice mode (safe: never throws)
-    const initAdaptive = (att: Attempt, qs: Question[]) => {
-      try {
-        if (mode !== "practice") { set({ adaptiveSession: null }); return; }
-        let session = createAdaptiveSessionState();
-        // Restore from persisted adaptive state if available
-        if (att.adaptiveState) {
-          session = {
-            ...session,
-            consecutiveCorrect: att.adaptiveState.consecutiveCorrect ?? 0,
-            consecutiveWrong: att.adaptiveState.consecutiveWrong ?? 0,
-            targetDifficulty: att.adaptiveState.targetDifficulty ?? DEFAULT_DIFFICULTY,
-            recentQuestionIds: att.adaptiveState.recentQuestionIds ?? [],
-            recentDomains: (att.adaptiveState.recentDomains ?? []) as Domain[],
-          };
-        }
-        // Rebuild weakness maps from current progress
-        session = rebuildAdaptiveWeakness(att, qs, session);
-        set({ adaptiveSession: session });
-        adaptiveDebug.dumpState("Init adaptive session", {
-          targetDifficulty: session.targetDifficulty,
-          streak: `${session.consecutiveCorrect}✓ ${session.consecutiveWrong}✗`,
-          domainWeakness: session.domainWeakness,
-        });
-      } catch (e) {
-        // Never let adaptive init failure block the main exam flow
-        console.warn("[Adaptive] Init failed, continuing without adaptive state:", e);
-        set({ adaptiveSession: null });
-      }
-    };
-
-    // stale-attempt guard
-    if (existing && isStaleAttempt(existing, bank)) {
-      const created = createAttempt({ bank, blueprint: defaultBlueprint, mode });
-      const filtered = applyDomainFilter(created.questions, get().filters.domain);
-
-      const visibleSet = buildVisibleSet(filtered);
-      const nextIndex = clampToNearestVisible(created.attempt, visibleSet);
-      const nextAttempt = { ...created.attempt, currentIndex: nextIndex };
-
-      set({
-        bank,
-        attempt: nextAttempt,
-        picked: created.questions,
-        questions: filtered,
-      });
-      initAdaptive(nextAttempt, created.questions);
-
-      if (storage) await storage.saveAttempt(nextAttempt);
-      return;
-    }
-
-    if (existing) {
-      const pickedRaw = bank.filter((q) => existing.questionOrder.includes(q.id));
-      const picked = pickedRaw.length ? pickedRaw : bank; // ✅ fallback
-      const filtered = applyDomainFilter(picked, get().filters.domain);
-
-      const visibleSet = buildVisibleSet(filtered);
-      const nextIndex = clampToNearestVisible(existing, visibleSet);
-      const nextAttempt = { ...existing, currentIndex: nextIndex };
-
-      set({
-        bank,
-        attempt: nextAttempt,
-        picked,
-        questions: filtered,
-      });
-      initAdaptive(nextAttempt, bank);
-
-      storage?.saveAttempt(nextAttempt);
-      return;
-    }
-
-
+    // Always start a fresh attempt — resume is not supported
     const created = createAttempt({ bank, blueprint: defaultBlueprint, mode });
     const filtered = applyDomainFilter(created.questions, get().filters.domain);
 
@@ -356,13 +266,30 @@ export const useExamSession = create<State>((set, get) => ({
     const nextIndex = clampToNearestVisible(created.attempt, visibleSet);
     const nextAttempt = { ...created.attempt, currentIndex: nextIndex };
 
+    // Initialize adaptive session for practice mode (safe: never throws)
+    if (mode === "practice") {
+      try {
+        const session = createAdaptiveSessionState();
+        set({ adaptiveSession: session });
+        adaptiveDebug.dumpState("Init adaptive session (fresh)", {
+          targetDifficulty: session.targetDifficulty,
+          streak: "0✓ 0✗",
+          domainWeakness: session.domainWeakness,
+        });
+      } catch (e) {
+        console.warn("[Adaptive] Init failed, continuing without adaptive state:", e);
+        set({ adaptiveSession: null });
+      }
+    } else {
+      set({ adaptiveSession: null });
+    }
+
     set({
       bank,
       attempt: nextAttempt,
       picked: created.questions,
       questions: filtered,
     });
-    initAdaptive(nextAttempt, created.questions);
 
     if (storage) await storage.saveAttempt(nextAttempt);
   },

@@ -1168,11 +1168,7 @@ export default function DashboardClient() {
                   </AttemptMeta>
                 </AttemptInfo>
                 <ScoreBadge $passed={a.passed}>
-                  {a.score_percent !== null
-                    ? `${a.score_percent}%`
-                    : a.status === "in_progress"
-                      ? "In Progress"
-                      : "—"}
+                  {a.score_percent !== null ? `${a.score_percent}%` : "—"}
                 </ScoreBadge>
                 <DeleteBtn
                   onClick={(e) => { e.stopPropagation(); deleteAttempt(a.id); }}

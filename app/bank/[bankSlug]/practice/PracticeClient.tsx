@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { useSearchParams } from "next/navigation";
 import type { Question, Scenario } from "@/src/exam-engine/core/types";
@@ -8,8 +8,6 @@ import { EngineRunner } from "@/src/exam-engine/ui/EngineRunner";
 import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useUpgrade } from "@/lib/useUpgrade";
-import { supabaseBrowser } from "@/lib/supabase/browser";
-import { LocalAttemptStorage } from "@/src/exam-engine/core/storage";
 import { pmpBank } from "@/src/exam-engine/data/seed.pmp";
 import { setABank } from "@/src/exam-engine/data/seed.set-a";
 
@@ -284,108 +282,6 @@ const UpgradeCloseBtn = styled.button`
   &:hover { color: ${(p) => p.theme.text}; }
 `;
 
-/* ── resume card styled ────────────────────────────────────────────────── */
-
-const ResumeIcon = styled.div`
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #f59e0b);
-  display: grid;
-  place-items: center;
-  font-size: 26px;
-  margin: 0 auto 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-`;
-
-const ProgressBar = styled.div`
-  width: 100%;
-  height: 8px;
-  border-radius: 4px;
-  background: ${(p) => p.theme.cardBorder};
-  margin: 16px 0 8px;
-  overflow: hidden;
-`;
-
-const ProgressFill = styled.div<{ $pct: number }>`
-  height: 100%;
-  width: ${(p) => p.$pct}%;
-  border-radius: 4px;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #f59e0b);
-  transition: width 400ms ease;
-`;
-
-const ProgressText = styled.div`
-  font-size: 13px;
-  font-weight: 700;
-  color: ${(p) => p.theme.text};
-  margin-bottom: 4px;
-`;
-
-const MetaText = styled.div`
-  font-size: 12px;
-  color: ${(p) => p.theme.muted};
-  margin-bottom: 20px;
-`;
-
-const ButtonRow = styled.div`
-  display: flex;
-  gap: 10px;
-
-  @media (max-width: 480px) {
-    flex-direction: column;
-  }
-`;
-
-const ResumeBtn = styled.button`
-  flex: 1;
-  padding: 14px 20px;
-  border-radius: 14px;
-  border: none;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #f59e0b);
-  color: white;
-  font-size: 15px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: opacity 150ms ease, transform 100ms ease;
-
-  &:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-  }
-`;
-
-const FreshBtn = styled.button`
-  flex: 1;
-  padding: 14px 20px;
-  border-radius: 14px;
-  border: 1px solid ${(p) => p.theme.cardBorder};
-  background: ${(p) => p.theme.cardBg};
-  color: ${(p) => p.theme.text};
-  font-size: 15px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: opacity 150ms ease, transform 100ms ease;
-
-  &:hover {
-    border-color: ${(p) => p.theme.error};
-    color: ${(p) => p.theme.error};
-    background: ${(p) => p.theme.errorSoft};
-    transform: translateY(-1px);
-  }
-`;
-
-/* ── types ─────────────────────────────────────────────────────────────── */
-
-interface InProgressAttempt {
-  id: string;
-  updated_at: string;
-  state: {
-    questionOrder: string[];
-    responsesByQuestionId: Record<string, unknown>;
-    currentIndex: number;
-  };
-}
 
 /* ── component ──────────────────────────────────────────────────────────── */
 
@@ -406,11 +302,6 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
   // If a count was passed via URL, skip the setup screen
   const [started, setStarted] = useState<boolean>(!!countParam);
 
-  // Resume-flow state
-  const [inProgressAttempt, setInProgressAttempt] = useState<InProgressAttempt | null>(null);
-  const [resumeCheckDone, setResumeCheckDone] = useState(false);
-  const [clearing, setClearing] = useState(false);
-
   useEffect(() => {
     (async () => {
       try {
@@ -426,56 +317,6 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
       }
     })();
   }, [bankSlug]);
-
-  // Check for in-progress attempt once questions are loaded and user is known
-  useEffect(() => {
-    if (!questions || !user?.id) {
-      setResumeCheckDone(true);
-      return;
-    }
-
-    (async () => {
-      try {
-        const sb = supabaseBrowser();
-        const { data } = await sb
-          .from("attempts")
-          .select("id, state, created_at, updated_at")
-          .eq("user_id", user.id)
-          .eq("bank_slug", bankSlug)
-          .eq("mode", "practice")
-          .eq("status", "in_progress")
-          .order("updated_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (data?.state?.questionOrder) {
-          setInProgressAttempt(data as InProgressAttempt);
-        }
-      } catch {
-        // Silently ignore — proceed to setup
-      } finally {
-        setResumeCheckDone(true);
-      }
-    })();
-  }, [questions, user?.id, bankSlug]);
-
-  const handleStartFresh = useCallback(async () => {
-    if (!inProgressAttempt) return;
-    setClearing(true);
-    try {
-      const sb = supabaseBrowser();
-      await sb.from("attempts").update({ status: "abandoned" }).eq("id", inProgressAttempt.id);
-      new LocalAttemptStorage(`${bankSlug}__practice`).clearLatest();
-    } catch {
-      // Best-effort clear
-    }
-    setInProgressAttempt(null);
-    setClearing(false);
-  }, [inProgressAttempt, bankSlug]);
-
-  const handleResume = useCallback(() => {
-    setStarted(true);
-  }, []);
 
   if (!questions) return <P>{msg}</P>;
 
@@ -493,59 +334,7 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
     },
   };
 
-  // Show resume card if there is an in-progress attempt and we haven't started yet
-  if (!started && resumeCheckDone && inProgressAttempt) {
-    const { state, updated_at } = inProgressAttempt;
-    const totalQ = state.questionOrder.length;
-    const answered = Object.keys(state.responsesByQuestionId).length;
-    const pct = totalQ > 0 ? Math.round((answered / totalQ) * 100) : 0;
-    const lastActive = new Date(updated_at);
-    const formattedDate = lastActive.toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-    const formattedTime = lastActive.toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-
-    return (
-      <SetupWrap>
-        <SetupCard>
-          <ResumeIcon>&#9654;</ResumeIcon>
-          <SetupTitle>Resume Session?</SetupTitle>
-          <SetupSubtitle>
-            You have an unfinished practice session.
-          </SetupSubtitle>
-
-          <ProgressText>
-            {answered} of {totalQ} questions answered
-          </ProgressText>
-          <ProgressBar>
-            <ProgressFill $pct={pct} />
-          </ProgressBar>
-          <MetaText>
-            Last active: {formattedDate} at {formattedTime}
-          </MetaText>
-
-          <ButtonRow>
-            <ResumeBtn onClick={handleResume}>
-              Resume Session
-            </ResumeBtn>
-            <FreshBtn onClick={handleStartFresh} disabled={clearing}>
-              {clearing ? "Clearing\u2026" : "Start Fresh"}
-            </FreshBtn>
-          </ButtonRow>
-        </SetupCard>
-      </SetupWrap>
-    );
-  }
-
   if (!started) {
-    // Wait for resume check before showing setup
-    if (!resumeCheckDone) return <P>Loading questions\u2026</P>;
-
     return (
       <SetupWrap>
         <SetupCard>
