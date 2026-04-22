@@ -510,11 +510,15 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
           finalQs = qs.length ? qs : pmpBank;
         }
 
+        // Cancel the fallback timeout — real data is ready
+        clearTimeout(timeout);
         setQuestions(finalQs);
         setScenarios(scns);
         setMsg("");
       } catch (e: any) {
         if (cancelled) return;
+        // Cancel the fallback timeout — catch block handles the fallback directly
+        clearTimeout(timeout);
         setBankConfig(FALLBACK_BANK_CONFIG);
         setQuestions(resolvedSetId && SEED_FALLBACKS[resolvedSetId] ? SEED_FALLBACKS[resolvedSetId]! : pmpBank);
         setScenarios([]);
