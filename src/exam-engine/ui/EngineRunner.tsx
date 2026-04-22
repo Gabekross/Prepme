@@ -12,6 +12,8 @@ import { supabaseBrowser } from "@/lib/supabase/browser";
 import { computeAdaptiveSummary, type AdaptiveSummary } from "../core/analytics";
 import { AdaptiveResults } from "./AdaptiveResults";
 import { ProcessingOverlay } from "./ProcessingOverlay";
+import { useAuth } from "@/lib/auth/AuthProvider";
+import { useUpgrade } from "@/lib/useUpgrade";
 
 /* ── animations ─────────────────────────────────────────────────────────── */
 
@@ -1407,6 +1409,93 @@ const BreakNote = styled.p`
   line-height: 1.6;
 `;
 
+/* ── topic gate (review_list, free users) ───────────────────────────────── */
+
+const TopicGateWrap = styled.div`
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-top: 14px;
+`;
+
+const TopicGateBlur = styled.div`
+  filter: blur(3px);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.45;
+`;
+
+const TopicGateOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: ${(p) =>
+    p.theme.name === "dark" ? "rgba(0,0,0,0.72)" : "rgba(255,255,255,0.82)"};
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 14px;
+  border: 1px solid ${(p) => p.theme.cardBorder};
+`;
+
+const TopicGateBadge = styled.div`
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: ${(p) => p.theme.accentSoft};
+  color: ${(p) => p.theme.accent};
+`;
+
+const TopicGateLabel = styled.div`
+  font-size: 12.5px;
+  font-weight: 700;
+  color: ${(p) => p.theme.text};
+`;
+
+const TopicGateSub = styled.div`
+  font-size: 11.5px;
+  color: ${(p) => p.theme.muted};
+  text-align: center;
+  max-width: 220px;
+  line-height: 1.45;
+`;
+
+const TopicGateBtn = styled.button`
+  border: none;
+  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  margin-top: 2px;
+  transition: opacity 150ms ease;
+  &:hover { opacity: 0.88; }
+  &:disabled { opacity: 0.5; cursor: wait; }
+`;
+
+/* ── full-report CTA button ─────────────────────────────────────────────── */
+
+const FullReportBtn = styled.button`
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
+  color: white;
+  padding: 10px 18px;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 150ms ease, transform 100ms ease;
+  &:hover { opacity: 0.9; transform: translateY(-1px); }
+`;
+
 /* ── component ───────────────────────────────────────────────────────────── */
 
 export type BreakConfigMode = "real_pmp" | "continuous" | "adaptive_45" | "adaptive_60";
@@ -1435,6 +1524,8 @@ export function EngineRunner(props: {
           durationMinutes, passThreshold = 70, userId, bankSlug, setId, breakConfig } = props;
   const engine = useExamSession();
   const router = useRouter();
+  const { isPro } = useAuth();
+  const { startCheckout, loading: checkoutLoading } = useUpgrade();
 
   const [initialized, setInitialized] = useState(false);
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
@@ -1571,6 +1662,7 @@ export function EngineRunner(props: {
       else if (remaining <= 1800) setTimerWarning("low");
       else setTimerWarning("none");
       if (remaining === 0) {
+        setShowProcessing(true);
         engine.submitAttempt();
         persistResult();
       }
@@ -1858,8 +1950,13 @@ export function EngineRunner(props: {
       if (showReviewAfterSubmit) {
         setShowProcessing(true);
       } else {
-        // Skip review — go to dashboard
-        router.push("/dashboard");
+        // Skip review — go directly to the results page for this attempt
+        const attemptId = engine.attempt?.id;
+        if (attemptId) {
+          router.push(`/dashboard/results/${attemptId}`);
+        } else {
+          router.push("/dashboard");
+        }
       }
     }
   }
@@ -2149,13 +2246,13 @@ export function EngineRunner(props: {
           <Card>
             <ResultsHero $pass={examPassed}>
               <ResultsIcon $pass={examPassed}>
-                {examPassed ? "Passed" : "Review"}
+                {examPassed ? "Passed ✓" : "Not Passed"}
               </ResultsIcon>
               <ResultsScore>{examPercent}%</ResultsScore>
               <ResultsSubtext>
                 {examPassed
-                  ? `Congratulations — you passed! (threshold: ${passThreshold}%)`
-                  : `Keep studying — you've got this! (threshold: ${passThreshold}%)`}
+                  ? `You're ${examPercent - passThreshold}% above the passing threshold — great result!`
+                  : `You're ${passThreshold - examPercent}% away from passing. Review where you lost marks below.`}
               </ResultsSubtext>
               {engine.attempt.submittedAt && (
                 <SubmittedAt>Submitted {formatSubmittedAt(engine.attempt.submittedAt)}</SubmittedAt>
@@ -2212,6 +2309,56 @@ export function EngineRunner(props: {
               </>
             )}
 
+            {/* Topic breakdown gate (free users) / link (pro users) */}
+            {result && (
+              <>
+                <Divider />
+                {!isPro ? (
+                  <TopicGateWrap>
+                    <TopicGateBlur>
+                      <SectionToggleBtn>
+                        Performance by Topic
+                        <SectionArrow $open={false}>▼</SectionArrow>
+                      </SectionToggleBtn>
+                      <DomainTable>
+                        {["Planning & Scheduling", "Risk Management", "Stakeholder Engagement", "Team Leadership"].map((t) => (
+                          <React.Fragment key={t}>
+                            <DomainRow>
+                              <DomainName>{t}</DomainName>
+                              <DomainScore>??/??</DomainScore>
+                              <DomainPct $pass={false}>??%</DomainPct>
+                            </DomainRow>
+                            <DomainTrack>
+                              <DomainFill $pct={48} $pass={false} />
+                            </DomainTrack>
+                          </React.Fragment>
+                        ))}
+                      </DomainTable>
+                    </TopicGateBlur>
+                    <TopicGateOverlay>
+                      <TopicGateBadge>STUDY MODE</TopicGateBadge>
+                      <TopicGateLabel>Unlock per-topic breakdown</TopicGateLabel>
+                      <TopicGateSub>
+                        See exactly which topics cost you marks — and which to fix first.
+                      </TopicGateSub>
+                      <TopicGateBtn onClick={startCheckout} disabled={checkoutLoading}>
+                        {checkoutLoading ? "Redirecting…" : "Unlock Study Mode — $29"}
+                      </TopicGateBtn>
+                    </TopicGateOverlay>
+                  </TopicGateWrap>
+                ) : (
+                  engine.attempt?.id && (
+                    <RetakeBtn
+                      style={{ width: "100%", marginTop: 8, textAlign: "center" }}
+                      onClick={() => router.push(`/dashboard/results/${engine.attempt!.id}`)}
+                    >
+                      View Full Topic Breakdown →
+                    </RetakeBtn>
+                  )
+                )}
+              </>
+            )}
+
             {/* Adaptive insights — collapsible */}
             {adaptiveSummary && (
               <>
@@ -2229,6 +2376,11 @@ export function EngineRunner(props: {
             <Divider />
 
             <ActionRow>
+              {engine.attempt?.id && (
+                <FullReportBtn onClick={() => router.push(`/dashboard/results/${engine.attempt!.id}`)}>
+                  View Full Report →
+                </FullReportBtn>
+              )}
               <RetakeBtn onClick={retakeExam}>Retake Exam</RetakeBtn>
             </ActionRow>
 

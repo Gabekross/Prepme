@@ -91,8 +91,8 @@ const StatusText = styled.div`
 const STAGES = [
   "Scoring your responses...",
   "Analyzing domain performance...",
-  "Generating your performance summary...",
-  "Preparing results...",
+  "Identifying topic-level gaps...",
+  "Your results are ready...",
 ];
 
 /* ── component ───────────────────────────────────────────────────────────── */
