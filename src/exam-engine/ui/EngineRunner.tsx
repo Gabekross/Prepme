@@ -1288,7 +1288,128 @@ const DOMAIN_LABELS: Record<string, string> = {
   business_environment: "Business Env.",
 };
 
+/* ── break overlay ───────────────────────────────────────────────────────── */
+
+const BreakOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: ${(p) =>
+    p.theme.name === "dark"
+      ? "rgba(0,0,0,0.88)"
+      : "rgba(248,250,252,0.96)"};
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+`;
+
+const BreakCard = styled.div`
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 28px;
+  padding: 48px 40px 40px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  box-shadow: ${(p) => p.theme.shadowLg ?? p.theme.shadow};
+
+  @media (max-width: 480px) {
+    padding: 36px 24px 32px;
+    border-radius: 22px;
+  }
+`;
+
+const BreakPill = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  background: ${(p) => p.theme.accentSoft};
+  color: ${(p) => p.theme.accent};
+  border: 1px solid ${(p) => p.theme.accent}33;
+  margin-bottom: 20px;
+`;
+
+const BreakTitle = styled.h2`
+  margin: 0 0 10px;
+  font-size: clamp(22px, 4vw, 28px);
+  font-weight: 900;
+  letter-spacing: -0.4px;
+  color: ${(p) => p.theme.text};
+`;
+
+const BreakBody = styled.p`
+  margin: 0 0 28px;
+  font-size: 14px;
+  color: ${(p) => p.theme.muted};
+  line-height: 1.65;
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+`;
+
+const BreakCountdown = styled.div`
+  font-size: 56px;
+  font-weight: 900;
+  letter-spacing: -2px;
+  color: ${(p) => p.theme.text};
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  margin-bottom: 6px;
+`;
+
+const BreakCountdownLabel = styled.div`
+  font-size: 12px;
+  font-weight: 600;
+  color: ${(p) => p.theme.muted};
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 28px;
+`;
+
+const BreakResumeBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 40px;
+  border-radius: 14px;
+  border: none;
+  background: ${(p) => p.theme.accent};
+  color: ${(p) => p.theme.accentText};
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 150ms ease, transform 100ms ease, box-shadow 150ms ease;
+  box-shadow: 0 4px 16px ${(p) => p.theme.accent}40;
+  margin-bottom: 16px;
+
+  &:hover {
+    background: ${(p) => p.theme.accentHover};
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px ${(p) => p.theme.accent}50;
+  }
+  &:active { transform: translateY(0); }
+`;
+
+const BreakNote = styled.p`
+  margin: 0;
+  font-size: 12px;
+  color: ${(p) => p.theme.muted};
+  line-height: 1.6;
+`;
+
 /* ── component ───────────────────────────────────────────────────────────── */
+
+export type BreakConfigMode = "real_pmp" | "continuous" | "adaptive_45" | "adaptive_60";
 
 export function EngineRunner(props: {
   title: string;
@@ -1307,9 +1428,11 @@ export function EngineRunner(props: {
   bankSlug?: string;
   /** Set ID for exam mode (e.g. "set_a") */
   setId?: string | null;
+  /** Break structure config for exam mode */
+  breakConfig?: { mode: BreakConfigMode };
 }) {
   const { title, subtitle, questions, scenarios, blueprint, mode, storageNamespace,
-          durationMinutes, passThreshold = 70, userId, bankSlug, setId } = props;
+          durationMinutes, passThreshold = 70, userId, bankSlug, setId, breakConfig } = props;
   const engine = useExamSession();
   const router = useRouter();
 
@@ -1332,6 +1455,19 @@ export function EngineRunner(props: {
   const [showQuestionList, setShowQuestionList] = useState(false);
   const [reviewingFlagged, setReviewingFlagged] = useState(false);
 
+  // ── Break system state ────────────────────────────────────────────────────
+  const [isOnBreak, setIsOnBreak] = useState(false);
+  const [breakNumber, setBreakNumber] = useState(0);
+  const [breakCountdown, setBreakCountdown] = useState<number | null>(null);
+  /** Thresholds that have already fired (question-index for real_pmp; elapsed-seconds for adaptive) */
+  const [firedBreaks, setFiredBreaks] = useState<Set<number>>(new Set());
+  /** For real_pmp: questions before this index are locked from navigation */
+  const [lockedBefore, setLockedBefore] = useState(0);
+  /** Adjusted exam deadline — extended by actual break pause duration on resume */
+  const examEndMsRef = useRef<number>(0);
+  /** Timestamp when the current break started */
+  const breakStartMsRef = useRef<number | null>(null);
+
   const questionEntryRef = useRef<{ qid: string; enteredAt: number } | null>(null);
 
   /**
@@ -1342,6 +1478,13 @@ export function EngineRunner(props: {
   useEffect(() => {
     latestAttemptRef.current = engine.attempt;
   }, [engine.attempt]);
+
+  // Initialise the adjusted exam end time whenever a new attempt is created
+  useEffect(() => {
+    if (!engine.attempt?.id || !durationMinutes) return;
+    examEndMsRef.current =
+      new Date(engine.attempt.createdAt).getTime() + durationMinutes * 60_000;
+  }, [engine.attempt?.id, durationMinutes]);
 
   useEffect(() => {
     const ns = storageNamespace;
@@ -1357,6 +1500,14 @@ export function EngineRunner(props: {
     setExamView("take");
     setTimeRemaining(null);
     setReviewingFlagged(false);
+    // Reset break state
+    setIsOnBreak(false);
+    setBreakNumber(0);
+    setBreakCountdown(null);
+    setFiredBreaks(new Set());
+    setLockedBefore(0);
+    examEndMsRef.current = 0;
+    breakStartMsRef.current = null;
 
     engine.initIfNeeded({ bank: questions, defaultBlueprint: blueprint, mode, storageNamespace, userId, bankSlug, setId })
       .then(() => { setInitialized(true); });
@@ -1405,16 +1556,16 @@ export function EngineRunner(props: {
 
   // ── Timer countdown ──────────────────────────────────────────────────────
   useEffect(() => {
-    if (!durationMinutes || mode !== "exam" || !engine.attempt || engine.attempt.submittedAt) {
-      setTimeRemaining(null);
-      setTimerWarning("none");
+    if (!durationMinutes || mode !== "exam" || !engine.attempt || engine.attempt.submittedAt || isOnBreak) {
+      if (engine.attempt?.submittedAt || !durationMinutes || mode !== "exam") {
+        setTimeRemaining(null);
+        setTimerWarning("none");
+      }
       return;
     }
 
-    const endMs = new Date(engine.attempt.createdAt).getTime() + durationMinutes * 60 * 1000;
-
     function tick() {
-      const remaining = Math.max(0, Math.floor((endMs - Date.now()) / 1000));
+      const remaining = Math.max(0, Math.floor((examEndMsRef.current - Date.now()) / 1000));
       setTimeRemaining(remaining);
       if (remaining <= 600) setTimerWarning("critical");
       else if (remaining <= 1800) setTimerWarning("low");
@@ -1429,7 +1580,79 @@ export function EngineRunner(props: {
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [durationMinutes, mode, engine.attempt?.id, engine.attempt?.submittedAt]);
+  }, [durationMinutes, mode, engine.attempt?.id, engine.attempt?.submittedAt, isOnBreak]);
+
+  // ── Break helpers ─────────────────────────────────────────────────────────
+
+  function triggerBreak(threshold: number, num: number, lockAt?: number) {
+    breakStartMsRef.current = Date.now();
+    setBreakNumber(num);
+    setBreakCountdown(600); // 10-min countdown
+    setIsOnBreak(true);
+    setFiredBreaks((prev) => new Set([...prev, threshold]));
+    if (lockAt !== undefined) setLockedBefore(lockAt);
+  }
+
+  function handleResumeFromBreak() {
+    if (breakStartMsRef.current !== null) {
+      // Extend the exam deadline by the actual time spent on break
+      examEndMsRef.current += Date.now() - breakStartMsRef.current;
+      breakStartMsRef.current = null;
+    }
+    setIsOnBreak(false);
+    setBreakCountdown(null);
+  }
+
+  // ── Break countdown tick ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (!isOnBreak || breakCountdown === null || breakCountdown <= 0) {
+      if (isOnBreak && breakCountdown === 0) handleResumeFromBreak();
+      return;
+    }
+    const id = setTimeout(
+      () => setBreakCountdown((prev) => (prev !== null ? prev - 1 : null)),
+      1000
+    );
+    return () => clearTimeout(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOnBreak, breakCountdown]);
+
+  // ── Real PMP break triggers (fires at question index 60 and 120) ──────────
+  useEffect(() => {
+    if (breakConfig?.mode !== "real_pmp") return;
+    if (isOnBreak || !engine.attempt || engine.attempt.submittedAt) return;
+    const idx = engine.attempt.currentIndex;
+    const checkpoints: Array<{ at: number; num: number; lock: number }> = [
+      { at: 60, num: 1, lock: 60 },
+      { at: 120, num: 2, lock: 120 },
+    ];
+    for (const cp of checkpoints) {
+      if (idx === cp.at && !firedBreaks.has(cp.at)) {
+        triggerBreak(cp.at, cp.num, cp.lock);
+        break;
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engine.attempt?.currentIndex, breakConfig?.mode]);
+
+  // ── Adaptive break triggers (fires on elapsed-time thresholds) ────────────
+  useEffect(() => {
+    const bm = breakConfig?.mode;
+    if (!bm || bm === "real_pmp" || bm === "continuous") return;
+    if (isOnBreak || timeRemaining === null || !engine.attempt || engine.attempt.submittedAt) return;
+
+    const intervalMin = bm === "adaptive_45" ? 45 : 60;
+    const totalSec = (durationMinutes ?? 230) * 60;
+    const elapsedSec = totalSec - timeRemaining;
+
+    for (let t = intervalMin * 60; t < totalSec; t += intervalMin * 60) {
+      if (elapsedSec >= t && !firedBreaks.has(t)) {
+        triggerBreak(t, Math.round(t / (intervalMin * 60)));
+        break;
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeRemaining, breakConfig?.mode]);
 
   // ── Per-question time tracking ────────────────────────────────────────────
   useEffect(() => {
@@ -1504,9 +1727,19 @@ export function EngineRunner(props: {
     }, []);
   }, [engine.attempt]);
 
+  // ── Section lock (Real PMP: previous sections become read-only) ──────────
+  const sectionLockBefore = breakConfig?.mode === "real_pmp" ? lockedBefore : 0;
+
+  function safeGoToIndex(idx: number) {
+    if (idx < sectionLockBefore) return; // locked section
+    engine.goToIndex(idx);
+  }
+
   // Compute canNext/canPrev directly from functions to avoid stale Zustand getter issue
   const isLast = !engine.canNext();
-  const canPrevNav = reviewingFlagged ? flaggedIndices.length > 1 : engine.canPrev();
+  const canPrevNav = reviewingFlagged
+    ? flaggedIndices.length > 1
+    : (engine.attempt?.currentIndex ?? 0) > sectionLockBefore && engine.canPrev();
   const practiceSubmitted = mode === "practice" && !!engine.attempt?.submittedAt;
   const domain = engine.filters.domain as Domain | "all";
 
@@ -1693,7 +1926,7 @@ export function EngineRunner(props: {
   }
 
   function openReviewQuestion(idx: number) {
-    engine.goToIndex(idx);
+    safeGoToIndex(idx);
     setExamView("review_question");
   }
 
@@ -1727,7 +1960,42 @@ export function EngineRunner(props: {
   const incorrectCount = result ? result.incorrectQuestionIds.length : 0;
 
   return (
-    <Grid>
+    <>
+      {/* ── Break overlay ──────────────────────────────────────── */}
+      {isOnBreak && (
+        <BreakOverlay>
+          <BreakCard>
+            <BreakPill>
+              {breakConfig?.mode === "real_pmp"
+                ? `Break ${breakNumber} of 2`
+                : `Break ${breakNumber}`}
+            </BreakPill>
+            <BreakTitle>Optional Break Period</BreakTitle>
+            <BreakBody>
+              {breakConfig?.mode === "real_pmp"
+                ? `You've completed Section ${breakNumber} (Questions ${breakNumber === 1 ? "1–60" : "61–120"}). Take a moment before continuing.`
+                : "Take a moment to rest. Your timer is paused and all answers are saved."}
+            </BreakBody>
+            {breakCountdown !== null && breakCountdown > 0 && (
+              <>
+                <BreakCountdown>{formatTime(breakCountdown)}</BreakCountdown>
+                <BreakCountdownLabel>break time remaining</BreakCountdownLabel>
+              </>
+            )}
+            <BreakResumeBtn onClick={handleResumeFromBreak}>
+              Resume Now →
+            </BreakResumeBtn>
+            <BreakNote>
+              All answers are saved · Timer paused
+              {sectionLockBefore > 0
+                ? ` · Questions 1–${sectionLockBefore} are now locked`
+                : ""}
+            </BreakNote>
+          </BreakCard>
+        </BreakOverlay>
+      )}
+
+      <Grid>
       {/* ── LEFT SIDEBAR ───────────────────────────────────────── */}
       <Card>
         {/* ── Exam status: progress · unanswered · timer ─── */}
@@ -1842,7 +2110,7 @@ export function EngineRunner(props: {
                     key={qid}
                     $state={gridState}
                     onClick={() => {
-                      engine.goToIndex(idx);
+                      safeGoToIndex(idx);
                       if (isSubmitted) setExamView("review_question");
                     }}
                     title={`Q${idx + 1}${isFlagged ? " · flagged" : ""}${isSubmitted ? (scoreById.get(qid) ? " · correct" : " · incorrect") : ""}`}
@@ -2264,5 +2532,6 @@ export function EngineRunner(props: {
         </ConfirmOverlay>
       )}
     </Grid>
+    </>
   );
 }
