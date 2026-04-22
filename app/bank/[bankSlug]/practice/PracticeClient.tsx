@@ -15,7 +15,7 @@ import { setABank } from "@/src/exam-engine/data/seed.set-a";
  *  regardless of setId, giving the student maximum variety. */
 const combinedSeedBank: Question[] = [...pmpBank, ...setABank];
 
-const FREE_PRESETS = [10, 20, 25, 30];
+const FREE_PRESETS = [10, 20, 25];
 const PRO_PRESETS = [50, 90];
 const QUESTION_PRESETS = [...FREE_PRESETS, ...PRO_PRESETS];
 
@@ -390,34 +390,34 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
             <UpgradeCard onClick={(e) => e.stopPropagation()}>
               <UpgradeTitle>Upgrade to Study Mode</UpgradeTitle>
               <UpgradeText>
-                Unlock the full exam preparation experience and maximize your chances of passing the PMP on your first attempt.
+                Most PMP candidates fail because they don't know where they're losing marks. Study Mode shows you exactly that.
               </UpgradeText>
               <UpgradeFeature>
                 <UpgradeFeatureItem>
                   <UpgradeCheckmark>✓</UpgradeCheckmark>
-                  All 3 exam simulations (210 exam questions)
+                  Extended practice sessions — 50 & 90 questions
                 </UpgradeFeatureItem>
                 <UpgradeFeatureItem>
                   <UpgradeCheckmark>✓</UpgradeCheckmark>
-                  Extended practice sessions (50 & 90 questions)
+                  2 more full simulations — Sets B & C
                 </UpgradeFeatureItem>
                 <UpgradeFeatureItem>
                   <UpgradeCheckmark>✓</UpgradeCheckmark>
-                  Adaptive difficulty engine
+                  Topic-level breakdown — see exactly where you're losing marks
                 </UpgradeFeatureItem>
                 <UpgradeFeatureItem>
                   <UpgradeCheckmark>✓</UpgradeCheckmark>
-                  Weakness targeting per domain & topic
+                  Personalized focus areas — top 3 weak spots to fix first
                 </UpgradeFeatureItem>
                 <UpgradeFeatureItem>
                   <UpgradeCheckmark>✓</UpgradeCheckmark>
-                  Personalized study recommendations
+                  Real PMP break structure + Adaptive Training mode
                 </UpgradeFeatureItem>
               </UpgradeFeature>
               <UpgradePrice>$29</UpgradePrice>
-              <UpgradePriceNote>One-time payment · Lifetime access</UpgradePriceNote>
+              <UpgradePriceNote>One-time payment · Lifetime access · Less than a practice exam book</UpgradePriceNote>
               <UpgradeBtn onClick={startCheckout} disabled={checkoutLoading}>
-                {checkoutLoading ? "Redirecting…" : "Upgrade Now"}
+                {checkoutLoading ? "Redirecting…" : "Unlock Study Mode →"}
               </UpgradeBtn>
               <UpgradeCloseBtn onClick={() => setShowUpgrade(false)}>
                 Maybe later

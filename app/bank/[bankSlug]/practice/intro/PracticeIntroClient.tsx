@@ -706,7 +706,7 @@ const Loading = styled.p`
 
 /* ── presets config ──────────────────────────────────────────────────────── */
 
-const FREE_PRESETS = [10, 20, 25, 30];
+const FREE_PRESETS = [10, 20, 25];
 const PRO_PRESETS = [50, 90];
 const ALL_PRESETS = [...FREE_PRESETS, ...PRO_PRESETS];
 
@@ -969,14 +969,14 @@ export default function PracticeIntroClient({ bankSlug }: { bankSlug: string }) 
       {showUpgrade && (
         <UpgradeOverlay onClick={() => setShowUpgrade(false)}>
           <UpgradeCard onClick={(e) => e.stopPropagation()}>
-            <UpgradeTitle>Unlock Extended Sessions</UpgradeTitle>
+            <UpgradeTitle>Upgrade to Study Mode</UpgradeTitle>
             <UpgradeText>
-              50 and 90-question sessions are part of the Professional Plan — designed for deep exam preparation.
+              Most PMP candidates fail because they don't know where they're losing marks. Study Mode shows you exactly that.
             </UpgradeText>
             <UpgradePrice>$29</UpgradePrice>
-            <UpgradePriceNote>One-time payment · Lifetime access</UpgradePriceNote>
+            <UpgradePriceNote>One-time payment · Lifetime access · Less than a practice exam book</UpgradePriceNote>
             <UpgradeBtn onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Upgrade Now →"}
+              {checkoutLoading ? "Redirecting…" : "Unlock Study Mode →"}
             </UpgradeBtn>
             <UpgradeCloseBtn onClick={() => setShowUpgrade(false)}>
               Maybe later

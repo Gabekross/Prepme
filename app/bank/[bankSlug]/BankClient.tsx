@@ -312,6 +312,26 @@ const LockedCard = styled.div`
   &:hover { transform: translateY(-3px); box-shadow: ${(p) => p.theme.shadowLg}; opacity: 1; }
 `;
 
+const FreeBadge = styled.div`
+  position: absolute;
+  top: 14px; right: 14px;
+  display: flex; align-items: center; gap: 5px;
+  background: ${(p) => p.theme.successSoft};
+  border: 1px solid ${(p) => p.theme.successBorder};
+  color: ${(p) => p.theme.success};
+  font-size: 9px; font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+
+  @media (min-width: 480px) {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 8px;
+  }
+`;
+
 const LockBadge = styled.div`
   position: absolute;
   top: 14px; right: 14px;
@@ -609,68 +629,47 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
       <SectionLabel style={{ marginTop: 36 }}>Exam Simulations</SectionLabel>
 
       <Grid>
-        {isPro ? (
-          <ModeCard href={`/bank/${bank.slug}/exam/set-a/instructions`} $variant="exam">
-            <ModeHeader>
-              <ModeIcon><ModeImg src="/images/ui/bank/set-a.svg" alt="Set A" /></ModeIcon>
-              <ModeTitleGroup>
-                <ModeTitle>Simulation — Set A</ModeTitle>
-                <ModeSubtitle>70 questions drawn from Set A question bank</ModeSubtitle>
-              </ModeTitleGroup>
-            </ModeHeader>
-            <FeatureList>
-              <FeatureItem>
-                <FeatureDot $variant="exam">✓</FeatureDot>
-                Timed simulation under real exam conditions
-              </FeatureItem>
-              <FeatureItem>
-                <FeatureDot $variant="exam">✓</FeatureDot>
-                Score breakdown by domain and question type
-              </FeatureItem>
-            </FeatureList>
-            <CardCta $variant="exam">Start Set A →</CardCta>
-          </ModeCard>
-        ) : (
-          <LockedCard onClick={() => setShowUpgrade(true)}>
-            <LockBadge>STUDY MODE</LockBadge>
-            <ModeHeader>
-              <ModeIcon><ModeImg src="/images/ui/bank/set-a.svg" alt="Set A" /></ModeIcon>
-              <ModeTitleGroup>
-                <ModeTitle>Simulation — Set A</ModeTitle>
-                <ModeSubtitle>70 questions drawn from Set A question bank</ModeSubtitle>
-              </ModeTitleGroup>
-            </ModeHeader>
-            <FeatureList>
-              <FeatureItem>
-                <FeatureDot $variant="exam">✓</FeatureDot>
-                Timed simulation under real exam conditions
-              </FeatureItem>
-              <FeatureItem>
-                <FeatureDot $variant="exam">✓</FeatureDot>
-                Score breakdown by domain and question type
-              </FeatureItem>
-            </FeatureList>
-            <CardCta $variant="exam">Unlock Set A</CardCta>
-          </LockedCard>
-        )}
+        {/* Set A — free for all users */}
+        <ModeCard href={`/bank/${bank.slug}/exam/set-a/instructions`} $variant="exam">
+          <FreeBadge>FREE</FreeBadge>
+          <ModeHeader>
+            <ModeIcon><ModeImg src="/images/ui/bank/set-a.svg" alt="Set A" /></ModeIcon>
+            <ModeTitleGroup>
+              <ModeTitle>Simulation — Set A</ModeTitle>
+              <ModeSubtitle>Full 180-question timed simulation, real exam conditions</ModeSubtitle>
+            </ModeTitleGroup>
+          </ModeHeader>
+          <FeatureList>
+            <FeatureItem>
+              <FeatureDot $variant="exam">✓</FeatureDot>
+              Timed simulation under real exam conditions
+            </FeatureItem>
+            <FeatureItem>
+              <FeatureDot $variant="exam">✓</FeatureDot>
+              Score breakdown by domain and question type
+            </FeatureItem>
+          </FeatureList>
+          <CardCta $variant="exam">Start Set A →</CardCta>
+        </ModeCard>
 
+        {/* Set B — Study Mode only */}
         {isPro ? (
           <ModeCard href={`/bank/${bank.slug}/exam/set-b/instructions`} $variant="exam">
             <ModeHeader>
               <ModeIcon><ModeImg src="/images/ui/bank/set-b.svg" alt="Set B" /></ModeIcon>
               <ModeTitleGroup>
                 <ModeTitle>Simulation — Set B</ModeTitle>
-                <ModeSubtitle>70 questions drawn from Set B question bank</ModeSubtitle>
+                <ModeSubtitle>Fresh questions — no overlap with Set A</ModeSubtitle>
               </ModeTitleGroup>
             </ModeHeader>
             <FeatureList>
               <FeatureItem>
                 <FeatureDot $variant="exam">✓</FeatureDot>
-                Timed simulation under real exam conditions
+                All-new question patterns not seen in Set A
               </FeatureItem>
               <FeatureItem>
                 <FeatureDot $variant="exam">✓</FeatureDot>
-                Fresh questions — no overlap with Set A
+                Topic-level weakness breakdown included
               </FeatureItem>
             </FeatureList>
             <CardCta $variant="exam">Start Set B →</CardCta>
@@ -682,40 +681,41 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
               <ModeIcon><ModeImg src="/images/ui/bank/set-b.svg" alt="Set B" /></ModeIcon>
               <ModeTitleGroup>
                 <ModeTitle>Simulation — Set B</ModeTitle>
-                <ModeSubtitle>70 fresh questions — no overlap with Set A</ModeSubtitle>
+                <ModeSubtitle>Find the gaps Set A didn't expose</ModeSubtitle>
               </ModeTitleGroup>
             </ModeHeader>
             <FeatureList>
               <FeatureItem>
                 <FeatureDot $variant="exam">✓</FeatureDot>
-                Timed simulation under real exam conditions
+                All-new question patterns not seen in Set A
               </FeatureItem>
               <FeatureItem>
                 <FeatureDot $variant="exam">✓</FeatureDot>
-                Fresh questions — no overlap with Set A
+                Topic-level weakness breakdown included
               </FeatureItem>
             </FeatureList>
-            <CardCta $variant="exam">Unlock Set B</CardCta>
+            <CardCta $variant="exam">Unlock Set B →</CardCta>
           </LockedCard>
         )}
 
+        {/* Set C — Study Mode only */}
         {isPro ? (
           <ModeCard href={`/bank/${bank.slug}/exam/set-c/instructions`} $variant="exam">
             <ModeHeader>
               <ModeIcon><ModeImg src="/images/ui/bank/set-c.svg" alt="Set C" /></ModeIcon>
               <ModeTitleGroup>
                 <ModeTitle>Simulation — Set C</ModeTitle>
-                <ModeSubtitle>70 questions drawn from Set C question bank</ModeSubtitle>
+                <ModeSubtitle>Fresh questions — no overlap with Sets A or B</ModeSubtitle>
               </ModeTitleGroup>
             </ModeHeader>
             <FeatureList>
               <FeatureItem>
                 <FeatureDot $variant="exam">✓</FeatureDot>
-                Timed simulation under real exam conditions
+                Maximum variety — draws from the full question pool
               </FeatureItem>
               <FeatureItem>
                 <FeatureDot $variant="exam">✓</FeatureDot>
-                Fresh questions — no overlap with Sets A or B
+                Topic-level weakness breakdown included
               </FeatureItem>
             </FeatureList>
             <CardCta $variant="exam">Start Set C →</CardCta>
@@ -727,20 +727,20 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
               <ModeIcon><ModeImg src="/images/ui/bank/set-c.svg" alt="Set C" /></ModeIcon>
               <ModeTitleGroup>
                 <ModeTitle>Simulation — Set C</ModeTitle>
-                <ModeSubtitle>70 fresh questions — no overlap with Sets A or B</ModeSubtitle>
+                <ModeSubtitle>The final readiness check before exam day</ModeSubtitle>
               </ModeTitleGroup>
             </ModeHeader>
             <FeatureList>
               <FeatureItem>
                 <FeatureDot $variant="exam">✓</FeatureDot>
-                Timed simulation under real exam conditions
+                Maximum variety — draws from the full question pool
               </FeatureItem>
               <FeatureItem>
                 <FeatureDot $variant="exam">✓</FeatureDot>
-                Fresh questions — no overlap with Sets A or B
+                Topic-level weakness breakdown included
               </FeatureItem>
             </FeatureList>
-            <CardCta $variant="exam">Unlock Set C</CardCta>
+            <CardCta $variant="exam">Unlock Set C →</CardCta>
           </LockedCard>
         )}
       </Grid>
@@ -751,34 +751,34 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
           <UpgradeCard onClick={(e) => e.stopPropagation()}>
             <UpgradeTitle>Upgrade to Study Mode</UpgradeTitle>
             <UpgradeText>
-              Unlock the full exam preparation experience and maximize your chances of passing the PMP on your first attempt.
+              Most PMP candidates fail because they don't know where they're losing marks. Study Mode shows you exactly that — and gives you 2 more full simulations to fix it.
             </UpgradeText>
             <UpgradeFeature>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
-                All 3 exam simulations (210 exam questions)
+                2 more full simulations — Sets B & C (fresh questions)
               </UpgradeFeatureItem>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
-                Adaptive difficulty engine
+                Topic-level breakdown — see exactly where you're losing marks
               </UpgradeFeatureItem>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
-                Weakness targeting per domain & topic
+                Personalized focus areas — top 3 weak spots to fix first
               </UpgradeFeatureItem>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
-                Topic-level mastery insights
+                Real PMP break structure + Adaptive Training mode
               </UpgradeFeatureItem>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
-                Personalized study recommendations
+                Extended practice sessions (50 & 90 questions)
               </UpgradeFeatureItem>
             </UpgradeFeature>
             <UpgradePrice>$29</UpgradePrice>
-            <UpgradePriceNote>One-time payment · Lifetime access</UpgradePriceNote>
+            <UpgradePriceNote>One-time payment · Lifetime access · Less than a practice exam book</UpgradePriceNote>
             <UpgradeBtn onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Upgrade Now"}
+              {checkoutLoading ? "Redirecting…" : "Unlock Study Mode →"}
             </UpgradeBtn>
             <UpgradeCloseBtn onClick={() => setShowUpgrade(false)}>
               Maybe later

@@ -227,6 +227,46 @@ const EmptyState = styled.div`
   line-height: 1.6;
 `;
 
+const HistoryGate = styled.div`
+  margin-top: 10px;
+  padding: 14px 20px;
+  border-radius: 14px;
+  border: 1px dashed ${(p) => p.theme.cardBorder};
+  background: ${(p) => p.theme.accentSoft};
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+`;
+
+const HistoryGateText = styled.div`
+  font-size: 13px;
+  color: ${(p) => p.theme.text};
+  font-weight: 600;
+  flex: 1;
+
+  span {
+    color: ${(p) => p.theme.muted};
+    font-weight: 400;
+  }
+`;
+
+const HistoryGateBtn = styled.button`
+  border: none;
+  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 150ms ease;
+
+  &:hover { opacity: 0.88; }
+`;
+
 const StartLink = styled(Link)`
   display: inline-flex;
   align-items: center;
@@ -1152,7 +1192,7 @@ export default function DashboardClient() {
         <>
           <SectionTitle>Recent Attempts</SectionTitle>
           <AttemptList>
-            {submitted.map((a) => (
+            {(isPro ? submitted : submitted.slice(0, 3)).map((a) => (
               <AttemptCard
                 key={a.id}
                 onClick={() => router.push(`/dashboard/results/${a.id}`)}
@@ -1179,6 +1219,17 @@ export default function DashboardClient() {
               </AttemptCard>
             ))}
           </AttemptList>
+          {!isPro && submitted.length > 3 && (
+            <HistoryGate>
+              <HistoryGateText>
+                {submitted.length - 3} older attempt{submitted.length - 3 === 1 ? "" : "s"} hidden.{" "}
+                <span>Study Mode unlocks your full attempt history.</span>
+              </HistoryGateText>
+              <HistoryGateBtn onClick={() => setShowUpgrade(true)}>
+                Unlock History →
+              </HistoryGateBtn>
+            </HistoryGate>
+          )}
         </>
       )}
       {/* ── Upgrade Modal ──────────────────────────────────────── */}
@@ -1187,34 +1238,34 @@ export default function DashboardClient() {
           <UpgradeModalCard onClick={(e) => e.stopPropagation()}>
             <UpgradeTitle>Upgrade to Study Mode</UpgradeTitle>
             <UpgradeText>
-              Unlock the full exam preparation experience and maximize your chances of passing the PMP on your first attempt.
+              Most PMP candidates fail because they don't know where they're losing marks. Study Mode shows you exactly that.
             </UpgradeText>
             <UpgradeFeature>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
-                All 3 exam simulations (210 exam questions)
+                Topic-level breakdown — see exactly where you're losing marks
               </UpgradeFeatureItem>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
-                Adaptive difficulty engine
+                2 more full simulations — Sets B & C (fresh questions)
               </UpgradeFeatureItem>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
-                Weakness targeting per domain & topic
+                Personalized focus areas — top 3 weak spots to fix first
               </UpgradeFeatureItem>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
-                Topic-level mastery insights
+                Full attempt history — track improvement over time
               </UpgradeFeatureItem>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
-                Personalized study recommendations
+                Extended practice sessions (50 & 90 questions)
               </UpgradeFeatureItem>
             </UpgradeFeature>
             <UpgradePrice>$29</UpgradePrice>
-            <UpgradePriceNote>One-time payment · Lifetime access</UpgradePriceNote>
+            <UpgradePriceNote>One-time payment · Lifetime access · Less than a practice exam book</UpgradePriceNote>
             <UpgradeModalBtn onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Upgrade Now"}
+              {checkoutLoading ? "Redirecting…" : "Unlock Study Mode →"}
             </UpgradeModalBtn>
             <UpgradeCloseBtn onClick={() => setShowUpgrade(false)}>
               Maybe later

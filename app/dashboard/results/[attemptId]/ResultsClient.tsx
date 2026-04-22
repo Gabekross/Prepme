@@ -719,23 +719,32 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
       </HeroCard>
 
       {/* ── Pro upsell for free users ────────────────────────── */}
-      {!isPro && attempt.mode === "exam" && (
-        <UpsellBanner>
-          <UpsellText>
-            <UpsellTitle>
-              {passed ? "Pass with even more confidence" : "Improve your score with Pro"}
-            </UpsellTitle>
-            <UpsellSub>
-              {passed
-                ? "Unlock 2 more full exam simulations, adaptive difficulty, and topic-level insights to solidify your preparation."
-                : "Unlock adaptive difficulty that targets your weak areas, 2 additional exam sets, and personalized study recommendations."}
-            </UpsellSub>
-          </UpsellText>
-          <UpsellBtn onClick={startCheckout} disabled={checkoutLoading}>
-            {checkoutLoading ? "Redirecting…" : "Upgrade to Study Mode — $29"}
-          </UpsellBtn>
-        </UpsellBanner>
-      )}
+      {!isPro && attempt.mode === "exam" && (() => {
+        const gap = passThreshold - scorePercent;
+        let title: string;
+        let sub: string;
+        if (!passed) {
+          title = `You're ${gap} point${gap === 1 ? "" : "s"} away from passing`;
+          sub = `Topic-level breakdown shows exactly which topics are costing you marks. Unlock it, fix the gaps, and run Set B to confirm you're ready.`;
+        } else if (scorePercent < 75) {
+          title = "You passed Set A — but are you ready for the real thing?";
+          sub = `Sets B & C use different question patterns. See your topic-level weak spots now so they don't surprise you on exam day.`;
+        } else {
+          title = "Strong result. Make sure it wasn't luck.";
+          sub = `Verify your readiness across 2 more full simulations and get a topic-level mastery report before you book your exam date.`;
+        }
+        return (
+          <UpsellBanner>
+            <UpsellText>
+              <UpsellTitle>{title}</UpsellTitle>
+              <UpsellSub>{sub}</UpsellSub>
+            </UpsellText>
+            <UpsellBtn onClick={startCheckout} disabled={checkoutLoading}>
+              {checkoutLoading ? "Redirecting…" : "Unlock Study Mode — $29"}
+            </UpsellBtn>
+          </UpsellBanner>
+        );
+      })()}
 
       {/* ── No scoring notice ──────────────────────────────── */}
       {!hasScoring && (
