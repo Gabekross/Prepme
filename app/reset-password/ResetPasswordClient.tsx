@@ -40,17 +40,6 @@ const Card = styled.div`
   }
 `;
 
-const CardIcon = styled.div`
-  width: 52px;
-  height: 52px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent} 0%, #7c3aed 100%);
-  display: grid;
-  place-items: center;
-  font-size: 24px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 16px ${(p) => p.theme.accentSoft};
-`;
 
 const Title = styled.h1`
   margin: 0 0 6px;
@@ -160,7 +149,6 @@ export default function ResetPasswordClient() {
   return (
     <PageWrap>
       <Card>
-        <CardIcon>🔑</CardIcon>
         <Title>Set New Password</Title>
         <Subtitle>
           Enter your new password below. This page was opened from the reset link sent to your email.
