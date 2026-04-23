@@ -6,8 +6,8 @@ import { AuthProvider } from "@/lib/auth/AuthProvider";
 
 export const metadata: Metadata = {
   title: {
-    default: "PMP Exam Simulator 2026 — Pass the PMP on Your First Attempt",
-    template: "%s | PMP Exam Simulator",
+    default: "PMP Mastery Lab — Pass the PMP on Your First Attempt",
+    template: "%s | PMP Mastery Lab",
   },
   description:
     "Free PMP mock exam with adaptive difficulty, real-time weakness targeting, and full timed simulations. 400+ questions, 6 question types, 3 exam simulations. PMBOK 7th Edition aligned.",
@@ -23,9 +23,9 @@ export const metadata: Metadata = {
     "PMBOK 7th edition",
     "PMP certification prep",
   ],
-  authors: [{ name: "PMP Exam Simulator" }],
+  authors: [{ name: "PMP Mastery Lab" }],
   openGraph: {
-    title: "PMP Exam Simulator 2026 — Pass the PMP on Your First Attempt",
+    title: "PMP Mastery Lab — Pass the PMP on Your First Attempt",
     description:
       "Train like the real PMP exam. Adaptive difficulty, weakness targeting, full timed simulations. Free to start.",
     type: "website",

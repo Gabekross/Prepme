@@ -1,7 +1,7 @@
 {
-  "name": "ExamEngine - PMP Exam Prep",
-  "short_name": "ExamEngine",
-  "description": "Professional PMP exam preparation with practice mode, full exam simulations, and immediate feedback.",
+  "name": "PMP Mastery Lab",
+  "short_name": "PMP Mastery Lab",
+  "description": "Adaptive PMP exam preparation with practice mode, full timed simulations, and real-time performance analytics.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#06090f",

@@ -799,7 +799,7 @@ const PRO_FEATURES = [
 
 const FAQ_DATA = [
   {
-    q: "Is this PMP exam simulator updated for 2026?",
+    q: "Is PMP Mastery Lab updated for 2026?",
     a: "Yes. Our question bank is aligned with the PMBOK 7th Edition and the current PMP Examination Content Outline (ECO). Questions cover all three domains: People (42%), Process (50%), and Business Environment (8%) with the correct weighting.",
   },
   {
@@ -879,7 +879,7 @@ export default function HomeClient() {
     <Page>
       {/* ── 1. Hero ──────────────────────────────────────────────────── */}
       <Hero>
-        <HeroKicker>PMP Exam Simulator 2026</HeroKicker>
+        <HeroKicker>PMP Mastery Lab — 2026</HeroKicker>
         <H1>
           Pass the PMP on
           <br />

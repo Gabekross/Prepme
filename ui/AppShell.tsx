@@ -424,7 +424,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <TopbarInner>
           <BrandLink href={signedIn ? "/bank/pmp" : "/"}>
             <BrandIcon aria-hidden="true">🎓</BrandIcon>
-            <BrandName>ExamEngine</BrandName>
+            <BrandName>PMP Mastery Lab</BrandName>
           </BrandLink>
 
           <Nav>
