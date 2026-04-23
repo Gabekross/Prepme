@@ -100,7 +100,7 @@ const PrimaryCTA = styled(Link)`
   gap: 8px;
   padding: 14px 32px;
   border-radius: 14px;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
+  background: ${(p) => p.theme.accent};
   color: white;
   font-size: 15px;
   font-weight: 800;
@@ -558,10 +558,7 @@ const PricingCTA = styled(Link)<{ $featured?: boolean }>`
   text-align: center;
   padding: 12px 20px;
   border-radius: 12px;
-  background: ${(p) =>
-    p.$featured
-      ? `linear-gradient(135deg, ${p.theme.accent}, #7c3aed)`
-      : p.theme.buttonBg};
+  background: ${(p) => (p.$featured ? p.theme.accent : p.theme.buttonBg)};
   border: 1px solid ${(p) => (p.$featured ? "transparent" : p.theme.buttonBorder)};
   color: ${(p) => (p.$featured ? "white" : p.theme.text)};
   font-size: 14px;
@@ -581,10 +578,7 @@ const PricingCTABtn = styled.button<{ $featured?: boolean }>`
   text-align: center;
   padding: 12px 20px;
   border-radius: 12px;
-  background: ${(p) =>
-    p.$featured
-      ? `linear-gradient(135deg, ${p.theme.accent}, #7c3aed)`
-      : p.theme.buttonBg};
+  background: ${(p) => (p.$featured ? p.theme.accent : p.theme.buttonBg)};
   border: 1px solid ${(p) => (p.$featured ? "transparent" : p.theme.buttonBorder)};
   color: ${(p) => (p.$featured ? "white" : p.theme.text)};
   font-size: 14px;
@@ -897,7 +891,7 @@ export default function HomeClient() {
         </HeroSub>
         <HeroCTAs>
           <PrimaryCTA href="/bank/pmp">
-            Start Free Simulation →
+            Start Free Simulation
           </PrimaryCTA>
           <SecondaryCTA href="#how-it-works">See How It Works</SecondaryCTA>
         </HeroCTAs>
@@ -1064,7 +1058,7 @@ export default function HomeClient() {
                 </PricingItem>
               ))}
             </PricingList>
-            <PricingCTA href="/bank/pmp">Try It Free — No Card Needed →</PricingCTA>
+            <PricingCTA href="/bank/pmp">Try It Free — No Card Needed</PricingCTA>
           </PricingCard>
 
           <PricingCard $featured>
@@ -1088,7 +1082,7 @@ export default function HomeClient() {
               ))}
             </PricingList>
             <PricingCTABtn $featured onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Unlock Study Mode — $29 →"}
+              {checkoutLoading ? "Redirecting…" : "Unlock Study Mode — $29"}
             </PricingCTABtn>
           </PricingCard>
         </PricingGrid>
@@ -1108,7 +1102,7 @@ export default function HomeClient() {
             Take a free practice assessment and get instant feedback on your
             strengths and weaknesses across all three PMP domains.
           </CTABannerSub>
-          <PrimaryCTA href="/bank/pmp">Take the Free Assessment →</PrimaryCTA>
+          <PrimaryCTA href="/bank/pmp">Take the Free Assessment</PrimaryCTA>
         </CTABanner>
       </Section>
 
