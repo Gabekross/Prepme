@@ -742,7 +742,7 @@ const FAQ_DATA = [
   },
   {
     q: "Is there a free PMP mock exam I can take?",
-    a: "Yes. The Free tier includes unlimited practice sessions with immediate feedback, plus one full 70-question timed exam simulation (Set A). No credit card required.",
+    a: "Yes. The Free tier includes unlimited practice sessions with immediate feedback, plus one full 180-question timed exam simulation (Set A). No credit card required.",
   },
   {
     q: "How many questions are in the question bank?",
