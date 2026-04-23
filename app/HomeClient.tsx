@@ -686,13 +686,38 @@ const Footer = styled.footer`
 const FooterTagline = styled.div`
   font-size: 13px;
   color: ${(p) => p.theme.muted};
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+`;
+
+const FooterLinks = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+`;
+
+const FooterLink = styled(Link)`
+  font-size: 12px;
+  font-weight: 600;
+  color: ${(p) => p.theme.muted};
+  text-decoration: none;
+  transition: color 150ms ease;
+  &:hover { color: ${(p) => p.theme.text}; }
+`;
+
+const FooterSep = styled.span`
+  font-size: 12px;
+  color: ${(p) => p.theme.muted};
+  opacity: 0.35;
 `;
 
 const SocialsRow = styled.div`
   display: flex;
   justify-content: center;
   gap: 12px;
+  margin-bottom: 16px;
 `;
 
 const SocialLink = styled.a`
@@ -713,6 +738,15 @@ const SocialLink = styled.a`
     background: ${(p) => p.theme.buttonHover};
     color: ${(p) => p.theme.text};
   }
+`;
+
+const FooterCopy = styled.div`
+  font-size: 11px;
+  color: ${(p) => p.theme.muted};
+  opacity: 0.6;
+  max-width: 540px;
+  margin: 0 auto;
+  line-height: 1.6;
 `;
 
 /* ── skeleton ───────────────────────────────────────────────────────────── */
@@ -1102,6 +1136,17 @@ export default function HomeClient() {
         <FooterTagline>
           Built for PMP candidates, by PMP professionals.
         </FooterTagline>
+
+        <FooterLinks>
+          <FooterLink href="/terms">Terms of Service</FooterLink>
+          <FooterSep>&middot;</FooterSep>
+          <FooterLink href="/privacy">Privacy Policy</FooterLink>
+          <FooterSep>&middot;</FooterSep>
+          <FooterLink href="/refund">Refund Policy</FooterLink>
+          <FooterSep>&middot;</FooterSep>
+          <FooterLink href="/contact">Contact</FooterLink>
+        </FooterLinks>
+
         <SocialsRow>
           <SocialLink
             href="https://twitter.com"
@@ -1128,6 +1173,12 @@ export default function HomeClient() {
             &#x25B6;
           </SocialLink>
         </SocialsRow>
+
+        <FooterCopy>
+          &copy; 2026 Jemigah LLC. PMI&reg; and PMP&reg; are registered trademarks of the
+          Project Management Institute, Inc. PMP Mastery Lab is not affiliated with
+          or endorsed by PMI&reg;.
+        </FooterCopy>
       </Footer>
     </Page>
   );
