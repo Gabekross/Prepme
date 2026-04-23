@@ -457,7 +457,7 @@ const UpsellBtn = styled.button`
   font-weight: 800;
   border: none;
   cursor: pointer;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
+  background: ${(p) => p.theme.accent};
   color: white;
   white-space: nowrap;
   transition: opacity 150ms ease;

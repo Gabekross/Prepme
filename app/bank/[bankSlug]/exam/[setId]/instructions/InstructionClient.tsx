@@ -1109,7 +1109,7 @@ export default function InstructionClient({ bankSlug, setSlug }: Props) {
       {/* ── CTA ── */}
       <CtaWrap>
         <BeginBtn href={`/bank/${bankSlug}/exam/${setSlug}`}>
-          Begin Full Simulation →
+          Begin Full Simulation
         </BeginBtn>
         <CtaNote>
           Timer starts immediately. Make sure you are in a quiet, distraction-free environment.

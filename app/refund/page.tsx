@@ -172,7 +172,7 @@ export default function RefundPage() {
           additional 5–10 business days to appear in your account.
         </P>
         <ContactBtn href="mailto:support@pmpmasterylab.com">
-          Request a Refund →
+          Request a Refund
         </ContactBtn>
       </Block>
 

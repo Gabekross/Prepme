@@ -634,7 +634,7 @@ const UpgradeBtn = styled.button`
   width: 100%;
   border-radius: 12px;
   border: none;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
+  background: ${(p) => p.theme.accent};
   color: white;
   padding: 13px 20px;
   font-size: 15px;
@@ -958,7 +958,7 @@ export default function PracticeIntroClient({ bankSlug }: { bankSlug: string }) 
       {/* ── CTA ── */}
       <CtaWrap>
         <StartBtn onClick={handleStart}>
-          Start Practice ({questionCount} questions) →
+          Start Practice ({questionCount} questions)
         </StartBtn>
         <CtaNote>
           Questions are randomly selected and balanced across People, Process, and Business Environment.
@@ -976,7 +976,7 @@ export default function PracticeIntroClient({ bankSlug }: { bankSlug: string }) 
             <UpgradePrice>$29</UpgradePrice>
             <UpgradePriceNote>One-time payment · Lifetime access · Less than a practice exam book</UpgradePriceNote>
             <UpgradeBtn onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Unlock Study Mode →"}
+              {checkoutLoading ? "Redirecting…" : "Unlock Study Mode"}
             </UpgradeBtn>
             <UpgradeCloseBtn onClick={() => setShowUpgrade(false)}>
               Maybe later

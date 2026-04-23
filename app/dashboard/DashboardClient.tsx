@@ -254,7 +254,7 @@ const HistoryGateText = styled.div`
 
 const HistoryGateBtn = styled.button`
   border: none;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
+  background: ${(p) => p.theme.accent};
   color: white;
   padding: 8px 16px;
   border-radius: 10px;
@@ -549,7 +549,7 @@ const UpgradeModalBtn = styled.button`
   width: 100%;
   border-radius: 12px;
   border: none;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
+  background: ${(p) => p.theme.accent};
   color: white;
   padding: 13px 20px;
   font-size: 15px;
@@ -1226,7 +1226,7 @@ export default function DashboardClient() {
                 <span>Study Mode unlocks your full attempt history.</span>
               </HistoryGateText>
               <HistoryGateBtn onClick={() => setShowUpgrade(true)}>
-                Unlock History →
+                Unlock History
               </HistoryGateBtn>
             </HistoryGate>
           )}
@@ -1265,7 +1265,7 @@ export default function DashboardClient() {
             <UpgradePrice>$29</UpgradePrice>
             <UpgradePriceNote>One-time payment · Lifetime access · Less than a practice exam book</UpgradePriceNote>
             <UpgradeModalBtn onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Unlock Study Mode →"}
+              {checkoutLoading ? "Redirecting…" : "Unlock Study Mode"}
             </UpgradeModalBtn>
             <UpgradeCloseBtn onClick={() => setShowUpgrade(false)}>
               Maybe later

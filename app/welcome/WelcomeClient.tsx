@@ -150,7 +150,7 @@ const CtaButton = styled(Link)`
   box-sizing: border-box;
   border-radius: 14px;
   border: none;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
+  background: ${(p) => p.theme.accent};
   color: white;
   font-size: 16px;
   font-weight: 800;
@@ -240,7 +240,7 @@ export default function WelcomeClient() {
         </Checklist>
 
         <CtaButton href="/bank/pmp">
-          Start Your First Practice →
+          Start Your First Practice
         </CtaButton>
 
         <CtaNote>

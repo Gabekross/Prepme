@@ -95,7 +95,7 @@ const SubmitBtn = styled.button`
   width: 100%;
   border-radius: 12px;
   border: 1px solid transparent;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
+  background: ${(p) => p.theme.accent};
   color: white;
   padding: 12px 16px;
   font-size: 14px;

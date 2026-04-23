@@ -441,7 +441,7 @@ function BreakModeSelector({
 
       <CtaWrap>
         <BeginBtn onClick={onBegin}>
-          Begin Simulation →
+          Begin Simulation
         </BeginBtn>
         <CtaNote>Timer starts immediately when the exam loads.</CtaNote>
       </CtaWrap>

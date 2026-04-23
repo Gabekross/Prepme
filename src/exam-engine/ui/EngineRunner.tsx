@@ -1468,7 +1468,7 @@ const TopicGateSub = styled.div`
 
 const TopicGateBtn = styled.button`
   border: none;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
+  background: ${(p) => p.theme.accent};
   color: white;
   padding: 8px 16px;
   border-radius: 10px;
@@ -1486,7 +1486,7 @@ const TopicGateBtn = styled.button`
 const FullReportBtn = styled.button`
   border-radius: 12px;
   border: none;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
+  background: ${(p) => p.theme.accent};
   color: white;
   padding: 10px 18px;
   font-size: 13.5px;
@@ -2080,7 +2080,7 @@ export function EngineRunner(props: {
               </>
             )}
             <BreakResumeBtn onClick={handleResumeFromBreak}>
-              Resume Now →
+              Resume Now
             </BreakResumeBtn>
             <BreakNote>
               All answers are saved · Timer paused
@@ -2352,7 +2352,7 @@ export function EngineRunner(props: {
                       style={{ width: "100%", marginTop: 8, textAlign: "center" }}
                       onClick={() => router.push(`/dashboard/results/${engine.attempt!.id}`)}
                     >
-                      View Full Topic Breakdown →
+                      View Full Topic Breakdown
                     </RetakeBtn>
                   )
                 )}
@@ -2378,7 +2378,7 @@ export function EngineRunner(props: {
             <ActionRow>
               {engine.attempt?.id && (
                 <FullReportBtn onClick={() => router.push(`/dashboard/results/${engine.attempt!.id}`)}>
-                  View Full Report →
+                  View Full Report
                 </FullReportBtn>
               )}
               <RetakeBtn onClick={retakeExam}>Retake Exam</RetakeBtn>

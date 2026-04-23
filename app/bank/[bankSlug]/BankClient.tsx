@@ -431,7 +431,7 @@ const UpgradeBtn = styled.button`
   width: 100%;
   border-radius: 12px;
   border: none;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
+  background: ${(p) => p.theme.accent};
   color: white;
   padding: 13px 20px;
   font-size: 15px;
@@ -622,7 +622,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
             </FeatureItem>
           </FeatureList>
 
-          <CardCta $variant="practice">Start Practice →</CardCta>
+          <CardCta $variant="practice">Start Practice</CardCta>
         </ModeCard>
       </Grid>
 
@@ -649,7 +649,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
               Score breakdown by domain and question type
             </FeatureItem>
           </FeatureList>
-          <CardCta $variant="exam">Start Set A →</CardCta>
+          <CardCta $variant="exam">Start Set A</CardCta>
         </ModeCard>
 
         {/* Set B — Study Mode only */}
@@ -672,7 +672,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
                 Topic-level weakness breakdown included
               </FeatureItem>
             </FeatureList>
-            <CardCta $variant="exam">Start Set B →</CardCta>
+            <CardCta $variant="exam">Start Set B</CardCta>
           </ModeCard>
         ) : (
           <LockedCard onClick={() => setShowUpgrade(true)}>
@@ -694,7 +694,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
                 Topic-level weakness breakdown included
               </FeatureItem>
             </FeatureList>
-            <CardCta $variant="exam">Unlock Set B →</CardCta>
+            <CardCta $variant="exam">Unlock Set B</CardCta>
           </LockedCard>
         )}
 
@@ -718,7 +718,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
                 Topic-level weakness breakdown included
               </FeatureItem>
             </FeatureList>
-            <CardCta $variant="exam">Start Set C →</CardCta>
+            <CardCta $variant="exam">Start Set C</CardCta>
           </ModeCard>
         ) : (
           <LockedCard onClick={() => setShowUpgrade(true)}>
@@ -740,7 +740,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
                 Topic-level weakness breakdown included
               </FeatureItem>
             </FeatureList>
-            <CardCta $variant="exam">Unlock Set C →</CardCta>
+            <CardCta $variant="exam">Unlock Set C</CardCta>
           </LockedCard>
         )}
       </Grid>
@@ -778,7 +778,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
             <UpgradePrice>$29</UpgradePrice>
             <UpgradePriceNote>One-time payment · Lifetime access · Less than a practice exam book</UpgradePriceNote>
             <UpgradeBtn onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Unlock Study Mode →"}
+              {checkoutLoading ? "Redirecting…" : "Unlock Study Mode"}
             </UpgradeBtn>
             <UpgradeCloseBtn onClick={() => setShowUpgrade(false)}>
               Maybe later

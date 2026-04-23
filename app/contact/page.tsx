@@ -157,7 +157,7 @@ export default function ContactPage() {
           </CardBody>
           <CardMeta>Response time: 1–2 business days</CardMeta>
           <EmailBtn href="mailto:support@pmpmasterylab.com">
-            Email Support →
+            Email Support
           </EmailBtn>
         </ContactCard>
 
@@ -170,7 +170,7 @@ export default function ContactPage() {
           </CardBody>
           <CardMeta>Response time: 2–3 business days</CardMeta>
           <EmailBtn href="mailto:support@pmpmasterylab.com?subject=Feedback">
-            Send Feedback →
+            Send Feedback
           </EmailBtn>
         </ContactCard>
       </CardGrid>
