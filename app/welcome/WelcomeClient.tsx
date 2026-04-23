@@ -78,18 +78,6 @@ const Card = styled.div`
 
 /* ── icon ───────────────────────────────────────────────────────────────── */
 
-const IconWrap = styled.div`
-  width: 72px;
-  height: 72px;
-  border-radius: 22px;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent} 0%, #7c3aed 100%);
-  display: grid;
-  place-items: center;
-  font-size: 34px;
-  margin: 0 auto 24px;
-  box-shadow: 0 6px 24px ${(p) => p.theme.accentSoft};
-  animation: ${popIn} 600ms 200ms ease both;
-`;
 
 /* ── typography ──────────────────────────────────────────────────────────── */
 
@@ -215,8 +203,6 @@ export default function WelcomeClient() {
   return (
     <PageWrap>
       <Card>
-        <IconWrap>🎓</IconWrap>
-
         <Title>You're in!</Title>
 
         <Subtitle>
