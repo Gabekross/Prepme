@@ -114,25 +114,6 @@ const PrimaryCTA = styled(Link)`
   }
 `;
 
-const SecondaryCTA = styled.a`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 14px 24px;
-  border-radius: 14px;
-  background: ${(p) => p.theme.buttonBg};
-  border: 1px solid ${(p) => p.theme.buttonBorder};
-  color: ${(p) => p.theme.text};
-  font-size: 15px;
-  font-weight: 700;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 150ms ease;
-
-  &:hover {
-    background: ${(p) => p.theme.buttonHover};
-  }
-`;
 
 const TrustLine = styled.div`
   margin-top: 16px;
@@ -349,53 +330,6 @@ const FeatureDesc = styled.p`
   color: ${(p) => p.theme.mutedStrong};
 `;
 
-/* ── how it works ───────────────────────────────────────────────────────── */
-
-const StepsRow = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-`;
-
-const StepCard = styled.div`
-  text-align: center;
-  position: relative;
-`;
-
-const StepNumber = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: ${(p) => p.theme.accentSoft};
-  color: ${(p) => p.theme.accent};
-  font-size: 18px;
-  font-weight: 900;
-  display: grid;
-  place-items: center;
-  margin: 0 auto 12px;
-  border: 1px solid ${(p) => p.theme.accent}33;
-`;
-
-const StepTitle = styled.h3`
-  margin: 0 0 6px;
-  font-size: 15px;
-  font-weight: 800;
-  color: ${(p) => p.theme.text};
-`;
-
-const StepDesc = styled.p`
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
-  color: ${(p) => p.theme.muted};
-  max-width: 260px;
-  margin: 0 auto;
-`;
 
 /* ── testimonials ───────────────────────────────────────────────────────── */
 
@@ -893,7 +827,6 @@ export default function HomeClient() {
           <PrimaryCTA href="/bank/pmp">
             Start Free Simulation
           </PrimaryCTA>
-          <SecondaryCTA href="#how-it-works">See How It Works</SecondaryCTA>
         </HeroCTAs>
         <TrustLine>No credit card required &middot; Free tier available</TrustLine>
       </Hero>
@@ -965,46 +898,7 @@ export default function HomeClient() {
 
       <Divider />
 
-      {/* ── 5. How It Works ──────────────────────────────────────────── */}
-      <Section id="how-it-works" $delay={200}>
-        <SectionHeading>How It Works</SectionHeading>
-        <SectionSub>
-          From zero to PMP-ready in three steps.
-        </SectionSub>
-
-        <StepsRow>
-          <StepCard>
-            <StepNumber>1</StepNumber>
-            <StepTitle>Start a Free Practice</StepTitle>
-            <StepDesc>
-              Pick your question count (10-90). Get immediate feedback after
-              every question with detailed explanations.
-            </StepDesc>
-          </StepCard>
-
-          <StepCard>
-            <StepNumber>2</StepNumber>
-            <StepTitle>Take a Full Simulation</StepTitle>
-            <StepDesc>
-              70 questions, 230-minute timer, real exam format. Scored and
-              weighted by difficulty — just like the PMP.
-            </StepDesc>
-          </StepCard>
-
-          <StepCard>
-            <StepNumber>3</StepNumber>
-            <StepTitle>Focus Your Weak Areas</StepTitle>
-            <StepDesc>
-              Review analytics by domain, question type, and topic. The adaptive
-              engine targets what you get wrong next time.
-            </StepDesc>
-          </StepCard>
-        </StepsRow>
-      </Section>
-
-      <Divider />
-
-      {/* ── 7. Testimonials ──────────────────────────────────────────── */}
+      {/* ── 6. Testimonials ──────────────────────────────────────────── */}
       <Section $delay={280}>
         <SectionHeading>What Candidates Say</SectionHeading>
         <SectionSub>
