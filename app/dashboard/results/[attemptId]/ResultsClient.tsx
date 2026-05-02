@@ -36,6 +36,8 @@ const DOMAIN_LABELS: Record<string, string> = {
   business_environment: "Business Environment",
 };
 
+/** PMP exam: 180 questions in 230 minutes → ~76.7 seconds per question */
+const PMP_SECS_PER_Q = Math.round((230 * 60) / 180);
 
 /* ── animations ─────────────────────────────────────────────────────────── */
 
@@ -55,7 +57,6 @@ const Wrap = styled.div`
   margin: 0 auto;
 `;
 
-/* breadcrumb */
 const Breadcrumb = styled.div`
   display: flex;
   align-items: center;
@@ -76,7 +77,6 @@ const BreadcrumbLink = styled(Link)`
 
 const BreadcrumbSep = styled.span`opacity: 0.4;`;
 
-/* hero card */
 const HeroCard = styled.div<{ $pass: boolean }>`
   background: ${(p) => p.theme.cardBg};
   border: 1px solid ${(p) => p.$pass ? p.theme.successBorder : p.theme.errorBorder};
@@ -133,7 +133,6 @@ const HeroMeta = styled.div`
   opacity: 0.7;
 `;
 
-/* stat grid */
 const StatGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -176,7 +175,6 @@ const StatLabel = styled.div`
   margin-top: 4px;
 `;
 
-/* section card */
 const SectionCard = styled.div<{ $delay?: number }>`
   background: ${(p) => p.theme.cardBg};
   border: 1px solid ${(p) => p.theme.cardBorder};
@@ -224,7 +222,6 @@ const SectionArrow = styled.span<{ $open: boolean }>`
   transform: ${(p) => (p.$open ? "rotate(180deg)" : "rotate(0)")};
 `;
 
-/* domain / type rows */
 const BreakdownGrid = styled.div`
   display: grid;
   gap: 10px;
@@ -285,7 +282,6 @@ const BarFill = styled.div<{ $pct: number; $pass: boolean }>`
   animation: ${growWidth} 800ms ease both;
 `;
 
-/* question list */
 const QList = styled.div`
   display: grid;
   gap: 6px;
@@ -301,14 +297,8 @@ const QRow = styled.div<{ $correct: boolean }>`
   gap: 10px;
   padding: 8px 12px;
   border-radius: 12px;
-  background: ${(p) =>
-    p.$correct
-      ? p.theme.successSoft
-      : p.theme.errorSoft};
-  border: 1px solid ${(p) =>
-    p.$correct
-      ? p.theme.successBorder
-      : p.theme.errorBorder};
+  background: ${(p) => p.$correct ? p.theme.successSoft : p.theme.errorSoft};
+  border: 1px solid ${(p) => p.$correct ? p.theme.successBorder : p.theme.errorBorder};
   font-size: 13px;
 `;
 
@@ -338,31 +328,33 @@ const QDomain = styled.span`
   text-align: right;
 `;
 
-/* time stats */
+/* ── time analysis ──────────────────────────────────────────────────────── */
+
 const TimeGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: 10px;
   margin-top: 12px;
-
-  @media (min-width: 480px) {
-    grid-template-columns: 1fr 1fr 1fr;
-  }
 `;
 
-const TimeStat = styled.div`
+const TimeStat = styled.div<{ $highlight?: boolean }>`
   text-align: center;
   padding: 12px 8px;
   border-radius: 14px;
   background: ${(p) =>
-    p.theme.name === "dark" ? "rgba(255,255,255,0.03)" : "#f8fafc"};
-  border: 1px solid ${(p) => p.theme.cardBorder};
+    p.$highlight
+      ? p.theme.warningSoft
+      : p.theme.name === "dark"
+        ? "rgba(255,255,255,0.03)"
+        : "#f8fafc"};
+  border: 1px solid ${(p) =>
+    p.$highlight ? p.theme.warningBorder : p.theme.cardBorder};
 `;
 
-const TimeValue = styled.div`
+const TimeValue = styled.div<{ $color?: string }>`
   font-size: 20px;
   font-weight: 900;
-  color: ${(p) => p.theme.text};
+  color: ${(p) => p.$color ?? p.theme.text};
   letter-spacing: -0.3px;
 `;
 
@@ -373,7 +365,72 @@ const TimeLabel = styled.div`
   margin-top: 2px;
 `;
 
-/* footer actions */
+const PacingNote = styled.div<{ $status: "good" | "slow" | "fast" }>`
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  background: ${(p) =>
+    p.$status === "good"
+      ? p.theme.successSoft
+      : p.$status === "slow"
+        ? p.theme.errorSoft
+        : p.theme.warningSoft};
+  color: ${(p) =>
+    p.$status === "good"
+      ? p.theme.success
+      : p.$status === "slow"
+        ? p.theme.error
+        : p.theme.warning};
+  border: 1px solid ${(p) =>
+    p.$status === "good"
+      ? p.theme.successBorder
+      : p.$status === "slow"
+        ? p.theme.errorBorder
+        : p.theme.warningBorder};
+`;
+
+const HalfCompare = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+`;
+
+const HalfCard = styled.div`
+  background: ${(p) =>
+    p.theme.name === "dark" ? "rgba(255,255,255,0.03)" : "#f8fafc"};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 12px;
+  padding: 10px 12px;
+  text-align: center;
+`;
+
+const HalfLabel = styled.div`
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: ${(p) => p.theme.muted};
+  margin-bottom: 4px;
+`;
+
+const HalfValue = styled.div`
+  font-size: 17px;
+  font-weight: 900;
+  color: ${(p) => p.theme.text};
+`;
+
+const HalfNote = styled.div`
+  font-size: 10.5px;
+  color: ${(p) => p.theme.muted};
+  margin-top: 2px;
+`;
+
+/* ── footer actions ─────────────────────────────────────────────────────── */
+
 const ActionRow = styled.div`
   display: flex;
   gap: 10px;
@@ -406,6 +463,24 @@ const SecondaryAction = styled(ActionLink)`
   color: ${(p) => p.theme.text};
 `;
 
+const ShareBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 150ms ease;
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  background: ${(p) => p.theme.cardBg};
+  color: ${(p) => p.theme.text};
+  cursor: pointer;
+
+  &:hover { opacity: 0.85; }
+`;
+
 const P = styled.p`
   margin: 0;
   color: ${(p) => p.theme.muted};
@@ -430,9 +505,7 @@ const UpsellBanner = styled.div`
   }
 `;
 
-const UpsellText = styled.div`
-  flex: 1;
-`;
+const UpsellText = styled.div`flex: 1;`;
 
 const UpsellTitle = styled.div`
   font-size: 15px;
@@ -507,6 +580,90 @@ const ProGateLabel = styled.div`
   color: ${(p) => p.theme.text};
 `;
 
+/* ── share modal ────────────────────────────────────────────────────────── */
+
+const ShareOverlay = styled.div`
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  animation: ${fadeUp} 200ms ease both;
+`;
+
+const ShareCard = styled.div`
+  background: ${(p) => p.theme.name === "dark" ? "#111827" : p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 24px;
+  padding: 28px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: ${(p) => p.theme.shadowLg};
+`;
+
+const ShareCardTitle = styled.h3`
+  font-size: 16px;
+  font-weight: 900;
+  color: ${(p) => p.theme.text};
+  margin: 0 0 6px;
+`;
+
+const ShareCardSub = styled.p`
+  font-size: 13px;
+  color: ${(p) => p.theme.muted};
+  margin: 0 0 18px;
+  line-height: 1.5;
+`;
+
+const SharePreview = styled.pre`
+  background: ${(p) =>
+    p.theme.name === "dark" ? "rgba(255,255,255,0.04)" : "#f3f5f9"};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-size: 12px;
+  line-height: 1.65;
+  color: ${(p) => p.theme.text};
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0 0 14px;
+  max-height: 220px;
+  overflow-y: auto;
+`;
+
+const CopyBtn = styled.button`
+  width: 100%;
+  padding: 11px 20px;
+  border-radius: 12px;
+  border: none;
+  background: ${(p) => p.theme.accent};
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 150ms ease;
+  margin-bottom: 8px;
+
+  &:hover { opacity: 0.88; }
+`;
+
+const ShareCloseBtn = styled.button`
+  width: 100%;
+  background: none;
+  border: none;
+  color: ${(p) => p.theme.muted};
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px;
+
+  &:hover { color: ${(p) => p.theme.text}; }
+`;
+
 /* ── helpers ─────────────────────────────────────────────────────────────── */
 
 function formatDate(iso: string) {
@@ -546,6 +703,8 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
   const [showTopics, setShowTopics] = useState(false);
   const [showTime, setShowTime] = useState(false);
   const [showQuestions, setShowQuestions] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [questionMeta, setQuestionMeta] = useState<Map<string, { domain: Domain; tags: string[] }>>(
     new Map()
   );
@@ -579,8 +738,6 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
     })();
   }, [user, authLoading, sb, attemptId]);
 
-  // Load the attempt's question bank once so we can resolve questionId → tags
-  // for the per-topic breakdown.
   useEffect(() => {
     if (!attempt?.bank_slug) return;
     let cancelled = false;
@@ -596,14 +753,9 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
         console.error("[Results] Failed to load question bank for topic analytics:", err);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [attempt?.bank_slug]);
 
-  // Per-topic breakdown for this single attempt. Mirrors the dashboard logic:
-  // map each scoreResult's questionId → tags → topic bucket(s), with an
-  // "Other" fallback per domain for tags that don't map to any bucket.
   const topicEntries = useMemo(() => {
     const sr = attempt?.result?.scoreResults;
     if (!sr || sr.length === 0 || questionMeta.size === 0) return [];
@@ -653,7 +805,6 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
         pct: b.total > 0 ? Math.round((b.correct / b.total) * 100) : 0,
       }))
       .sort((a, b) => {
-        // Keep "Other" rows at the bottom of their domain group.
         const dd = (domOrder[a.domain] ?? 9) - (domOrder[b.domain] ?? 9);
         if (dd !== 0) return dd;
         if (a.isOther !== b.isOther) return a.isOther ? 1 : -1;
@@ -671,7 +822,6 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
   const scorePercent = attempt.score_percent ?? 0;
   const modeLabel = attempt.mode === "exam" ? "Exam Simulation" : "Practice Session";
 
-  // Use QUESTION counts (not raw points) for the stats
   const questionCount = attempt.state?.questionOrder?.length ?? 0;
   const correctCount = result
     ? result.scoreResults.filter((sr: any) => sr.isCorrect).length
@@ -682,7 +832,7 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
   const totalPoints = result ? result.totalScore : (attempt.total_score ?? 0);
   const maxPoints = result ? result.maxScore : (attempt.max_score ?? 0);
 
-  // Time stats from state
+  // Time stats
   const timeSpent: Record<string, number> = attempt.state?.timeSpentMsByQuestionId ?? {};
   const totalTimeMs = Object.values(timeSpent).reduce((a: number, b: number) => a + b, 0);
   const avgTimeMs = questionCount > 0 ? totalTimeMs / questionCount : 0;
@@ -690,8 +840,73 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
     ? Math.max(...Object.values(timeSpent).map(Number))
     : 0;
 
-  // Pass threshold from blueprint
+  // Pacing: compare against PMP standard
+  const avgSecsPerQ = avgTimeMs / 1000;
+  const pacingRatio = PMP_SECS_PER_Q > 0 ? avgSecsPerQ / PMP_SECS_PER_Q : 1;
+  const pacingStatus: "good" | "slow" | "fast" =
+    pacingRatio > 1.3 ? "slow" : pacingRatio < 0.5 ? "fast" : "good";
+  const pacingMsg =
+    pacingStatus === "slow"
+      ? `Your avg of ${formatMs(avgTimeMs)}/question is above the PMP target of ${formatMs(PMP_SECS_PER_Q * 1000)}. You need to increase your pace or you'll run out of time on exam day.`
+      : pacingStatus === "fast"
+        ? `You're answering much faster than the PMP target (${formatMs(PMP_SECS_PER_Q * 1000)}/q). Fast can mean efficient — but make sure you're not rushing through careful scenarios.`
+        : `Good pace. Your avg of ${formatMs(avgTimeMs)}/question is within the PMP target of ${formatMs(PMP_SECS_PER_Q * 1000)}/question.`;
+
+  // First-half vs. second-half timing
+  const questionOrder: string[] = attempt.state?.questionOrder ?? [];
+  const halfIdx = Math.floor(questionOrder.length / 2);
+  const firstHalfIds = questionOrder.slice(0, halfIdx);
+  const secondHalfIds = questionOrder.slice(halfIdx);
+  const firstHalfMs = firstHalfIds.reduce((s: number, id: string) => s + (timeSpent[id] ?? 0), 0);
+  const secondHalfMs = secondHalfIds.reduce((s: number, id: string) => s + (timeSpent[id] ?? 0), 0);
+  const firstHalfAvg = firstHalfIds.length > 0 ? firstHalfMs / firstHalfIds.length : 0;
+  const secondHalfAvg = secondHalfIds.length > 0 ? secondHalfMs / secondHalfIds.length : 0;
+  const paceShift =
+    firstHalfAvg > 0 && secondHalfAvg > 0
+      ? Math.round(((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 100)
+      : null;
+
   const passThreshold = attempt.state?.blueprint?.passThreshold ?? 70;
+
+  // Share summary text
+  const domainLines =
+    result
+      ? (
+          Object.entries(result.byDomain) as [string, { correct: number; total: number }][]
+        )
+          .filter(([, d]) => d.total > 0)
+          .map(([domain, d]) => {
+            const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
+            return `  ${DOMAIN_LABELS[domain] ?? domain}: ${pct}% (${d.correct}/${d.total})`;
+          })
+          .join("\n")
+      : "";
+
+  const shareText = [
+    "🎯 PMP Mastery Lab Results",
+    "━".repeat(28),
+    `Result: ${passed ? "PASSED ✓" : "NOT PASSED ✗"} (${scorePercent}%)`,
+    `${modeLabel}${setLabel(attempt.set_id)}`,
+    attempt.submitted_at
+      ? `Date: ${new Date(attempt.submitted_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+      : "",
+    "",
+    ...(domainLines ? ["Domain Scores:", domainLines] : []),
+    "",
+    "Prepare with me at pmpmasterylab.com",
+  ]
+    .filter((l) => l !== undefined)
+    .join("\n");
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      // fallback: select text
+    }
+  }
 
   return (
     <Wrap>
@@ -701,7 +916,7 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
         <span>Results</span>
       </Breadcrumb>
 
-      {/* ── Hero ────────────────────────────────────────────── */}
+      {/* ── Hero ─────────────────────────────────────────────── */}
       <HeroCard $pass={passed}>
         <HeroLabel $pass={passed}>
           {passed ? "Passed" : "Not Passed"}
@@ -757,24 +972,26 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
       )}
 
       {/* ── Score Stats ─────────────────────────────────────── */}
-      {hasScoring && <StatGrid>
-        <StatCard $variant="success">
-          <StatValue $variant="success">{correctCount}</StatValue>
-          <StatLabel>Correct</StatLabel>
-        </StatCard>
-        <StatCard $variant="error">
-          <StatValue $variant="error">{incorrectCount}</StatValue>
-          <StatLabel>Incorrect</StatLabel>
-        </StatCard>
-        <StatCard>
-          <StatValue>{totalPoints}/{maxPoints}</StatValue>
-          <StatLabel>Total Points</StatLabel>
-        </StatCard>
-        <StatCard>
-          <StatValue>{questionCount}</StatValue>
-          <StatLabel>Questions</StatLabel>
-        </StatCard>
-      </StatGrid>}
+      {hasScoring && (
+        <StatGrid>
+          <StatCard $variant="success">
+            <StatValue $variant="success">{correctCount}</StatValue>
+            <StatLabel>Correct</StatLabel>
+          </StatCard>
+          <StatCard $variant="error">
+            <StatValue $variant="error">{incorrectCount}</StatValue>
+            <StatLabel>Incorrect</StatLabel>
+          </StatCard>
+          <StatCard>
+            <StatValue>{totalPoints}/{maxPoints}</StatValue>
+            <StatLabel>Total Points</StatLabel>
+          </StatCard>
+          <StatCard>
+            <StatValue>{questionCount}</StatValue>
+            <StatLabel>Questions</StatLabel>
+          </StatCard>
+        </StatGrid>
+      )}
 
       {/* ── Domain Breakdown ────────────────────────────────── */}
       {result && (
@@ -810,7 +1027,7 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
         </SectionCard>
       )}
 
-      {/* ── Topic Breakdown (replaces Question Type) ────────── */}
+      {/* ── Topic Breakdown ─────────────────────────────────── */}
       {result && (
         isPro ? (
           <SectionCard $delay={220}>
@@ -891,7 +1108,7 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
         )
       )}
 
-      {/* ── Time Analysis ───────────────────────────────────── */}
+      {/* ── Time Analysis (enhanced with pacing) ─────────────── */}
       {totalTimeMs > 0 && (
         <SectionCard $delay={280}>
           <SectionToggleBtn onClick={() => setShowTime((v) => !v)}>
@@ -899,20 +1116,56 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
             <SectionArrow $open={showTime}>▼</SectionArrow>
           </SectionToggleBtn>
           {showTime && (
-            <TimeGrid>
-              <TimeStat>
-                <TimeValue>{formatMs(totalTimeMs)}</TimeValue>
-                <TimeLabel>Total Time</TimeLabel>
-              </TimeStat>
-              <TimeStat>
-                <TimeValue>{formatMs(avgTimeMs)}</TimeValue>
-                <TimeLabel>Avg / Question</TimeLabel>
-              </TimeStat>
-              <TimeStat>
-                <TimeValue>{formatMs(maxTimeMs)}</TimeValue>
-                <TimeLabel>Longest Question</TimeLabel>
-              </TimeStat>
-            </TimeGrid>
+            <>
+              <TimeGrid>
+                <TimeStat>
+                  <TimeValue>{formatMs(totalTimeMs)}</TimeValue>
+                  <TimeLabel>Total Time</TimeLabel>
+                </TimeStat>
+                <TimeStat $highlight={pacingStatus === "slow"}>
+                  <TimeValue $color={pacingStatus === "slow" ? undefined : undefined}>
+                    {formatMs(avgTimeMs)}
+                  </TimeValue>
+                  <TimeLabel>Avg / Question</TimeLabel>
+                </TimeStat>
+                <TimeStat>
+                  <TimeValue>{formatMs(PMP_SECS_PER_Q * 1000)}</TimeValue>
+                  <TimeLabel>PMP Target / Q</TimeLabel>
+                </TimeStat>
+                <TimeStat>
+                  <TimeValue>{formatMs(maxTimeMs)}</TimeValue>
+                  <TimeLabel>Longest Question</TimeLabel>
+                </TimeStat>
+              </TimeGrid>
+
+              {/* Pacing assessment */}
+              <PacingNote $status={pacingStatus}>{pacingMsg}</PacingNote>
+
+              {/* First-half vs second-half comparison */}
+              {paceShift !== null && questionOrder.length >= 10 && (
+                <>
+                  <HalfCompare>
+                    <HalfCard>
+                      <HalfLabel>First Half</HalfLabel>
+                      <HalfValue>{formatMs(firstHalfAvg)}</HalfValue>
+                      <HalfNote>avg / question</HalfNote>
+                    </HalfCard>
+                    <HalfCard>
+                      <HalfLabel>Second Half</HalfLabel>
+                      <HalfValue>{formatMs(secondHalfAvg)}</HalfValue>
+                      <HalfNote>avg / question</HalfNote>
+                    </HalfCard>
+                  </HalfCompare>
+                  {Math.abs(paceShift) >= 15 && (
+                    <PacingNote $status={paceShift > 0 ? "slow" : "fast"} style={{ marginTop: 8 }}>
+                      {paceShift > 0
+                        ? `You slowed down ${paceShift}% in the second half — possible fatigue or harder questions.`
+                        : `You sped up ${Math.abs(paceShift)}% in the second half. Make sure you weren't rushing near the end.`}
+                    </PacingNote>
+                  )}
+                </>
+              )}
+            </>
           )}
         </SectionCard>
       )}
@@ -926,28 +1179,20 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
           </SectionToggleBtn>
           {showQuestions && (
             <QList>
-              {result.scoreResults.map((sr, idx) => {
-                const domain = attempt.state?.questionOrder
-                  ? (() => {
-                      // Try to find domain from the state
-                      return "";
-                    })()
-                  : "";
-                return (
-                  <QRow key={sr.questionId} $correct={sr.isCorrect}>
-                    <QIcon $correct={sr.isCorrect}>
-                      {sr.isCorrect ? "\u2713" : "\u2717"}
-                    </QIcon>
-                    <QNumber>Q{idx + 1}</QNumber>
-                    <QDomain>
-                      {sr.score}/{sr.maxScore} pts
-                      {timeSpent[sr.questionId]
-                        ? ` \u00B7 ${formatMs(timeSpent[sr.questionId])}`
-                        : ""}
-                    </QDomain>
-                  </QRow>
-                );
-              })}
+              {result.scoreResults.map((sr, idx) => (
+                <QRow key={sr.questionId} $correct={sr.isCorrect}>
+                  <QIcon $correct={sr.isCorrect}>
+                    {sr.isCorrect ? "✓" : "✗"}
+                  </QIcon>
+                  <QNumber>Q{idx + 1}</QNumber>
+                  <QDomain>
+                    {sr.score}/{sr.maxScore} pts
+                    {timeSpent[sr.questionId]
+                      ? ` · ${formatMs(timeSpent[sr.questionId])}`
+                      : ""}
+                  </QDomain>
+                </QRow>
+              ))}
             </QList>
           )}
         </SectionCard>
@@ -961,7 +1206,29 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
         <SecondaryAction href="/dashboard">
           Back to Dashboard
         </SecondaryAction>
+        <ShareBtn onClick={() => setShowShare(true)}>
+          Share Results
+        </ShareBtn>
       </ActionRow>
+
+      {/* ── Share Modal ─────────────────────────────────────── */}
+      {showShare && (
+        <ShareOverlay onClick={() => setShowShare(false)}>
+          <ShareCard onClick={(e) => e.stopPropagation()}>
+            <ShareCardTitle>Share Your Results</ShareCardTitle>
+            <ShareCardSub>
+              Copy this summary and share it anywhere — study groups, LinkedIn, or your notes.
+            </ShareCardSub>
+            <SharePreview>{shareText}</SharePreview>
+            <CopyBtn onClick={handleCopy}>
+              {copied ? "Copied!" : "Copy to Clipboard"}
+            </CopyBtn>
+            <ShareCloseBtn onClick={() => setShowShare(false)}>
+              Close
+            </ShareCloseBtn>
+          </ShareCard>
+        </ShareOverlay>
+      )}
     </Wrap>
   );
 }

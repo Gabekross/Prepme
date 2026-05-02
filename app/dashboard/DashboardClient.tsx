@@ -9,6 +9,7 @@ import { useUpgrade } from "@/lib/useUpgrade";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { loadBankBySlug, loadQuestions } from "@/src/exam-engine/data/loadFromSupabase";
 import { TOPICS_BY_DOMAIN, buildTopicIndex } from "@/src/exam-engine/core/topicLabels";
+import type { AppTheme } from "@/ui/theme";
 
 /* ── types ──────────────────────────────────────────────────────────────── */
 
@@ -39,7 +40,6 @@ type ScoreResultLite = { questionId: string; isCorrect: boolean };
 
 type AttemptResult = {
   byDomain: Partial<Record<DomainKey, BucketStats>>;
-  /** Present on all modern attempts; used for per-topic aggregation. */
   scoreResults?: ScoreResultLite[];
 };
 
@@ -59,6 +59,13 @@ const DOMAIN_LABELS: Record<DomainKey, string> = {
   business_environment: "Business Environment",
 };
 
+/** PMI PMP exam blueprint weights per domain */
+const PMI_BLUEPRINT: Record<DomainKey, number> = {
+  people: 42,
+  process: 50,
+  business_environment: 8,
+};
+
 /* ── animations ─────────────────────────────────────────────────────────── */
 
 const fadeUp = keyframes`
@@ -66,7 +73,7 @@ const fadeUp = keyframes`
   to   { opacity: 1; transform: translateY(0); }
 `;
 
-/* ── styled components ──────────────────────────────────────────────────── */
+/* ── existing styled components ─────────────────────────────────────────── */
 
 const Wrap = styled.div`
   max-width: 780px;
@@ -95,9 +102,9 @@ const Subtitle = styled.p`
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 14px;
-  margin-bottom: 32px;
+  margin-bottom: 16px;
   animation: ${fadeUp} 400ms 80ms ease both;
 `;
 
@@ -114,6 +121,10 @@ const StatValue = styled.div`
   font-weight: 900;
   color: ${(p) => p.theme.text};
   margin-bottom: 4px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 3px;
 `;
 
 const StatLabel = styled.div`
@@ -122,6 +133,13 @@ const StatLabel = styled.div`
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: ${(p) => p.theme.muted};
+`;
+
+const StatSub = styled.div`
+  font-size: 11px;
+  color: ${(p) => p.theme.muted};
+  opacity: 0.65;
+  margin-top: 3px;
 `;
 
 const SectionTitle = styled.h2`
@@ -346,6 +364,9 @@ const BarLabel = styled.div`
 const BarLabelRight = styled.span`
   color: ${(p) => p.theme.muted};
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 `;
 
 const BarTrack = styled.div`
@@ -363,8 +384,6 @@ const BarFill = styled.div<{ $pct: number; $color: string }>`
   background: ${(p) => p.$color};
   transition: width 600ms ease;
 `;
-
-/* ── shared empty/loading state for the Topic Performance card ─────────── */
 
 const TopicEmpty = styled.div`
   font-size: 12px;
@@ -628,6 +647,241 @@ const NoData = styled.div`
   text-align: center;
 `;
 
+/* ── NEW: score trend chart ─────────────────────────────────────────────── */
+
+const TrendWrap = styled.div`
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 14px;
+`;
+
+const TrendHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const TrendLegend = styled.div`
+  display: flex;
+  gap: 14px;
+  font-size: 11px;
+  color: ${(p) => p.theme.muted};
+  font-weight: 600;
+`;
+
+const LegendItem = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+`;
+
+const LegendLine = styled.span<{ $dashed?: boolean; $color: string }>`
+  display: inline-block;
+  width: 18px;
+  height: 0;
+  border-bottom: ${(p) =>
+    p.$dashed
+      ? `2px dashed ${p.$color}`
+      : `2.5px solid ${p.$color}`};
+  vertical-align: middle;
+`;
+
+/* ── NEW: readiness banner ──────────────────────────────────────────────── */
+
+const ReadinessBanner = styled.div`
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  animation: ${fadeUp} 400ms 90ms ease both;
+  box-shadow: ${(p) => p.theme.shadow};
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+`;
+
+const ReadinessGauge = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 76px;
+
+  @media (max-width: 480px) {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 10px;
+    width: auto;
+  }
+`;
+
+const ReadinessNum = styled.div`
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  line-height: 1;
+`;
+
+const ReadinessTag = styled.div`
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+  opacity: 0.8;
+
+  @media (max-width: 480px) {
+    margin-top: 0;
+  }
+`;
+
+const ReadinessInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const ReadinessTitle = styled.div`
+  font-size: 15px;
+  font-weight: 800;
+  color: ${(p) => p.theme.text};
+  margin-bottom: 4px;
+`;
+
+const ReadinessDesc = styled.div`
+  font-size: 12.5px;
+  color: ${(p) => p.theme.muted};
+  line-height: 1.5;
+`;
+
+/* ── NEW: next recommended session ─────────────────────────────────────── */
+
+const NextSessionCard = styled.div`
+  background: ${(p) => p.theme.accentSoft};
+  border: 1px solid ${(p) => p.theme.accent}28;
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 28px;
+  animation: ${fadeUp} 400ms 100ms ease both;
+  flex-wrap: wrap;
+`;
+
+const NextSessionText = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const NextSessionTitle = styled.div`
+  font-size: 13px;
+  font-weight: 800;
+  color: ${(p) => p.theme.text};
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+`;
+
+const NextSessionSub = styled.div`
+  font-size: 13px;
+  color: ${(p) => p.theme.muted};
+  line-height: 1.45;
+`;
+
+const NextSessionBtn = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  background: ${(p) => p.theme.accent};
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 150ms ease;
+  flex-shrink: 0;
+
+  &:hover { opacity: 0.88; }
+`;
+
+/* ── NEW: blueprint gap note ────────────────────────────────────────────── */
+
+const BlueprintNote = styled.span`
+  font-size: 10px;
+  color: ${(p) => p.theme.muted};
+  font-weight: 500;
+  margin-left: 4px;
+  opacity: 0.65;
+`;
+
+/* ── NEW: persistent wrong-answer memory ───────────────────────────────── */
+
+const WrongMemoryCard = styled.div`
+  background: ${(p) => p.theme.errorSoft};
+  border: 1px solid ${(p) => p.theme.errorBorder};
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-top: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+`;
+
+const WrongMemoryIcon = styled.div`
+  font-size: 20px;
+  flex-shrink: 0;
+  line-height: 1.5;
+`;
+
+const WrongMemoryInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const WrongMemoryTitle = styled.div`
+  font-size: 14px;
+  font-weight: 800;
+  color: ${(p) => p.theme.error};
+  margin-bottom: 4px;
+`;
+
+const WrongMemoryDesc = styled.div`
+  font-size: 12.5px;
+  color: ${(p) => p.theme.muted};
+  line-height: 1.5;
+  margin-bottom: 10px;
+`;
+
+const WrongMemoryBtn = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: 9px;
+  background: ${(p) => p.theme.error};
+  color: white;
+  font-size: 12.5px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: opacity 150ms ease;
+
+  &:hover { opacity: 0.85; }
+`;
+
 /* ── helpers ─────────────────────────────────────────────────────────────── */
 
 function formatDate(iso: string) {
@@ -670,6 +924,175 @@ function aggregateResults(results: AttemptResult[]) {
   return { byDomain };
 }
 
+/* ── Score Trend Chart ──────────────────────────────────────────────────── */
+
+type TrendPoint = {
+  date: string;
+  score: number;
+  mode: "practice" | "exam";
+  passed: boolean | null;
+};
+
+function ScoreTrendLine({ points }: { points: TrendPoint[] }) {
+  const theme = useTheme() as AppTheme;
+  if (points.length < 2) return null;
+
+  const W = 540, H = 112, PL = 30, PR = 10, PT = 20, PB = 26;
+  const plotW = W - PL - PR;
+  const plotH = H - PT - PB;
+  const n = points.length;
+
+  const xOf = (i: number) =>
+    PL + (n === 1 ? plotW / 2 : (i / (n - 1)) * plotW);
+  const yOf = (s: number) =>
+    PT + (1 - Math.min(Math.max(s, 0), 100) / 100) * plotH;
+
+  const examPts = points
+    .map((p, i) => ({ ...p, i }))
+    .filter((p) => p.mode === "exam");
+  const practicePts = points
+    .map((p, i) => ({ ...p, i }))
+    .filter((p) => p.mode === "practice");
+
+  const toPolyline = (pts: (TrendPoint & { i: number })[]) =>
+    pts.map((p) => `${xOf(p.i).toFixed(1)},${yOf(p.score).toFixed(1)}`).join(" ");
+
+  const thY = yOf(70);
+  const accentColor = theme.accent;
+  const mutedColor = theme.muted;
+  const successColor = theme.success;
+  const errorColor = theme.error;
+
+  // Which x-axis indices to label
+  const labelIdxSet = new Set<number>([0, n - 1]);
+  if (n <= 6) {
+    for (let i = 1; i < n - 1; i++) labelIdxSet.add(i);
+  } else {
+    const step = Math.ceil(n / 4);
+    for (let i = step; i < n - 1; i += step) labelIdxSet.add(i);
+  }
+
+  return (
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      style={{ width: "100%", height: "auto", display: "block", overflow: "visible" }}
+      aria-label="Score trend over time"
+    >
+      {/* Horizontal grid lines */}
+      {[0, 25, 50, 75, 100].map((v) => (
+        <line
+          key={v}
+          x1={PL} y1={yOf(v)} x2={W - PR} y2={yOf(v)}
+          stroke={mutedColor} strokeOpacity="0.12" strokeWidth="1"
+        />
+      ))}
+
+      {/* 70% pass threshold */}
+      <line
+        x1={PL} y1={thY} x2={W - PR} y2={thY}
+        stroke={successColor} strokeWidth="1.5"
+        strokeDasharray="5 3" strokeOpacity="0.5"
+      />
+      <text
+        x={W - PR} y={thY - 4} fontSize="8.5"
+        fill={successColor} opacity="0.6" textAnchor="end"
+      >
+        70% pass
+      </text>
+
+      {/* Practice polyline (dashed, muted) */}
+      {practicePts.length >= 2 && (
+        <polyline
+          points={toPolyline(practicePts)}
+          fill="none"
+          stroke={mutedColor}
+          strokeWidth="1.5"
+          strokeDasharray="4 2"
+          strokeOpacity="0.45"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+
+      {/* Exam polyline (solid, accent) */}
+      {examPts.length >= 2 && (
+        <polyline
+          points={toPolyline(examPts)}
+          fill="none"
+          stroke={accentColor}
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+
+      {/* Data dots */}
+      {points.map((p, i) => {
+        const cx = xOf(i);
+        const cy = yOf(p.score);
+        const dotColor =
+          p.mode === "exam"
+            ? p.passed
+              ? successColor
+              : errorColor
+            : mutedColor;
+        const r = p.mode === "exam" ? 4.5 : 3;
+        return (
+          <g key={i}>
+            <circle cx={cx} cy={cy} r={r} fill={dotColor} />
+            {p.mode === "exam" && (
+              <text
+                x={cx} y={cy - 8} fontSize="9"
+                textAnchor="middle"
+                fill={dotColor}
+                fontWeight="700"
+                opacity="0.9"
+              >
+                {p.score}%
+              </text>
+            )}
+          </g>
+        );
+      })}
+
+      {/* X axis date labels */}
+      {points.map((p, i) => {
+        if (!labelIdxSet.has(i)) return null;
+        const lbl = new Date(p.date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        });
+        return (
+          <text
+            key={i}
+            x={xOf(i)} y={H - 3}
+            fontSize="8.5"
+            textAnchor={i === 0 ? "start" : i === n - 1 ? "end" : "middle"}
+            fill={mutedColor}
+            opacity="0.65"
+          >
+            {lbl}
+          </text>
+        );
+      })}
+
+      {/* Y axis labels */}
+      {[0, 50, 100].map((v) => (
+        <text
+          key={v}
+          x={PL - 4} y={yOf(v) + 3}
+          fontSize="8.5"
+          textAnchor="end"
+          fill={mutedColor}
+          opacity="0.55"
+        >
+          {v}%
+        </text>
+      ))}
+    </svg>
+  );
+}
+
 /* ── component ──────────────────────────────────────────────────────────── */
 
 export default function DashboardClient() {
@@ -677,7 +1100,7 @@ export default function DashboardClient() {
   const { startCheckout, loading: checkoutLoading } = useUpgrade();
   const [showUpgrade, setShowUpgrade] = useState(false);
   const router = useRouter();
-  const theme = useTheme() as { success: string; warning: string; error: string };
+  const theme = useTheme() as AppTheme;
   const sb = useMemo(() => supabaseBrowser(), []);
   const [attempts, setAttempts] = useState<AttemptSummary[]>([]);
   const [allResults, setAllResults] = useState<AttemptWithResult[]>([]);
@@ -686,8 +1109,6 @@ export default function DashboardClient() {
   const [loading, setLoading] = useState(true);
   const [analyticsTab, setAnalyticsTab] = useState<"practice" | "exam">("practice");
 
-  // Single user-scoped query powers both summary cards and analytics so the
-  // two sections can never drift. Called on mount and after every delete.
   const loadData = useCallback(async () => {
     if (!user) return;
     try {
@@ -727,13 +1148,9 @@ export default function DashboardClient() {
       await loadData();
       if (!cancelled) setLoading(false);
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [user, authLoading, loadData]);
 
-  // Lazy-load the question bank(s) needed to resolve questionId → tags for
-  // per-topic aggregation. Only loads banks we haven't already fetched.
   useEffect(() => {
     if (!user || allResults.length === 0) return;
     const slugs = Array.from(new Set(allResults.map((r) => r.bank_slug).filter(Boolean)));
@@ -764,15 +1181,11 @@ export default function DashboardClient() {
         console.error("[Dashboard] Failed to load question bank(s) for topic analytics:", err);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
-    // questionMeta is intentionally excluded: we read it as a starting point
-    // but don't want to re-run when we write to it.
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, allResults, loadedBankSlugs]);
 
-  /* ── derived data (all hooks MUST run before any early return) ──────── */
+  /* ── derived data ────────────────────────────────────────────────────── */
 
   const submitted = useMemo(() => attempts.filter((a) => a.status === "submitted"), [attempts]);
   const examAttempts = useMemo(() => submitted.filter((a) => a.mode === "exam"), [submitted]);
@@ -789,7 +1202,6 @@ export default function DashboardClient() {
     [examAttempts]
   );
 
-  // Split results by mode
   const practiceResults = useMemo(
     () => allResults.filter((r) => r.mode === "practice").map((r) => r.result as AttemptResult),
     [allResults]
@@ -799,7 +1211,6 @@ export default function DashboardClient() {
     [allResults]
   );
 
-  // Aggregate for whichever tab is active
   const activeResults = analyticsTab === "practice" ? practiceResults : examResults;
   const agg = useMemo(() => aggregateResults(activeResults), [activeResults]);
 
@@ -813,10 +1224,6 @@ export default function DashboardClient() {
       });
   }, [agg]);
 
-  // Per-domain topic breakdown. Derived from scoreResults (questionId +
-  // isCorrect) cross-referenced with the loaded question bank's tags,
-  // bucketed via TOPICS_BY_DOMAIN. Anything that doesn't match a curated
-  // bucket falls into an "Other" group so the user always sees their data.
   const OTHER_TOPIC_ID = "__other__";
   const topicEntriesByDomain = useMemo(() => {
     const out: Record<DomainKey, { id: string; label: string; correct: number; total: number; pct: number }[]> = {
@@ -852,9 +1259,6 @@ export default function DashboardClient() {
             for (const topicId of hit) matched.add(topicId);
           }
         }
-        // Fallback: if no curated topic matched, put this question under "Other"
-        // so the user still sees it. A question contributes to either its
-        // curated topic(s) or Other — never both.
         if (matched.size === 0) matched.add(OTHER_TOPIC_ID);
 
         for (const topicId of matched) {
@@ -892,12 +1296,8 @@ export default function DashboardClient() {
     return out;
   }, [allResults, analyticsTab, questionMeta]);
 
-  // True once we've fetched the question bank(s) needed for tag lookup —
-  // used to distinguish "loading" from "genuinely no topic data".
   const topicsReady = questionMeta.size > 0;
 
-  // Flat topic list across all domains for the active tab — feeds the
-  // Topic Performance card and the Focus Areas pick for Pro users.
   const topicEntriesFlat = useMemo(() => {
     const domOrder: Record<string, number> = { people: 0, process: 1, business_environment: 2 };
     const flat = (Object.keys(topicEntriesByDomain) as DomainKey[]).flatMap((d) =>
@@ -919,9 +1319,6 @@ export default function DashboardClient() {
     return flat;
   }, [topicEntriesByDomain]);
 
-  // Focus Areas: for Pro, pick the 3 weakest topics with at least 2 attempts
-  // of signal. For free users (who can't see topics), fall back to weakest
-  // domains. Requires at least 2 attempts in the active mode to show at all.
   const weakAreas = useMemo(() => {
     const modeAttempts = analyticsTab === "practice" ? practiceAttempts : examAttempts;
     if (modeAttempts.length < 2) return [];
@@ -960,7 +1357,6 @@ export default function DashboardClient() {
     analyticsTab,
   ]);
 
-  // Exam set breakdown
   const examSetBreakdown = useMemo(() => {
     if (analyticsTab !== "exam") return [];
     const setMap: Record<string, AttemptResult[]> = {};
@@ -980,6 +1376,163 @@ export default function DashboardClient() {
     });
   }, [allResults, analyticsTab]);
 
+  /* ── NEW derived data ────────────────────────────────────────────────── */
+
+  /** All submitted attempts sorted oldest → newest for the trend chart */
+  const trendData = useMemo((): TrendPoint[] => {
+    return [...submitted]
+      .filter((a) => a.score_percent !== null)
+      .sort(
+        (a, b) =>
+          new Date(a.submitted_at ?? a.created_at).getTime() -
+          new Date(b.submitted_at ?? b.created_at).getTime()
+      )
+      .map((a) => ({
+        date: a.submitted_at ?? a.created_at,
+        score: a.score_percent!,
+        mode: a.mode,
+        passed: a.passed,
+      }));
+  }, [submitted]);
+
+  /** Readiness score: recency-weighted average of last 3 exam (or practice) attempts */
+  const readiness = useMemo(() => {
+    const recentExams = [...examAttempts]
+      .sort(
+        (a, b) =>
+          new Date(b.submitted_at ?? b.created_at).getTime() -
+          new Date(a.submitted_at ?? a.created_at).getTime()
+      )
+      .slice(0, 3);
+    const recentPractice = [...practiceAttempts]
+      .sort(
+        (a, b) =>
+          new Date(b.submitted_at ?? b.created_at).getTime() -
+          new Date(a.submitted_at ?? a.created_at).getTime()
+      )
+      .slice(0, 3);
+
+    const pool = recentExams.length >= 1 ? recentExams : recentPractice;
+    if (pool.length === 0) return null;
+
+    const weights = [3, 2, 1];
+    const total = pool.reduce((s, a, i) => s + (a.score_percent ?? 0) * (weights[i] ?? 1), 0);
+    const wSum = pool.reduce((s, _, i) => s + (weights[i] ?? 1), 0);
+    const score = Math.round(total / wSum);
+
+    if (score >= 80)
+      return {
+        score,
+        band: "Ready to Test",
+        desc: "Strong readiness. Consider booking your PMP exam date.",
+        level: "success" as const,
+      };
+    if (score >= 70)
+      return {
+        score,
+        band: "Almost There",
+        desc: "You're at the passing threshold. One more solid session should confirm readiness.",
+        level: "warning" as const,
+      };
+    if (score >= 55)
+      return {
+        score,
+        band: "Building Up",
+        desc: "Keep going. Target your weakest domain to close the gap to 70%.",
+        level: "warning" as const,
+      };
+    return {
+      score,
+      band: "Needs Work",
+      desc: "Consistent daily practice is the path forward. Focus on fundamentals.",
+      level: "error" as const,
+    };
+  }, [examAttempts, practiceAttempts]);
+
+  /** Consecutive days studied */
+  const streak = useMemo(() => {
+    if (submitted.length === 0) return 0;
+    const uniqueDates = Array.from(
+      new Set(
+        submitted.map((a) =>
+          new Date(a.submitted_at ?? a.created_at).toDateString()
+        )
+      )
+    ).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86_400_000).toDateString();
+    if (uniqueDates[0] !== today && uniqueDates[0] !== yesterday) return 0;
+
+    let s = 1;
+    for (let i = 1; i < uniqueDates.length; i++) {
+      const diffMs =
+        new Date(uniqueDates[i - 1]).getTime() - new Date(uniqueDates[i]).getTime();
+      if (Math.round(diffMs / 86_400_000) <= 1) s++;
+      else break;
+    }
+    return s;
+  }, [submitted]);
+
+  /** Sessions completed this calendar week (Sun–Sat) */
+  const weekSessions = useMemo(() => {
+    const weekStart = new Date();
+    weekStart.setHours(0, 0, 0, 0);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    return submitted.filter(
+      (a) => new Date(a.submitted_at ?? a.created_at) >= weekStart
+    ).length;
+  }, [submitted]);
+
+  /** Weakest domain → recommended next session link */
+  const nextSession = useMemo(() => {
+    if (submitted.length === 0) return null;
+    const allResultsData = allResults
+      .map((r) => r.result)
+      .filter((r): r is AttemptResult => r !== null);
+    const allAgg = aggregateResults(allResultsData);
+    const scored = (Object.keys(DOMAIN_LABELS) as DomainKey[])
+      .map((k) => ({
+        domain: k,
+        label: DOMAIN_LABELS[k],
+        pct:
+          allAgg.byDomain[k]?.total
+            ? Math.round(
+                (allAgg.byDomain[k].correct / allAgg.byDomain[k].total) * 100
+              )
+            : 101,
+      }))
+      .filter((d) => (allAgg.byDomain[d.domain]?.total ?? 0) > 0);
+    if (scored.length === 0) return null;
+    const weakest = [...scored].sort((a, b) => a.pct - b.pct)[0];
+    const count = isPro ? 25 : 20;
+    return {
+      weakDomain: weakest.label,
+      weakPct: weakest.pct,
+      count,
+      href: `/bank/pmp/practice?count=${count}`,
+    };
+  }, [submitted, allResults, isPro]);
+
+  /** Questions answered incorrectly in 2+ separate sessions (Pro only) */
+  const persistentWrongIds = useMemo(() => {
+    if (!isPro) return [];
+    const wrongCounts: Record<string, number> = {};
+    for (const r of allResults) {
+      if (!r.result?.scoreResults) continue;
+      for (const s of r.result.scoreResults) {
+        if (!s.isCorrect) {
+          wrongCounts[s.questionId] = (wrongCounts[s.questionId] ?? 0) + 1;
+        }
+      }
+    }
+    return Object.entries(wrongCounts)
+      .filter(([, count]) => count >= 2)
+      .sort((a, b) => b[1] - a[1]);
+  }, [allResults, isPro]);
+
+  /* ── deleteAttempt ─────────────────────────────────────────────────── */
+
   const deleteAttempt = useCallback(async (attemptId: string) => {
     if (!user) return;
     const ok = window.confirm("Delete this attempt? This cannot be undone.");
@@ -992,32 +1545,35 @@ export default function DashboardClient() {
         .eq("user_id", user.id);
       if (error) throw error;
 
-      // Optimistic update for snappy UI...
       setAttempts((prev) => prev.filter((a) => a.id !== attemptId));
       setAllResults((prev) => prev.filter((r) => r.id !== attemptId));
-
-      // ...then refetch so summary cards AND analytics are guaranteed to match
-      // the DB (covers cascades and any rows filtered out of allResults at load).
       await loadData();
     } catch (err) {
       console.error("[Dashboard] Failed to delete attempt:", err);
     }
   }, [user, sb, loadData]);
 
-  /* ── early returns (after all hooks) ───────────────────────────────── */
+  /* ── early returns (after all hooks) ─────────────────────────────── */
 
   if (authLoading || loading) return <P>Loading dashboard...</P>;
   if (!user) return <P>Please sign in to view your dashboard.</P>;
+
+  // Readiness color from theme
+  const rColor =
+    readiness?.level === "success"
+      ? theme.success
+      : readiness?.level === "error"
+        ? theme.error
+        : theme.warning;
 
   return (
     <Wrap>
       <Header>
         <H1>Dashboard</H1>
-        <Subtitle>
-          Track your progress and review past exam attempts.
-        </Subtitle>
+        <Subtitle>Track your progress and review past exam attempts.</Subtitle>
       </Header>
 
+      {/* ── Summary Stats ─────────────────────────────────────── */}
       <StatsGrid>
         <StatCard>
           <StatValue>{examAttempts.length}</StatValue>
@@ -1035,11 +1591,77 @@ export default function DashboardClient() {
           <StatValue>{passedExams.length}</StatValue>
           <StatLabel>Exams Passed</StatLabel>
         </StatCard>
+        <StatCard>
+          <StatValue>
+            {streak > 0 ? streak : 0}
+            {streak > 1 && (
+              <span style={{ fontSize: "18px", lineHeight: 1 }}>🔥</span>
+            )}
+          </StatValue>
+          <StatLabel>Day Streak</StatLabel>
+          {weekSessions > 0 && (
+            <StatSub>{weekSessions} session{weekSessions !== 1 ? "s" : ""} this week</StatSub>
+          )}
+        </StatCard>
       </StatsGrid>
 
+      {/* ── Readiness Score ────────────────────────────────────── */}
+      {readiness && submitted.length >= 1 && (
+        <ReadinessBanner>
+          <ReadinessGauge>
+            <ReadinessNum style={{ color: rColor }}>
+              {readiness.score}%
+            </ReadinessNum>
+            <ReadinessTag style={{ color: rColor }}>Readiness</ReadinessTag>
+          </ReadinessGauge>
+          <ReadinessInfo>
+            <ReadinessTitle>{readiness.band}</ReadinessTitle>
+            <ReadinessDesc>{readiness.desc}</ReadinessDesc>
+          </ReadinessInfo>
+        </ReadinessBanner>
+      )}
+
+      {/* ── Next Recommended Session ────────────────────────────── */}
+      {nextSession && (
+        <NextSessionCard>
+          <NextSessionText>
+            <NextSessionTitle>Recommended Next Session</NextSessionTitle>
+            <NextSessionSub>
+              {nextSession.weakPct <= 100
+                ? `Focus on ${nextSession.weakDomain} — your weakest domain at ${nextSession.weakPct}%`
+                : "Start your first session to begin tracking progress"}
+            </NextSessionSub>
+          </NextSessionText>
+          <NextSessionBtn href={nextSession.href}>
+            Start {nextSession.count} Questions
+          </NextSessionBtn>
+        </NextSessionCard>
+      )}
+
+      {/* ── Performance Analytics ─────────────────────────────── */}
       {allResults.length > 0 && (
         <AnalyticsSection>
           <SectionTitle>Performance Analytics</SectionTitle>
+
+          {/* Score Trend Chart */}
+          {trendData.length >= 2 && (
+            <TrendWrap>
+              <TrendHeader>
+                <AnalyticsCardTitle style={{ margin: 0 }}>Score Trend</AnalyticsCardTitle>
+                <TrendLegend>
+                  <LegendItem>
+                    <LegendLine $color={theme.accent} />
+                    Exam
+                  </LegendItem>
+                  <LegendItem>
+                    <LegendLine $dashed $color={theme.muted} />
+                    Practice
+                  </LegendItem>
+                </TrendLegend>
+              </TrendHeader>
+              <ScoreTrendLine points={trendData} />
+            </TrendWrap>
+          )}
 
           <TabRow>
             <Tab $active={analyticsTab === "practice"} onClick={() => setAnalyticsTab("practice")}>
@@ -1063,7 +1685,10 @@ export default function DashboardClient() {
                   {examSetBreakdown.map((s) => (
                     <BarRow key={s.setId}>
                       <BarLabel>
-                        <span>{s.label} <SetBadge>{s.attempts} attempt{s.attempts !== 1 ? "s" : ""}</SetBadge></span>
+                        <span>
+                          {s.label}{" "}
+                          <SetBadge>{s.attempts} attempt{s.attempts !== 1 ? "s" : ""}</SetBadge>
+                        </span>
                         <BarLabelRight>
                           {s.pct}% ({s.correct}/{s.total})
                         </BarLabelRight>
@@ -1079,13 +1704,29 @@ export default function DashboardClient() {
               <AnalyticsGrid>
                 {domainEntries.length > 0 && (
                   <AnalyticsCard>
-                    <AnalyticsCardTitle>Domain Performance</AnalyticsCardTitle>
+                    <AnalyticsCardTitle>
+                      Domain Performance
+                      <SetBadge style={{ marginLeft: 6 }}>vs PMP blueprint</SetBadge>
+                    </AnalyticsCardTitle>
                     {domainEntries.map((d) => (
                       <BarRow key={d.key}>
                         <BarLabel>
-                          <span>{d.label}</span>
+                          <span>
+                            {d.label}
+                            <BlueprintNote>
+                              · {PMI_BLUEPRINT[d.key]}% of exam
+                            </BlueprintNote>
+                          </span>
                           <BarLabelRight>
                             {d.pct}% ({d.correct}/{d.total})
+                            {d.pct < 70 && PMI_BLUEPRINT[d.key] >= 40 && (
+                              <span
+                                title="Below pass threshold in a high-weight domain"
+                                style={{ color: theme.error, fontSize: 12 }}
+                              >
+                                ⚠
+                              </span>
+                            )}
                           </BarLabelRight>
                         </BarLabel>
                         <BarTrack>
@@ -1151,7 +1792,7 @@ export default function DashboardClient() {
                     </AnalyticsCardTitle>
                     {weakAreas.map((w) => (
                       <FocusItem key={`${w.kind}:${w.domainLabel ?? ""}:${w.label}`}>
-                        <FocusIcon>{w.pct < 50 ? "\u26A0" : "\u25CB"}</FocusIcon>
+                        <FocusIcon>{w.pct < 50 ? "⚠" : "○"}</FocusIcon>
                         <FocusText>
                           {w.isOther && w.domainLabel ? (
                             <>Practice more of the {w.domainLabel} domain</>
@@ -1192,11 +1833,31 @@ export default function DashboardClient() {
                   </ProGateCard>
                 )
               )}
+
+              {/* Persistent Wrong-Answer Memory (Pro) */}
+              {isPro && persistentWrongIds.length > 0 && (
+                <WrongMemoryCard>
+                  <WrongMemoryIcon>⚠</WrongMemoryIcon>
+                  <WrongMemoryInfo>
+                    <WrongMemoryTitle>
+                      Persistent Gaps — {persistentWrongIds.length} question{persistentWrongIds.length !== 1 ? "s" : ""}
+                    </WrongMemoryTitle>
+                    <WrongMemoryDesc>
+                      {persistentWrongIds.length} question{persistentWrongIds.length !== 1 ? "s have" : " has"} been answered
+                      incorrectly across 2 or more sessions. These are your highest-priority items to review.
+                    </WrongMemoryDesc>
+                    <WrongMemoryBtn href={`/bank/pmp/practice?count=${Math.min(persistentWrongIds.length, 25)}`}>
+                      Retry {Math.min(persistentWrongIds.length, 25)} Questions
+                    </WrongMemoryBtn>
+                  </WrongMemoryInfo>
+                </WrongMemoryCard>
+              )}
             </>
           )}
         </AnalyticsSection>
       )}
 
+      {/* ── Recent Attempts ────────────────────────────────────── */}
       {submitted.length === 0 ? (
         <EmptyState>
           <div>No completed attempts yet.</div>
@@ -1247,22 +1908,23 @@ export default function DashboardClient() {
           )}
         </>
       )}
+
       {/* ── Upgrade Modal ──────────────────────────────────────── */}
       {showUpgrade && (
         <UpgradeOverlay onClick={() => setShowUpgrade(false)}>
           <UpgradeModalCard onClick={(e) => e.stopPropagation()}>
             <UpgradeTitle>Upgrade to Study Mode</UpgradeTitle>
             <UpgradeText>
-              Most PMP candidates fail because they don't know where they're losing marks. Study Mode shows you exactly that.
+              Most PMP candidates fail because they don&apos;t know where they&apos;re losing marks. Study Mode shows you exactly that.
             </UpgradeText>
             <UpgradeFeature>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
-                Topic-level breakdown — see exactly where you're losing marks
+                Topic-level breakdown — see exactly where you&apos;re losing marks
               </UpgradeFeatureItem>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
-                2 more full simulations — Sets B & C (fresh questions)
+                2 more full simulations — Sets B &amp; C (fresh questions)
               </UpgradeFeatureItem>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
@@ -1274,7 +1936,7 @@ export default function DashboardClient() {
               </UpgradeFeatureItem>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
-                Extended practice sessions (50 & 90 questions)
+                Extended practice sessions (50 &amp; 90 questions)
               </UpgradeFeatureItem>
             </UpgradeFeature>
             <UpgradePrice>$29</UpgradePrice>
