@@ -312,6 +312,56 @@ const InsightText = styled.div`
   margin-top: 4px;
 `;
 
+/* ── flag instinct ────────────────────────────────────────────────────────── */
+
+const FlagInstinctCard = styled.div<{ $variant: "trust" | "mixed" | "accurate" }>`
+  border-radius: 14px;
+  padding: 14px 16px;
+  border: 1px solid ${(p) =>
+    p.$variant === "trust"    ? p.theme.successBorder
+    : p.$variant === "mixed"  ? p.theme.warningBorder
+    : p.theme.accentSoft};
+  background: ${(p) =>
+    p.$variant === "trust"    ? p.theme.successSoft
+    : p.$variant === "mixed"  ? p.theme.warningSoft
+    : p.theme.accentSoft};
+`;
+
+const FlagInstinctHeadline = styled.div`
+  font-size: 13.5px;
+  font-weight: 800;
+  color: ${(p) => p.theme.text};
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const FlagInstinctBody = styled.div`
+  font-size: 12.5px;
+  color: ${(p) => p.theme.muted};
+  line-height: 1.55;
+`;
+
+const FlagInstinctBar = styled.div`
+  margin-top: 10px;
+  height: 5px;
+  border-radius: 999px;
+  background: ${(p) => p.theme.divider};
+  overflow: hidden;
+`;
+
+const FlagInstinctFill = styled.div<{ $pct: number; $variant: "trust" | "mixed" | "accurate" }>`
+  height: 100%;
+  width: ${(p) => p.$pct}%;
+  border-radius: 999px;
+  background: ${(p) =>
+    p.$variant === "trust"    ? p.theme.success
+    : p.$variant === "mixed"  ? p.theme.warning
+    : p.theme.accent};
+  transition: width 600ms ease;
+`;
+
 /* ── helpers ──────────────────────────────────────────────────────────────── */
 
 const DOMAIN_LABELS: Record<Domain, string> = {
@@ -334,16 +384,22 @@ const DIFF_LABELS: Record<Difficulty, string> = {
 
 /* ── component ────────────────────────────────────────────────────────────── */
 
+interface FlagStats {
+  flaggedCount: number;
+  flaggedCorrect: number;
+}
+
 interface AdaptiveResultsProps {
   summary: AdaptiveSummary;
   passThreshold?: number;
+  flagStats?: FlagStats;
 }
 
 /** Same threshold as feedbackEngine — hide topic pills that don't have
  *  enough attempts for the accuracy % to be meaningful. */
 const TOPIC_MIN_ATTEMPTS = 3;
 
-export function AdaptiveResults({ summary, passThreshold = 70 }: AdaptiveResultsProps) {
+export function AdaptiveResults({ summary, passThreshold = 70, flagStats }: AdaptiveResultsProps) {
   const { weighted, topicInsights, domainMastery, feedback } = summary;
   const meaningfulStrong = topicInsights.strongest.filter((t) => t.attempted >= TOPIC_MIN_ATTEMPTS);
   const meaningfulWeak = topicInsights.weakest.filter((t) => t.attempted >= TOPIC_MIN_ATTEMPTS);
@@ -523,6 +579,55 @@ export function AdaptiveResults({ summary, passThreshold = 70 }: AdaptiveResults
           )}
         </CollapseBody>
       </CollapseSection>
+
+      {/* Flag Instinct Analysis — only shown when questions were flagged */}
+      {flagStats && flagStats.flaggedCount > 0 && (() => {
+        const { flaggedCount, flaggedCorrect } = flagStats;
+        const correctPct = Math.round((flaggedCorrect / flaggedCount) * 100);
+        const variant: "trust" | "mixed" | "accurate" =
+          correctPct >= 65 ? "trust"
+          : correctPct >= 40 ? "mixed"
+          : "accurate";
+
+        const headline =
+          variant === "trust"    ? "Trust your first instinct more"
+          : variant === "mixed"  ? "Mixed signals when you flag"
+          : "Your uncertainty was well-calibrated";
+
+        const emoji =
+          variant === "trust"    ? "💡"
+          : variant === "mixed"  ? "🔀"
+          : "✓";
+
+        const body =
+          variant === "trust"
+            ? `You flagged ${flaggedCount} question${flaggedCount !== 1 ? "s" : ""} for review, but got ${flaggedCorrect} of them right (${correctPct}%). When you flag a question, you usually already know the answer — resist the urge to second-guess yourself.`
+            : variant === "mixed"
+            ? `You flagged ${flaggedCount} question${flaggedCount !== 1 ? "s" : ""} and got ${flaggedCorrect} right (${correctPct}%). Your instincts were right about half the time — use flagging to identify uncertain topics rather than rechecking confident answers.`
+            : `You flagged ${flaggedCount} question${flaggedCount !== 1 ? "s" : ""} and only got ${flaggedCorrect} right (${correctPct}%). Your sense of uncertainty was accurate — the topics you flagged are real gaps worth revisiting.`;
+
+        return (
+          <>
+            <Divider />
+            <Section>
+              <SectionTitle>Flag Instinct</SectionTitle>
+              <FlagInstinctCard $variant={variant}>
+                <FlagInstinctHeadline>
+                  <span>{emoji}</span>
+                  {headline}
+                </FlagInstinctHeadline>
+                <FlagInstinctBody>{body}</FlagInstinctBody>
+                <FlagInstinctBar>
+                  <FlagInstinctFill $pct={correctPct} $variant={variant} />
+                </FlagInstinctBar>
+                <InsightText style={{ marginTop: 6, fontSize: "11.5px" }}>
+                  {flaggedCorrect}/{flaggedCount} flagged questions answered correctly
+                </InsightText>
+              </FlagInstinctCard>
+            </Section>
+          </>
+        );
+      })()}
     </>
   );
 }

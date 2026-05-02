@@ -386,15 +386,11 @@ const FlagBtn = styled.button<{ $flagged?: boolean }>`
   cursor: pointer;
   margin-top: 6px;
   text-align: center;
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
-
-  @media (min-width: 980px) {
-    display: flex;
-  }
 
   &:hover {
     background: ${(p) => p.$flagged ? p.theme.warningBorder : p.theme.buttonHover};
@@ -1911,6 +1907,17 @@ export function EngineRunner(props: {
     return Object.values(engine.attempt.flagged).filter(Boolean).length;
   }, [engine.attempt]);
 
+  /** Post-exam flag instinct stats: how many flagged questions were correct */
+  const flagStats = useMemo(() => {
+    if (!engine.attempt || !result) return null;
+    const flaggedIds = Object.entries(engine.attempt.flagged)
+      .filter(([, v]) => v)
+      .map(([qid]) => qid);
+    if (flaggedIds.length === 0) return null;
+    const flaggedCorrect = flaggedIds.filter((qid) => scoreById.get(qid) === true).length;
+    return { flaggedCount: flaggedIds.length, flaggedCorrect };
+  }, [engine.attempt, result, scoreById]);
+
   const reviewRows = useMemo(() => {
     if (mode !== "exam") return [];
     if (!result || !engine.attempt) return [];
@@ -2391,7 +2398,7 @@ export function EngineRunner(props: {
                   <SectionArrow $open={showInsightsSection}>▼</SectionArrow>
                 </SectionToggleBtn>
                 {showInsightsSection && (
-                  <AdaptiveResults summary={adaptiveSummary} passThreshold={passThreshold} />
+                  <AdaptiveResults summary={adaptiveSummary} passThreshold={passThreshold} flagStats={flagStats ?? undefined} />
                 )}
               </>
             )}
