@@ -121,6 +121,28 @@ const TrustLine = styled.div`
   color: ${(p) => p.theme.muted};
 `;
 
+const DisclaimerLine = styled.div`
+  margin-top: 10px;
+  font-size: 11px;
+  color: ${(p) => p.theme.muted};
+  opacity: 0.6;
+`;
+
+const ConsentNote = styled.div`
+  margin-top: 10px;
+  font-size: 11px;
+  color: ${(p) => p.theme.muted};
+  text-align: center;
+  line-height: 1.5;
+  opacity: 0.7;
+`;
+
+const ConsentLink = styled(Link)`
+  color: ${(p) => p.theme.muted};
+  text-decoration: underline;
+  &:hover { color: ${(p) => p.theme.text}; }
+`;
+
 /* ── trust badges ───────────────────────────────────────────────────────── */
 
 const BadgesRow = styled.div`
@@ -829,6 +851,10 @@ export default function HomeClient() {
           </PrimaryCTA>
         </HeroCTAs>
         <TrustLine>No credit card required &middot; Free tier available</TrustLine>
+        <DisclaimerLine>
+          PMP&reg; is a registered trademark of the Project Management Institute, Inc.
+          PMP Mastery Lab is not affiliated with or endorsed by PMI&reg;.
+        </DisclaimerLine>
       </Hero>
 
       {/* ── 2. Trust Badges ──────────────────────────────────────────── */}
@@ -978,6 +1004,13 @@ export default function HomeClient() {
             <PricingCTABtn $featured onClick={startCheckout} disabled={checkoutLoading}>
               {checkoutLoading ? "Redirecting…" : "Unlock Study Mode — $29"}
             </PricingCTABtn>
+            <ConsentNote>
+              By purchasing you agree to our{" "}
+              <ConsentLink href="/terms">Terms</ConsentLink>
+              {" "}&amp;{" "}
+              <ConsentLink href="/privacy">Privacy Policy</ConsentLink>.
+              Individual results vary — passing the PMP depends on personal preparation.
+            </ConsentNote>
           </PricingCard>
         </PricingGrid>
       </Section>

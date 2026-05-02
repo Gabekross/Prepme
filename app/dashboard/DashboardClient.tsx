@@ -561,6 +561,21 @@ const UpgradeModalBtn = styled.button`
   &:hover { opacity: 0.9; transform: translateY(-1px); }
 `;
 
+const UpgradeConsentNote = styled.div`
+  font-size: 11px;
+  color: ${(p) => p.theme.muted};
+  text-align: center;
+  line-height: 1.5;
+  margin-top: 8px;
+  opacity: 0.7;
+`;
+
+const UpgradeConsentLink = styled(Link)`
+  color: ${(p) => p.theme.muted};
+  text-decoration: underline;
+  &:hover { color: ${(p) => p.theme.text}; }
+`;
+
 const UpgradeCloseBtn = styled.button`
   background: none; border: none;
   color: ${(p) => p.theme.muted};
@@ -1267,6 +1282,13 @@ export default function DashboardClient() {
             <UpgradeModalBtn onClick={startCheckout} disabled={checkoutLoading}>
               {checkoutLoading ? "Redirecting…" : "Unlock Study Mode"}
             </UpgradeModalBtn>
+            <UpgradeConsentNote>
+              By purchasing you agree to our{" "}
+              <UpgradeConsentLink href="/terms">Terms</UpgradeConsentLink>
+              {" "}&amp;{" "}
+              <UpgradeConsentLink href="/privacy">Privacy Policy</UpgradeConsentLink>.
+              Individual results vary.
+            </UpgradeConsentNote>
             <UpgradeCloseBtn onClick={() => setShowUpgrade(false)}>
               Maybe later
             </UpgradeCloseBtn>

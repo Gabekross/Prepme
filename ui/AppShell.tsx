@@ -175,6 +175,58 @@ const ThemePill = styled.button`
   }
 `;
 
+/* ── Cookie consent banner ───────────────────────────────────────────────── */
+
+const CookieBanner = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
+  background: ${(p) =>
+    p.theme.name === "dark" ? "rgba(10,15,26,0.97)" : "rgba(255,255,255,0.98)"};
+  border-top: 1px solid ${(p) => p.theme.cardBorder};
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
+`;
+
+const CookieText = styled.p`
+  margin: 0;
+  font-size: 13px;
+  color: ${(p) => p.theme.muted};
+  line-height: 1.5;
+  flex: 1;
+  min-width: 200px;
+`;
+
+const CookieTextLink = styled(Link)`
+  color: ${(p) => p.theme.accent};
+  font-weight: 600;
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+`;
+
+const CookieBtn = styled.button`
+  border: none;
+  background: ${(p) => p.theme.accent};
+  color: white;
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity 150ms ease;
+  &:hover { opacity: 0.88; }
+`;
+
 const Main = styled.main`
   max-width: 1180px;
   margin: 0 auto;
@@ -333,6 +385,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const inSession = inPractice || inExam;
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [cookieAccepted, setCookieAccepted] = useState(true); // true = no flash on SSR
+
+  useEffect(() => {
+    if (!localStorage.getItem("cookie_consent")) setCookieAccepted(false);
+  }, []);
+
+  function acceptCookies() {
+    localStorage.setItem("cookie_consent", "1");
+    setCookieAccepted(true);
+  }
 
   const bankSlugMatch = pathname.match(/^\/bank\/([^/]+)\/(practice|exam)/);
   const bankSlug = bankSlugMatch?.[1] ?? null;
@@ -507,6 +569,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </Topbar>
 
       <Main>{children}</Main>
+
+      {!cookieAccepted && (
+        <CookieBanner role="region" aria-label="Cookie notice">
+          <CookieText>
+            We use essential cookies for authentication and session management only.
+            No tracking or advertising cookies.{" "}
+            <CookieTextLink href="/privacy">Privacy Policy</CookieTextLink>
+          </CookieText>
+          <CookieBtn onClick={acceptCookies}>Got it</CookieBtn>
+        </CookieBanner>
+      )}
     </Shell>
   );
 }

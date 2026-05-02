@@ -212,6 +212,14 @@ const PasswordHint = styled.div`
   margin-top: -6px;
 `;
 
+const ConsentNote = styled.div`
+  margin-top: 10px;
+  font-size: 11.5px;
+  color: ${(p) => p.theme.muted};
+  text-align: center;
+  line-height: 1.5;
+`;
+
 /* ── helpers ─────────────────────────────────────────────────────────────── */
 
 function getMsgType(msg: string): "success" | "error" | "info" {
@@ -386,9 +394,16 @@ export default function LoginClient() {
             {loading ? "Signing in..." : "Sign In"}
           </PrimaryButton>
         ) : (
-          <PrimaryButton onClick={signUp} disabled={!hasSignUpFields || loading}>
-            {loading ? "Creating account..." : "Create Free Account"}
-          </PrimaryButton>
+          <>
+            <PrimaryButton onClick={signUp} disabled={!hasSignUpFields || loading}>
+              {loading ? "Creating account..." : "Create Free Account"}
+            </PrimaryButton>
+            <ConsentNote>
+              By creating an account you agree to our{" "}
+              <TextLink href="/terms">Terms of Service</TextLink> and{" "}
+              <TextLink href="/privacy">Privacy Policy</TextLink>.
+            </ConsentNote>
+          </>
         )}
 
         {msg && <Msg $type={getMsgType(msg)}>{msg}</Msg>}

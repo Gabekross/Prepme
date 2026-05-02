@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import styled, { keyframes } from "styled-components";
 import type { Blueprint, Domain, Question, Scenario, Response } from "../core/types";
 import { useExamSession } from "../hooks/useExamSession";
@@ -1481,6 +1482,21 @@ const TopicGateBtn = styled.button`
   &:disabled { opacity: 0.5; cursor: wait; }
 `;
 
+const TopicGateConsentNote = styled.div`
+  font-size: 10.5px;
+  color: ${(p) => p.theme.muted};
+  text-align: center;
+  line-height: 1.5;
+  margin-top: 6px;
+  opacity: 0.65;
+`;
+
+const TopicGateConsentLink = styled(Link)`
+  color: ${(p) => p.theme.muted};
+  text-decoration: underline;
+  &:hover { color: ${(p) => p.theme.text}; }
+`;
+
 /* ── full-report CTA button ─────────────────────────────────────────────── */
 
 const FullReportBtn = styled.button`
@@ -2344,6 +2360,13 @@ export function EngineRunner(props: {
                       <TopicGateBtn onClick={startCheckout} disabled={checkoutLoading}>
                         {checkoutLoading ? "Redirecting…" : "Unlock Study Mode — $29"}
                       </TopicGateBtn>
+                      <TopicGateConsentNote>
+                        By purchasing you agree to our{" "}
+                        <TopicGateConsentLink href="/terms">Terms</TopicGateConsentLink>
+                        {" "}&amp;{" "}
+                        <TopicGateConsentLink href="/privacy">Privacy Policy</TopicGateConsentLink>.
+                        Individual results vary.
+                      </TopicGateConsentNote>
                     </TopicGateOverlay>
                   </TopicGateWrap>
                 ) : (

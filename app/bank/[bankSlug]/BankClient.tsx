@@ -453,6 +453,21 @@ const UpgradeCloseBtn = styled.button`
   &:hover { color: ${(p) => p.theme.text}; }
 `;
 
+const UpgradeConsentNote = styled.div`
+  font-size: 11px;
+  color: ${(p) => p.theme.muted};
+  text-align: center;
+  line-height: 1.5;
+  margin-top: 8px;
+  opacity: 0.7;
+`;
+
+const UpgradeConsentLink = styled(Link)`
+  color: ${(p) => p.theme.muted};
+  text-decoration: underline;
+  &:hover { color: ${(p) => p.theme.text}; }
+`;
+
 const SuccessBanner = styled.div`
   background: ${(p) => p.theme.successSoft};
   border: 1px solid ${(p) => p.theme.successBorder};
@@ -780,6 +795,13 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
             <UpgradeBtn onClick={startCheckout} disabled={checkoutLoading}>
               {checkoutLoading ? "Redirecting…" : "Unlock Study Mode"}
             </UpgradeBtn>
+            <UpgradeConsentNote>
+              By purchasing you agree to our{" "}
+              <UpgradeConsentLink href="/terms">Terms</UpgradeConsentLink>
+              {" "}&amp;{" "}
+              <UpgradeConsentLink href="/privacy">Privacy Policy</UpgradeConsentLink>.
+              Individual results vary.
+            </UpgradeConsentNote>
             <UpgradeCloseBtn onClick={() => setShowUpgrade(false)}>
               Maybe later
             </UpgradeCloseBtn>
