@@ -9,6 +9,7 @@ import { EngineRunner } from "@/src/exam-engine/ui/EngineRunner";
 import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
 import { balanceSimulationBlueprint } from "@/src/exam-engine/core/simulationBalance";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { useRouter } from "next/navigation";
 import { pmpBank } from "@/src/exam-engine/data/seed.pmp";
 import { setABank } from "@/src/exam-engine/data/seed.set-a";
 import { setBBank } from "@/src/exam-engine/data/seed.set-b";
@@ -456,8 +457,11 @@ interface ExamClientProps {
   setId?: string;
 }
 
+const PAID_SETS = ["set-a", "set-b", "set-c", "set_a", "set_b", "set_c"];
+
 export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProps) {
-  const { user } = useAuth();
+  const { user, isPro, phase } = useAuth();
+  const router = useRouter();
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [bankConfig, setBankConfig] = useState<BankConfig | null>(null);
@@ -468,6 +472,12 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
   const [modeId, setModeId] = useState<BreakModeId>("real_pmp");
   const [adaptiveInterval, setAdaptiveInterval] = useState<45 | 60>(45);
   const [modeConfirmed, setModeConfirmed] = useState(false);
+
+  useEffect(() => {
+    if (phase === "ready" && !isPro && rawSetId && PAID_SETS.includes(rawSetId)) {
+      router.replace(`/bank/${bankSlug}`);
+    }
+  }, [phase, isPro, rawSetId, bankSlug, router]);
 
   const resolvedSetId: SetId | undefined = rawSetId ? SET_MAP[rawSetId] : undefined;
   const setLabel = resolvedSetId?.replace("_", " ").toUpperCase() ?? "Random";

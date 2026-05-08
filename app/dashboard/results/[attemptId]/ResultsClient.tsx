@@ -567,9 +567,9 @@ const ProGateBadge = styled.div`
   font-weight: 800;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: ${(p) => p.theme.warning};
-  background: ${(p) => p.theme.warningSoft};
-  border: 1px solid ${(p) => p.theme.warningBorder};
+  color: ${(p) => p.theme.name === "dark" ? "#94a3b8" : "#64748b"};
+  background: ${(p) => p.theme.name === "dark" ? "rgba(148,163,184,0.12)" : "rgba(100,116,139,0.08)"};
+  border: 1px solid ${(p) => p.theme.name === "dark" ? "rgba(148,163,184,0.2)" : "rgba(100,116,139,0.18)"};
   padding: 4px 12px;
   border-radius: 8px;
 `;
@@ -1085,9 +1085,9 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
         ) : (
           <ProGateWrap>
             <ProGateOverlay>
-              <ProGateBadge>STUDY MODE</ProGateBadge>
+              <ProGateBadge>&#x1f512; Locked</ProGateBadge>
               <ProGateLabel>Unlock per-topic breakdown</ProGateLabel>
-              <UpsellBtn onClick={startCheckout} style={{ marginTop: 4 }}>Upgrade</UpsellBtn>
+              <UpsellBtn onClick={startCheckout} style={{ marginTop: 4 }}>Unlock Access</UpsellBtn>
             </ProGateOverlay>
             <ProGateBlur>
               <SectionCard $delay={220}>

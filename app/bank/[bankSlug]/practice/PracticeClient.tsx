@@ -10,11 +10,10 @@ import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useUpgrade } from "@/lib/useUpgrade";
 import { pmpBank } from "@/src/exam-engine/data/seed.pmp";
-import { setABank } from "@/src/exam-engine/data/seed.set-a";
 
-/** Combined local seed pool — practice mode draws from ALL available questions
- *  regardless of setId, giving the student maximum variety. */
-const combinedSeedBank: Question[] = [...pmpBank, ...setABank];
+/** Practice mode seed pool — only the 90-question practice bank.
+ *  Exam simulation sets (A, B, C) are excluded from practice. */
+const practiceSeedBank: Question[] = pmpBank;
 
 const FREE_PRESETS = [10, 20, 25];
 const PRO_PRESETS = [50, 90];
@@ -323,11 +322,12 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
       try {
         const bank = await loadBankBySlug(bankSlug);
         const [qs, scns] = await Promise.all([loadQuestions(bank.id), loadScenarios(bank.id)]);
-        setQuestions(qs.length ? qs : combinedSeedBank);
+        const practiceOnly = qs.filter((q) => (q.setId ?? "free") === "free");
+        setQuestions(practiceOnly.length ? practiceOnly : practiceSeedBank);
         setScenarios(scns);
         setMsg("");
       } catch (e: any) {
-        setQuestions(combinedSeedBank);
+        setQuestions(practiceSeedBank);
         setScenarios([]);
         setMsg("");
       }

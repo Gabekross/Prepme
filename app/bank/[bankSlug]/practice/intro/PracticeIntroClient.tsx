@@ -291,8 +291,8 @@ const LockedPresetBtn = styled.button`
 
 const LockBadge = styled.span`
   font-size: 10px;
-  background: ${(p) => p.theme.accentSoft};
-  color: ${(p) => p.theme.accent};
+  background: ${(p) => p.theme.name === "dark" ? "rgba(148,163,184,0.12)" : "rgba(100,116,139,0.08)"};
+  color: ${(p) => p.theme.name === "dark" ? "#94a3b8" : "#64748b"};
   border-radius: 4px;
   padding: 1px 5px;
   font-weight: 800;
@@ -907,10 +907,10 @@ export default function PracticeIntroClient({ bankSlug }: { bankSlug: string }) 
                 <LockedPresetBtn
                   key={n}
                   onClick={() => setShowUpgrade(true)}
-                  title="Pro feature"
+                  title="Unlock access"
                 >
                   {n}
-                  <LockBadge>PRO</LockBadge>
+                  <LockBadge>&#x1f512;</LockBadge>
                 </LockedPresetBtn>
               );
             }

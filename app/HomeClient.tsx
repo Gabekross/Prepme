@@ -764,7 +764,7 @@ const FAQ_DATA = [
   },
   {
     q: "Is there a free PMP mock exam I can take?",
-    a: "Yes. The Free tier includes unlimited practice sessions with immediate feedback, plus one full 180-question timed exam simulation (Set A). No credit card required.",
+    a: "Yes. The Free tier includes unlimited practice sessions with immediate feedback drawn from 90 practice questions. No credit card required. Upgrade to unlock full exam simulations.",
   },
   {
     q: "How many questions are in the question bank?",
@@ -847,7 +847,7 @@ export default function HomeClient() {
         </HeroSub>
         <HeroCTAs>
           <PrimaryCTA href="/bank/pmp">
-            Start Free Simulation
+            Start Free Practice
           </PrimaryCTA>
         </HeroCTAs>
         <TrustLine>No credit card required &middot; Free tier available</TrustLine>

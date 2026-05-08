@@ -277,7 +277,7 @@ const CardCta = styled.div<{ $variant: "practice" | "exam" }>`
   }
 `;
 
-/* ── locked card (Pro-gated sets) ───────────────────────────────────────── */
+/* ── locked card (paid-gated sets) ──────────────────────────────────────── */
 
 const LockedCard = styled.div`
   text-decoration: none;
@@ -312,33 +312,13 @@ const LockedCard = styled.div`
   &:hover { transform: translateY(-3px); box-shadow: ${(p) => p.theme.shadowLg}; opacity: 1; }
 `;
 
-const FreeBadge = styled.div`
-  position: absolute;
-  top: 14px; right: 14px;
-  display: flex; align-items: center; gap: 5px;
-  background: ${(p) => p.theme.successSoft};
-  border: 1px solid ${(p) => p.theme.successBorder};
-  color: ${(p) => p.theme.success};
-  font-size: 9px; font-weight: 800;
-  padding: 3px 7px;
-  border-radius: 6px;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-
-  @media (min-width: 480px) {
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 8px;
-  }
-`;
-
 const LockBadge = styled.div`
   position: absolute;
   top: 14px; right: 14px;
   display: flex; align-items: center; gap: 5px;
-  background: ${(p) => p.theme.warningSoft};
-  border: 1px solid ${(p) => p.theme.warningBorder};
-  color: ${(p) => p.theme.warning};
+  background: ${(p) => p.theme.name === "dark" ? "rgba(148,163,184,0.12)" : "rgba(100,116,139,0.08)"};
+  border: 1px solid ${(p) => p.theme.name === "dark" ? "rgba(148,163,184,0.2)" : "rgba(100,116,139,0.18)"};
+  color: ${(p) => p.theme.name === "dark" ? "#94a3b8" : "#64748b"};
   font-size: 9px; font-weight: 800;
   padding: 3px 7px;
   border-radius: 6px;
@@ -644,28 +624,51 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
       <SectionLabel style={{ marginTop: 36 }}>Exam Simulations</SectionLabel>
 
       <Grid>
-        {/* Set A — free for all users */}
-        <ModeCard href={`/bank/${bank.slug}/exam/set-a/instructions`} $variant="exam">
-          <FreeBadge>FREE</FreeBadge>
-          <ModeHeader>
-            <ModeIcon><ModeImg src="/images/ui/bank/set-a.svg" alt="Set A" /></ModeIcon>
-            <ModeTitleGroup>
-              <ModeTitle>Simulation — Set A</ModeTitle>
-              <ModeSubtitle>Full 180-question timed simulation, real exam conditions</ModeSubtitle>
-            </ModeTitleGroup>
-          </ModeHeader>
-          <FeatureList>
-            <FeatureItem>
-              <FeatureDot $variant="exam">✓</FeatureDot>
-              Timed simulation under real exam conditions
-            </FeatureItem>
-            <FeatureItem>
-              <FeatureDot $variant="exam">✓</FeatureDot>
-              Score breakdown by domain and question type
-            </FeatureItem>
-          </FeatureList>
-          <CardCta $variant="exam">Start Set A</CardCta>
-        </ModeCard>
+        {/* Set A — paid access */}
+        {isPro ? (
+          <ModeCard href={`/bank/${bank.slug}/exam/set-a/instructions`} $variant="exam">
+            <ModeHeader>
+              <ModeIcon><ModeImg src="/images/ui/bank/set-a.svg" alt="Set A" /></ModeIcon>
+              <ModeTitleGroup>
+                <ModeTitle>Simulation — Set A</ModeTitle>
+                <ModeSubtitle>Full 180-question timed simulation, real exam conditions</ModeSubtitle>
+              </ModeTitleGroup>
+            </ModeHeader>
+            <FeatureList>
+              <FeatureItem>
+                <FeatureDot $variant="exam">✓</FeatureDot>
+                Timed simulation under real exam conditions
+              </FeatureItem>
+              <FeatureItem>
+                <FeatureDot $variant="exam">✓</FeatureDot>
+                Score breakdown by domain and question type
+              </FeatureItem>
+            </FeatureList>
+            <CardCta $variant="exam">Start Set A</CardCta>
+          </ModeCard>
+        ) : (
+          <LockedCard onClick={() => setShowUpgrade(true)}>
+            <LockBadge>&#x1f512; Locked</LockBadge>
+            <ModeHeader>
+              <ModeIcon><ModeImg src="/images/ui/bank/set-a.svg" alt="Set A" /></ModeIcon>
+              <ModeTitleGroup>
+                <ModeTitle>Simulation — Set A</ModeTitle>
+                <ModeSubtitle>Full 180-question timed simulation, real exam conditions</ModeSubtitle>
+              </ModeTitleGroup>
+            </ModeHeader>
+            <FeatureList>
+              <FeatureItem>
+                <FeatureDot $variant="exam">✓</FeatureDot>
+                Timed simulation under real exam conditions
+              </FeatureItem>
+              <FeatureItem>
+                <FeatureDot $variant="exam">✓</FeatureDot>
+                Score breakdown by domain and question type
+              </FeatureItem>
+            </FeatureList>
+            <CardCta $variant="exam">Unlock Set A</CardCta>
+          </LockedCard>
+        )}
 
         {/* Set B — Study Mode only */}
         {isPro ? (
@@ -691,7 +694,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
           </ModeCard>
         ) : (
           <LockedCard onClick={() => setShowUpgrade(true)}>
-            <LockBadge>STUDY MODE</LockBadge>
+            <LockBadge>&#x1f512; Locked</LockBadge>
             <ModeHeader>
               <ModeIcon><ModeImg src="/images/ui/bank/set-b.svg" alt="Set B" /></ModeIcon>
               <ModeTitleGroup>
@@ -737,7 +740,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
           </ModeCard>
         ) : (
           <LockedCard onClick={() => setShowUpgrade(true)}>
-            <LockBadge>STUDY MODE</LockBadge>
+            <LockBadge>&#x1f512; Locked</LockBadge>
             <ModeHeader>
               <ModeIcon><ModeImg src="/images/ui/bank/set-c.svg" alt="Set C" /></ModeIcon>
               <ModeTitleGroup>
@@ -771,7 +774,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
             <UpgradeFeature>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
-                2 more full simulations — Sets B & C (fresh questions)
+                3 full exam simulations — Sets A, B & C
               </UpgradeFeatureItem>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>

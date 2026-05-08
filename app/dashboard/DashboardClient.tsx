@@ -459,9 +459,9 @@ const ProGateLabel = styled.div`
   font-weight: 800;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: ${(p) => p.theme.warning};
-  background: ${(p) => p.theme.warningSoft};
-  border: 1px solid ${(p) => p.theme.warningBorder};
+  color: ${(p) => p.theme.name === "dark" ? "#94a3b8" : "#64748b"};
+  background: ${(p) => p.theme.name === "dark" ? "rgba(148,163,184,0.12)" : "rgba(100,116,139,0.08)"};
+  border: 1px solid ${(p) => p.theme.name === "dark" ? "rgba(148,163,184,0.2)" : "rgba(100,116,139,0.18)"};
   padding: 4px 12px;
   border-radius: 8px;
 `;
@@ -1766,9 +1766,9 @@ export default function DashboardClient() {
                   ) : (
                     <ProGateCard>
                       <ProGateOverlay>
-                        <ProGateLabel>STUDY MODE</ProGateLabel>
+                        <ProGateLabel>&#x1f512; Locked</ProGateLabel>
                         <ProGateText>Unlock per-topic performance breakdown</ProGateText>
-                        <ProGateBtn onClick={() => setShowUpgrade(true)}>Upgrade to Study Mode</ProGateBtn>
+                        <ProGateBtn onClick={() => setShowUpgrade(true)}>Unlock Access</ProGateBtn>
                       </ProGateOverlay>
                       <ProGateBlur>
                         {(topicsReady ? topicEntriesFlat.slice(0, 6) : []).map((t) => (
@@ -1816,9 +1816,9 @@ export default function DashboardClient() {
                 ) : (
                   <ProGateCard>
                     <ProGateOverlay>
-                      <ProGateLabel>STUDY MODE</ProGateLabel>
+                      <ProGateLabel>&#x1f512; Locked</ProGateLabel>
                       <ProGateText>Unlock personalized focus areas & study recommendations</ProGateText>
-                      <ProGateBtn onClick={() => setShowUpgrade(true)}>Upgrade to Study Mode</ProGateBtn>
+                      <ProGateBtn onClick={() => setShowUpgrade(true)}>Unlock Access</ProGateBtn>
                     </ProGateOverlay>
                     <ProGateBlur>
                       <FocusItem>
@@ -1913,7 +1913,7 @@ export default function DashboardClient() {
       {showUpgrade && (
         <UpgradeOverlay onClick={() => setShowUpgrade(false)}>
           <UpgradeModalCard onClick={(e) => e.stopPropagation()}>
-            <UpgradeTitle>Upgrade to Study Mode</UpgradeTitle>
+            <UpgradeTitle>Unlock Access</UpgradeTitle>
             <UpgradeText>
               Most PMP candidates fail because they don&apos;t know where they&apos;re losing marks. Study Mode shows you exactly that.
             </UpgradeText>
@@ -1924,7 +1924,7 @@ export default function DashboardClient() {
               </UpgradeFeatureItem>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
-                2 more full simulations — Sets B &amp; C (fresh questions)
+                3 full exam simulations — Sets A, B &amp; C
               </UpgradeFeatureItem>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
