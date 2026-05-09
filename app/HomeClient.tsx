@@ -171,38 +171,48 @@ const Badge = styled.div`
 /* ── social proof stats ─────────────────────────────────────────────────── */
 
 const StatsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  max-width: 560px;
+  margin: 0 auto;
 
   @media (max-width: 480px) {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    gap: 12px;
   }
 `;
 
 const StatCard = styled.div`
+  flex: 1;
+  min-width: 0;
+  max-width: 260px;
   background: ${(p) => p.theme.cardBg};
   border: 1px solid ${(p) => p.theme.cardBorder};
   border-radius: 16px;
-  padding: 20px 16px;
+  padding: 28px 20px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 `;
 
 const StatValue = styled.div`
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 900;
   color: ${(p) => p.theme.accent};
   letter-spacing: -0.5px;
+  line-height: 1;
 `;
 
 const StatLabel = styled.div`
   font-size: 12px;
   font-weight: 600;
   color: ${(p) => p.theme.muted};
-  margin-top: 4px;
+  margin-top: 6px;
   text-transform: uppercase;
   letter-spacing: 0.3px;
+  line-height: 1.3;
 `;
 
 /* ── section headings ───────────────────────────────────────────────────── */
