@@ -6,7 +6,7 @@ import { AuthProvider } from "@/lib/auth/AuthProvider";
 
 export const metadata: Metadata = {
   title: {
-    default: "PMP Mastery Lab — Pass the PMP on Your First Attempt",
+    default: "PMP Mastery Lab — Realistic PMP Practice Exams and Study Tools",
     template: "%s | PMP Mastery Lab",
   },
   description:
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "PMP Mastery Lab" }],
   openGraph: {
-    title: "PMP Mastery Lab — Pass the PMP on Your First Attempt",
+    title: "PMP Mastery Lab — Realistic PMP Practice Exams and Study Tools",
     description:
       "Train like the real PMP exam. Adaptive difficulty, weakness targeting, full timed simulations. Free to start.",
     type: "website",
