@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     template: "%s | PMP Mastery Lab",
   },
   description:
-    "Free PMP mock exam with adaptive difficulty, real-time weakness targeting, and full timed simulations. 400+ questions, 6 question types, 3 exam simulations. PMBOK 7th Edition aligned.",
+    "Free PMP mock exam with adaptive difficulty, real-time weakness targeting, and full timed simulations. 400+ questions, 3 exam simulations. PMBOK 7th Edition aligned.",
   keywords: [
     "PMP exam questions 2026",
     "PMP mock exam free",

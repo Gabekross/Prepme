@@ -738,7 +738,7 @@ const TESTIMONIALS = [
 ];
 
 const FREE_FEATURES = [
-  { text: "Real PMP questions across all 6 question types", included: true },
+  { text: "Real PMP questions across all question types", included: true },
   { text: "Detailed explanation for every answer in real time", included: true },
   { text: "Instant pass/fail verdict with score by domain", included: true },
   { text: "See your domain score breakdown after each session", included: true },
@@ -768,7 +768,7 @@ const FAQ_DATA = [
   },
   {
     q: "How many questions are in the question bank?",
-    a: "We currently have 400+ unique PMP questions across 6 question types: single-select MCQ, multi-select MCQ, drag-and-drop matching, drag-and-drop ordering, hotspot (image-based), and fill-in-the-blank. This matches the variety you will see on the real PMP exam.",
+    a: "We currently have 400+ unique PMP questions across all question types: single-select MCQ, multi-select MCQ, drag-and-drop matching, drag-and-drop ordering, hotspot (image-based), and fill-in-the-blank. This matches the variety you will see on the real PMP exam.",
   },
   {
     q: "What question types are on the real PMP exam?",
@@ -793,7 +793,7 @@ const FEATURES = [
     title: "Real Exam Simulation",
     teaser: "Timed, weighted, and formatted like the real PMP.",
     detail:
-      "180 questions. 230-minute timer. Domain-weighted scoring that mirrors the actual PMP. Includes all 6 question types you will see on exam day.",
+      "180 questions. 230-minute timer. Domain-weighted scoring that mirrors the actual PMP. Includes all question types you will see on exam day.",
   },
   {
     img: "/images/ui/features/adaptive-intelligence.svg",
@@ -862,7 +862,6 @@ export default function HomeClient() {
       <BadgesRow>
         <Badge>PMP 2026 Updated</Badge>
         <Badge>PMBOK 7th Edition</Badge>
-        <Badge>6 Question Types</Badge>
         <Badge>Adaptive Engine</Badge>
       </BadgesRow>
 
@@ -878,10 +877,6 @@ export default function HomeClient() {
           <StatCard>
             <StatValue>3</StatValue>
             <StatLabel>Full Exam Simulations</StatLabel>
-          </StatCard>
-          <StatCard>
-            <StatValue>6</StatValue>
-            <StatLabel>Question Types</StatLabel>
           </StatCard>
         </StatsGrid>
       </Section>
