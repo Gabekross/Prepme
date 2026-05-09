@@ -837,13 +837,14 @@ export default function HomeClient() {
       <Hero>
         <HeroKicker>PMP Mastery Lab — 2026</HeroKicker>
         <H1>
-          Pass the PMP on
+          Prepare with Confidence
           <br />
-          Your First Attempt
+          for the PMP Exam
         </H1>
         <HeroSub>
-          Train like the real exam — adaptive difficulty, real-time weakness
-          targeting, and full timed simulations. Not just practice questions.
+          Realistic PMP-style exam simulations, practice questions,
+          performance analytics, and structured study tools designed
+          to help you prepare effectively for exam day.
         </HeroSub>
         <HeroCTAs>
           <PrimaryCTA href="/bank/pmp">
