@@ -1,9 +1,15 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import styled from "styled-components";
+import React, { useEffect, useMemo, useState } from "react";
+import styled, { keyframes } from "styled-components";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+const pulse = keyframes`
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 1; }
+`;
 
 const PageWrap = styled.div`
   display: flex;
@@ -39,7 +45,6 @@ const Card = styled.div`
     pointer-events: none;
   }
 `;
-
 
 const Title = styled.h1`
   margin: 0 0 6px;
@@ -122,28 +127,110 @@ const Msg = styled.div<{ $error?: boolean }>`
   border: 1px solid ${(p) => (p.$error ? p.theme.errorBorder : p.theme.successBorder)};
 `;
 
+const StatusWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 30vh;
+  text-align: center;
+  gap: 16px;
+  padding: 24px;
+`;
+
+const StatusText = styled.div<{ $error?: boolean }>`
+  font-size: 16px;
+  font-weight: 700;
+  color: ${(p) => (p.$error ? p.theme.error : p.theme.text)};
+  animation: ${(p) => (p.$error ? "none" : pulse)} 1.5s ease-in-out infinite;
+`;
+
+const StatusSub = styled.div`
+  font-size: 13px;
+  color: ${(p) => p.theme.muted};
+  line-height: 1.5;
+  max-width: 400px;
+`;
+
+const RetryLink = styled(Link)`
+  font-size: 14px;
+  font-weight: 700;
+  color: ${(p) => p.theme.accent};
+  text-decoration: none;
+  margin-top: 8px;
+  &:hover { text-decoration: underline; }
+`;
+
+type Phase = "checking" | "ready" | "no-session";
+
 export default function ResetPasswordClient() {
   const sb = useMemo(() => supabaseBrowser(), []);
   const router = useRouter();
 
+  const [phase, setPhase] = useState<Phase>("checking");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
   const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled) return;
+      if (session) {
+        setPhase("ready");
+      } else {
+        setPhase("no-session");
+      }
+    });
+
+    return () => { cancelled = true; };
+  }, [sb]);
 
   async function updatePassword() {
     if (!password || loading) return;
     setLoading(true);
     setMsg("Updating password…");
     setIsError(false);
+
     const { error } = await sb.auth.updateUser({ password });
     setLoading(false);
+
     if (error) {
       setIsError(true);
-      return setMsg(`Update failed: ${error.message}`);
+      setMsg(`Update failed: ${error.message}`);
+      return;
     }
+
     setMsg("Password updated! Redirecting to sign in…");
-    setTimeout(() => router.push("/login"), 1200);
+    setTimeout(() => router.push("/login"), 1500);
+  }
+
+  if (phase === "checking") {
+    return (
+      <PageWrap>
+        <StatusWrap>
+          <StatusText>Verifying your reset session…</StatusText>
+          <StatusSub>Please wait.</StatusSub>
+        </StatusWrap>
+      </PageWrap>
+    );
+  }
+
+  if (phase === "no-session") {
+    return (
+      <PageWrap>
+        <Card>
+          <Title>Session Expired</Title>
+          <Subtitle>
+            Your password reset link has expired, was already used, or is invalid.
+            Please request a new one.
+          </Subtitle>
+          <RetryLink href="/forgot-password">Request a new reset link</RetryLink>
+        </Card>
+      </PageWrap>
+    );
   }
 
   return (
@@ -162,7 +249,7 @@ export default function ResetPasswordClient() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             autoComplete="new-password"
-            onKeyDown={(e) => e.key === "Enter" && password && updatePassword()}
+            onKeyDown={(e) => e.key === "Enter" && password && !loading && updatePassword()}
           />
         </Label>
 

@@ -6,19 +6,6 @@ import { supabaseBrowser } from "@/lib/supabase/browser";
 import styled, { keyframes } from "styled-components";
 import Link from "next/link";
 
-/**
- * /auth/callback — Client-side auth finalization page.
- *
- * When a user clicks the email confirmation (or password reset) link,
- * Supabase redirects here with a `code` query param (PKCE flow).
- *
- * This page exchanges the code for a session using the BROWSER Supabase
- * client, which stores the resulting tokens in localStorage. This is
- * critical — a server-side exchange would discard the tokens.
- *
- * After a successful exchange, it redirects to the app.
- */
-
 const pulse = keyframes`
   0%, 100% { opacity: 0.4; }
   50%      { opacity: 1; }
@@ -68,7 +55,6 @@ export default function CallbackClient() {
   const exchangeAttempted = useRef(false);
 
   useEffect(() => {
-    // Guard against double-execution in React StrictMode
     if (exchangeAttempted.current) return;
     exchangeAttempted.current = true;
 
@@ -76,8 +62,8 @@ export default function CallbackClient() {
     const next = searchParams.get("next") ?? "/bank/pmp";
     const error = searchParams.get("error");
     const errorDescription = searchParams.get("error_description");
+    const isPasswordReset = next === "/reset-password";
 
-    // Supabase sent an error (e.g. expired link)
     if (error) {
       console.error("[auth/callback] Supabase error:", error, errorDescription);
       setStatus("error");
@@ -85,52 +71,98 @@ export default function CallbackClient() {
       return;
     }
 
-    // No code — might be implicit flow with hash fragments.
-    // The Supabase browser client auto-detects hash tokens on init,
-    // so just redirect to the destination.
-    if (!code) {
-      console.log("[auth/callback] No code param, redirecting to:", next);
-      window.location.replace(next);
+    const sb = supabaseBrowser();
+
+    if (code) {
+      sb.auth
+        .exchangeCodeForSession(code)
+        .then(({ data, error: exchangeError }) => {
+          if (exchangeError) {
+            console.error("[auth/callback] Code exchange failed:", exchangeError.message);
+            setStatus("error");
+            setErrorMsg(exchangeError.message);
+            return;
+          }
+
+          console.log(
+            "[auth/callback] Session established for:",
+            data.session?.user?.email ?? "unknown"
+          );
+          setStatus("success");
+          window.location.replace(next);
+        })
+        .catch((err) => {
+          console.error("[auth/callback] Unexpected error:", err);
+          setStatus("error");
+          setErrorMsg("An unexpected error occurred. Please try signing in manually.");
+        });
       return;
     }
 
-    // Exchange the PKCE code for a session using the browser client.
-    // This stores tokens in localStorage so the rest of the app can use them.
-    const sb = supabaseBrowser();
+    // No code param — check for implicit/hash-fragment flow.
+    // Hash fragments (#access_token=...&type=recovery) are used by some
+    // Supabase configurations. The browser client auto-detects them on init,
+    // but we need to wait for that async detection to finish.
+    const hash = window.location.hash;
+    if (hash && (hash.includes("access_token") || hash.includes("type=recovery"))) {
+      console.log("[auth/callback] Hash fragments detected, waiting for session…");
 
-    sb.auth
-      .exchangeCodeForSession(code)
-      .then(({ data, error: exchangeError }) => {
-        if (exchangeError) {
-          console.error("[auth/callback] Code exchange failed:", exchangeError.message);
-          setStatus("error");
-          setErrorMsg(exchangeError.message);
-          return;
+      const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
+        if (event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") {
+          console.log("[auth/callback] Session from hash fragments:", event);
+          subscription.unsubscribe();
+          setStatus("success");
+          window.location.replace(next);
         }
-
-        console.log(
-          "[auth/callback] Session established for:",
-          data.session?.user?.email ?? "unknown"
-        );
-        setStatus("success");
-
-        // Full-page navigation ensures AuthProvider re-initializes with the
-        // new session from localStorage. Using replace to keep back-button clean.
-        window.location.replace(next);
-      })
-      .catch((err) => {
-        console.error("[auth/callback] Unexpected error:", err);
-        setStatus("error");
-        setErrorMsg("An unexpected error occurred. Please try signing in manually.");
       });
+
+      const timeout = setTimeout(() => {
+        subscription.unsubscribe();
+        // One last check — the session might have been set before our listener.
+        sb.auth.getSession().then(({ data: { session } }) => {
+          if (session) {
+            setStatus("success");
+            window.location.replace(next);
+          } else {
+            setStatus("error");
+            setErrorMsg(
+              isPasswordReset
+                ? "Reset link expired or already used. Please request a new password reset."
+                : "Could not establish a session. Please try signing in again."
+            );
+          }
+        });
+      }, 5000);
+
+      return () => {
+        clearTimeout(timeout);
+        subscription.unsubscribe();
+      };
+    }
+
+    // No code, no hash fragments — might be a direct navigation.
+    // Check if there's already an active session (e.g. from a previous login).
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        window.location.replace(next);
+      } else {
+        console.log("[auth/callback] No code, no hash, no session — redirecting to:", next);
+        window.location.replace(next);
+      }
+    });
   }, [searchParams]);
 
   if (status === "error") {
+    const isPasswordReset = (searchParams.get("next") ?? "").includes("reset-password");
     return (
       <Wrap>
-        <StatusMsg $error>Sign-in failed</StatusMsg>
+        <StatusMsg $error>
+          {isPasswordReset ? "Reset link failed" : "Sign-in failed"}
+        </StatusMsg>
         <SubMsg>{errorMsg || "Something went wrong during authentication."}</SubMsg>
-        <RetryLink href="/login">Go to Sign In</RetryLink>
+        <RetryLink href={isPasswordReset ? "/forgot-password" : "/login"}>
+          {isPasswordReset ? "Request a new reset link" : "Go to Sign In"}
+        </RetryLink>
       </Wrap>
     );
   }
@@ -138,7 +170,7 @@ export default function CallbackClient() {
   return (
     <Wrap>
       <StatusMsg>
-        {status === "success" ? "Confirmed! Redirecting..." : "Confirming your account..."}
+        {status === "success" ? "Confirmed! Redirecting…" : "Confirming your account…"}
       </StatusMsg>
       <SubMsg>Please wait while we set up your session.</SubMsg>
     </Wrap>
