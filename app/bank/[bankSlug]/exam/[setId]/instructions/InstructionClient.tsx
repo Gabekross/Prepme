@@ -367,24 +367,34 @@ const TipNum = styled.div`
 /* ── mini quiz ───────────────────────────────────────────────────────────── */
 
 const QuizSection = styled.div`
-  margin-bottom: 16px;
-  animation: ${fadeUp} 400ms 150ms ease both;
+  margin-top: 24px;
+  animation: ${fadeIn} 400ms ease both;
 `;
 
-const QuizToggleBtn = styled.button`
-  width: 100%;
-  padding: 14px 20px;
-  border-radius: 16px;
-  border: 1.5px dashed ${(p) => p.theme.cardBorder};
-  background: transparent;
+const WarmUpArea = styled.div`
+  text-align: center;
+  margin-top: 28px;
+  animation: ${fadeUp} 400ms 220ms ease both;
+`;
+
+const WarmUpHint = styled.p`
+  margin: 0 0 10px;
+  font-size: 13px;
   color: ${(p) => p.theme.muted};
+`;
+
+const WarmUpBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 28px;
+  border-radius: 12px;
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  background: transparent;
+  color: ${(p) => p.theme.mutedStrong};
   font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
   transition: all 150ms ease;
 
   &:hover {
@@ -988,18 +998,6 @@ export default function InstructionClient({ bankSlug, setSlug }: Props) {
         </Panel>
       )}
 
-      {/* ── mini quiz ── */}
-      <QuizSection>
-        {showQuiz ? (
-          <MiniQuiz onClose={() => setShowQuiz(false)} />
-        ) : (
-          <QuizToggleBtn onClick={() => setShowQuiz(true)}>
-            <span>&#9654;</span>
-            Warm up with 5 sample questions
-          </QuizToggleBtn>
-        )}
-      </QuizSection>
-
       {/* ── CTA ── */}
       <CtaWrap>
         <BeginBtn href={`/bank/${bankSlug}/exam/${setSlug}`}>
@@ -1008,7 +1006,24 @@ export default function InstructionClient({ bankSlug, setSlug }: Props) {
         <CtaNote>
           Timer starts immediately. Make sure you are in a quiet, distraction-free environment.
         </CtaNote>
+
+        {/* ── secondary warm-up onboarding ── */}
+        {!showQuiz && (
+          <WarmUpArea>
+            <WarmUpHint>New to the simulator? Try a short warm-up first.</WarmUpHint>
+            <WarmUpBtn onClick={() => setShowQuiz(true)}>
+              Try 5-Question Warm-Up
+            </WarmUpBtn>
+          </WarmUpArea>
+        )}
       </CtaWrap>
+
+      {/* ── mini quiz (expands below CTA when active) ── */}
+      {showQuiz && (
+        <QuizSection>
+          <MiniQuiz onClose={() => setShowQuiz(false)} />
+        </QuizSection>
+      )}
     </Page>
   );
 }
