@@ -125,12 +125,38 @@ export function scoreQuestion(q: Question, response: any): ScoreResult {
 }
 
 /**
+ * Returns true if the user actually provided a response (not null/undefined/empty object).
+ */
+function hasResponse(response: any): boolean {
+  if (!response || typeof response !== "object") return false;
+
+  // MCQ single: needs a choiceId
+  if ("choiceId" in response) return !!response.choiceId;
+  // MCQ multi: needs at least one choice
+  if ("choiceIds" in response) return Array.isArray(response.choiceIds) && response.choiceIds.length > 0;
+  // DnD match: needs at least one mapping entry
+  if ("mapping" in response) return Object.keys(response.mapping ?? {}).length > 0;
+  // DnD order: needs at least one item
+  if ("orderedIds" in response) return Array.isArray(response.orderedIds) && response.orderedIds.length > 0;
+  // Hotspot: needs a selected region
+  if ("selectedRegionId" in response) return !!response.selectedRegionId;
+  // Fill blank: needs at least one non-empty value
+  if ("values" in response) {
+    const vals = response.values ?? {};
+    return Object.values(vals).some((v: any) => `${v ?? ""}`.trim() !== "");
+  }
+
+  return false;
+}
+
+/**
  * Production-safe: skips missing questions in byId mapping (prevents q.type crash).
  */
 export function scoreAttempt(attempt: Attempt, questions: Question[]): AttemptResult {
   const byId = Object.fromEntries(questions.map((q) => [q.id, q])) as Record<string, Question>;
 
   const scoreResults: ScoreResult[] = [];
+  let answeredCount = 0;
 
   for (const qid of attempt.questionOrder) {
     const q = byId[qid];
@@ -139,9 +165,11 @@ export function scoreAttempt(attempt: Attempt, questions: Question[]): AttemptRe
     if (!q) continue;
 
     const r = attempt.responsesByQuestionId[qid];
+    if (hasResponse(r)) answeredCount++;
     scoreResults.push(scoreQuestion(q, r));
   }
 
+  const unansweredCount = scoreResults.length - answeredCount;
   const totalScore = scoreResults.reduce((s, r) => s + r.score, 0);
   const maxScore = scoreResults.reduce((s, r) => s + r.maxScore, 0);
 
@@ -179,5 +207,15 @@ export function scoreAttempt(attempt: Attempt, questions: Question[]): AttemptRe
     if (!sr.isCorrect) incorrectQuestionIds.push(q.id);
   }
 
-  return { attemptId: attempt.id, totalScore, maxScore, byDomain, byType, incorrectQuestionIds, scoreResults };
+  return {
+    attemptId: attempt.id,
+    totalScore,
+    maxScore,
+    answeredCount,
+    unansweredCount,
+    byDomain,
+    byType,
+    incorrectQuestionIds,
+    scoreResults,
+  };
 }

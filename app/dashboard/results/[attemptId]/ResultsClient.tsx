@@ -487,6 +487,49 @@ const P = styled.p`
   font-size: 14px;
 `;
 
+const EmptyCard = styled.div`
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 24px;
+  padding: 40px 24px;
+  text-align: center;
+  box-shadow: ${(p) => p.theme.shadow};
+  margin-bottom: 20px;
+  animation: ${fadeUp} 400ms 60ms ease both;
+
+  @media (max-width: 480px) {
+    padding: 32px 16px;
+  }
+`;
+
+const EmptyTitle = styled.div`
+  font-size: 20px;
+  font-weight: 900;
+  color: ${(p) => p.theme.text};
+  margin-bottom: 10px;
+`;
+
+const EmptySubtext = styled.div`
+  font-size: 14px;
+  color: ${(p) => p.theme.muted};
+  line-height: 1.6;
+  max-width: 440px;
+  margin: 0 auto 6px;
+`;
+
+const CompletionBanner = styled.div`
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  background: ${(p) => p.theme.warningSoft};
+  color: ${(p) => p.theme.warning};
+  border: 1px solid ${(p) => p.theme.warningBorder};
+  animation: ${fadeUp} 400ms 80ms ease both;
+`;
+
 /* ── pro upsell ────────────────────────────────────────────────────────── */
 
 const UpsellBanner = styled.div`
@@ -832,6 +875,20 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
   const totalPoints = result ? result.totalScore : (attempt.total_score ?? 0);
   const maxPoints = result ? result.maxScore : (attempt.max_score ?? 0);
 
+  // Answered vs unanswered tracking
+  // Support both new results (with answeredCount) and legacy results (without it)
+  const answeredCount: number =
+    result && typeof (result as any).answeredCount === "number"
+      ? (result as any).answeredCount
+      : correctCount; // legacy fallback: at minimum, correct answers were answered
+  const unansweredCount: number =
+    result && typeof (result as any).unansweredCount === "number"
+      ? (result as any).unansweredCount
+      : questionCount - answeredCount;
+  const isEmptyAttempt = answeredCount === 0;
+  const completionPct = questionCount > 0 ? Math.round((answeredCount / questionCount) * 100) : 0;
+  const isPartialAttempt = answeredCount > 0 && completionPct < 80;
+
   // Time stats
   const timeSpent: Record<string, number> = attempt.state?.timeSpentMsByQuestionId ?? {};
   const totalTimeMs = Object.values(timeSpent).reduce((a: number, b: number) => a + b, 0);
@@ -916,6 +973,39 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
         <span>Results</span>
       </Breadcrumb>
 
+      {/* ── Empty attempt state ──────────────────────────────── */}
+      {isEmptyAttempt && hasScoring && (
+        <>
+          <EmptyCard>
+            <EmptyTitle>No Questions Answered</EmptyTitle>
+            <EmptySubtext>
+              Your exam was submitted without any responses, so no performance
+              analysis is available. This can happen if the timer expired before
+              you started or if you submitted immediately.
+            </EmptySubtext>
+            {attempt.submitted_at && (
+              <HeroMeta>{formatDate(attempt.submitted_at)}</HeroMeta>
+            )}
+          </EmptyCard>
+
+          <ActionRow>
+            <PrimaryAction href={`/bank/${attempt.bank_slug}`}>
+              Retake Exam
+            </PrimaryAction>
+            <SecondaryAction href="/dashboard">
+              Back to Dashboard
+            </SecondaryAction>
+            <SecondaryAction href={`/bank/${attempt.bank_slug}/practice/intro`}>
+              Start Practice
+            </SecondaryAction>
+          </ActionRow>
+        </>
+      )}
+
+      {/* ── Normal results (answered at least 1 question) ─────── */}
+      {!isEmptyAttempt && (
+        <>
+
       {/* ── Hero ─────────────────────────────────────────────── */}
       <HeroCard $pass={passed}>
         <HeroLabel $pass={passed}>
@@ -932,6 +1022,16 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
           <HeroMeta>{formatDate(attempt.submitted_at)}</HeroMeta>
         )}
       </HeroCard>
+
+      {/* ── Completion warning for partial attempts ────────────── */}
+      {isPartialAttempt && (
+        <CompletionBanner>
+          You answered {answeredCount} of {questionCount} questions ({completionPct}% completion).
+          {unansweredCount > 0
+            ? ` The ${unansweredCount} unanswered question${unansweredCount === 1 ? " is" : "s are"} scored as incorrect.`
+            : ""}
+        </CompletionBanner>
+      )}
 
       {/* ── Pro upsell for free users ────────────────────────── */}
       {!isPro && attempt.mode === "exam" && (() => {
@@ -1210,6 +1310,10 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
           Share Results
         </ShareBtn>
       </ActionRow>
+
+      </>
+      )}
+      {/* end of !isEmptyAttempt wrapper */}
 
       {/* ── Share Modal ─────────────────────────────────────── */}
       {showShare && (

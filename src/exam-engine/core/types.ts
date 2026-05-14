@@ -124,6 +124,10 @@ export type AttemptResult = {
   attemptId: string;
   totalScore: number;
   maxScore: number;
+  /** Number of questions the user actually provided a response for. */
+  answeredCount: number;
+  /** Number of questions left blank / unanswered. */
+  unansweredCount: number;
   byDomain: Record<Domain, { score: number; maxScore: number; correct: number; total: number }>;
   byType: Record<QuestionType, { score: number; maxScore: number; correct: number; total: number }>;
   incorrectQuestionIds: string[];
