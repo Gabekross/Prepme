@@ -114,10 +114,10 @@ const SAMPLE_QUESTIONS: SampleQ[] = [
 const Page = styled.div`
   max-width: 760px;
   margin: 0 auto;
-  padding: 24px 16px 80px;
+  padding: 24px 16px 64px;
 
   @media (min-width: 640px) {
-    padding: 40px 20px 96px;
+    padding: 40px 20px 80px;
   }
 `;
 
@@ -145,7 +145,7 @@ const BreadcrumbSep = styled.span`opacity: 0.4;`;
 
 const Hero = styled.div`
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   animation: ${fadeUp} 400ms 50ms ease both;
 `;
 
@@ -183,42 +183,12 @@ const Subtitle = styled.p`
   margin: 0 auto;
 `;
 
-/* ── stats row ───────────────────────────────────────────────────────────── */
-
-const StatsGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 28px;
-  animation: ${fadeUp} 400ms 100ms ease both;
-
-  @media (min-width: 480px) {
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-  }
-`;
-
-const StatCard = styled.div`
-  background: ${(p) => p.theme.cardBg};
-  border: 1px solid ${(p) => p.theme.cardBorder};
-  border-radius: 16px;
-  padding: 14px 16px;
-  text-align: center;
-`;
-
-const StatValue = styled.div`
-  font-size: 22px;
-  font-weight: 900;
-  color: ${(p) => p.theme.text};
-  letter-spacing: -0.3px;
-`;
-
-const StatLabel = styled.div`
-  font-size: 11px;
+const MetaRow = styled.div`
+  margin-top: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: ${(p) => p.theme.muted};
-  margin-top: 3px;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.2px;
 `;
 
 /* ── tabs ────────────────────────────────────────────────────────────────── */
@@ -231,7 +201,7 @@ const TabBar = styled.div`
   border-radius: 16px;
   padding: 5px;
   margin-bottom: 16px;
-  animation: ${fadeUp} 400ms 130ms ease both;
+  animation: ${fadeUp} 400ms 100ms ease both;
   overflow-x: auto;
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
@@ -287,44 +257,6 @@ const PanelTitle = styled.h2`
 `;
 
 /* overview tab */
-
-const DomainGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 20px;
-
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const DomainCard = styled.div<{ $color: string }>`
-  background: ${(p) => p.theme.cardBg};
-  border: 1px solid ${(p) => p.$color}33;
-  border-radius: 14px;
-  padding: 14px 16px;
-  text-align: center;
-`;
-
-const DomainPct = styled.div<{ $color: string }>`
-  font-size: 24px;
-  font-weight: 900;
-  color: ${(p) => p.$color};
-  letter-spacing: -0.5px;
-`;
-
-const DomainName = styled.div`
-  font-size: 12px;
-  font-weight: 700;
-  color: ${(p) => p.theme.text};
-  margin: 4px 0 2px;
-`;
-
-const DomainCount = styled.div`
-  font-size: 11px;
-  color: ${(p) => p.theme.muted};
-`;
 
 const WhatToExpect = styled.div`
   display: grid;
@@ -436,7 +368,7 @@ const TipNum = styled.div`
 
 const QuizSection = styled.div`
   margin-bottom: 16px;
-  animation: ${fadeUp} 400ms 180ms ease both;
+  animation: ${fadeUp} 400ms 150ms ease both;
 `;
 
 const QuizToggleBtn = styled.button`
@@ -674,8 +606,8 @@ const QuizRestartBtn = styled.button`
 
 const CtaWrap = styled.div`
   text-align: center;
-  margin-top: 32px;
-  animation: ${fadeUp} 400ms 220ms ease both;
+  margin-top: 24px;
+  animation: ${fadeUp} 400ms 180ms ease both;
 `;
 
 const BeginBtn = styled(Link)`
@@ -908,27 +840,8 @@ export default function InstructionClient({ bankSlug, setSlug }: Props) {
           A full-length, timed simulation that mirrors the real PMI® exam experience.
           Read the details below, then begin when you're ready.
         </Subtitle>
+        <MetaRow>180 Questions &nbsp;·&nbsp; {durationStr} &nbsp;·&nbsp; 2 Optional Breaks</MetaRow>
       </Hero>
-
-      {/* ── stats ── */}
-      <StatsGrid>
-        <StatCard>
-          <StatValue>180</StatValue>
-          <StatLabel>Questions</StatLabel>
-        </StatCard>
-        <StatCard>
-          <StatValue>{durationStr}</StatValue>
-          <StatLabel>Time Limit</StatLabel>
-        </StatCard>
-        <StatCard>
-          <StatValue>{passThreshold}%</StatValue>
-          <StatLabel>Pass Mark</StatLabel>
-        </StatCard>
-        <StatCard>
-          <StatValue>3</StatValue>
-          <StatLabel>Domains</StatLabel>
-        </StatCard>
-      </StatsGrid>
 
       {/* ── tabs ── */}
       <TabBar>
@@ -942,25 +855,6 @@ export default function InstructionClient({ bankSlug, setSlug }: Props) {
       {/* ── overview panel ── */}
       {activeTab === "overview" && (
         <Panel>
-          <PanelTitle>Domain Breakdown</PanelTitle>
-          <DomainGrid>
-            <DomainCard $color="#6366f1">
-              <DomainPct $color="#6366f1">42%</DomainPct>
-              <DomainName>People</DomainName>
-              <DomainCount>~76 questions</DomainCount>
-            </DomainCard>
-            <DomainCard $color="#10b981">
-              <DomainPct $color="#10b981">50%</DomainPct>
-              <DomainName>Process</DomainName>
-              <DomainCount>~90 questions</DomainCount>
-            </DomainCard>
-            <DomainCard $color="#f59e0b">
-              <DomainPct $color="#f59e0b">8%</DomainPct>
-              <DomainName>Business Env.</DomainName>
-              <DomainCount>~14 questions</DomainCount>
-            </DomainCard>
-          </DomainGrid>
-
           <PanelTitle>What to Expect</PanelTitle>
           <WhatToExpect>
             <ExpectItem>
