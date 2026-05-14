@@ -525,14 +525,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   {menuOpen && (
                     <MenuPanel role="menu">
                       <MenuSectionLabel>Navigation</MenuSectionLabel>
-                      <MenuItem href="/" onClick={() => setMenuOpen(false)}>
+                      <MenuItem href={bankSlug ? `/bank/${bankSlug}` : "/"} onClick={() => setMenuOpen(false)}>
                         ← Back to Exams
                       </MenuItem>
-                      {bankSlug && (
-                        <MenuItem href={`/bank/${bankSlug}`} onClick={() => setMenuOpen(false)}>
-                          ← Bank Overview
-                        </MenuItem>
-                      )}
 
                       <MenuDivider />
                       <MenuSectionLabel>Settings</MenuSectionLabel>
