@@ -1510,7 +1510,7 @@ export default function DashboardClient() {
       weakDomain: weakest.label,
       weakPct: weakest.pct,
       count,
-      href: `/bank/pmp/practice?count=${count}`,
+      href: `/bank/pmp/practice?count=${count}&domain=${weakest.domain}`,
     };
   }, [submitted, allResults, isPro]);
 

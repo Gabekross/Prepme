@@ -314,6 +314,13 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
   const initialCount = countParam ? Math.max(1, parseInt(countParam, 10)) : 20;
   const [questionCount, setQuestionCount] = useState<number>(initialCount);
 
+  // Read ?domain from URL (set by recommendation links); validates against known domains
+  const domainParam = searchParams.get("domain");
+  const validDomains = ["people", "process", "business_environment"] as const;
+  const initialDomain = domainParam && validDomains.includes(domainParam as any)
+    ? (domainParam as typeof validDomains[number])
+    : null;
+
   // If a count was passed via URL, skip the setup screen
   const [started, setStarted] = useState<boolean>(!!countParam);
 
@@ -462,6 +469,7 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
       blueprint={blueprint}
       mode="practice"
       allowDomainFilter
+      initialDomainFilter={initialDomain ?? undefined}
       storageNamespace={`${bankSlug}__practice`}
       userId={user?.id}
       bankSlug={bankSlug}

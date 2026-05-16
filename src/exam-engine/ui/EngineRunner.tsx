@@ -1520,6 +1520,8 @@ export function EngineRunner(props: {
   blueprint: Blueprint;
   mode: "practice" | "exam";
   allowDomainFilter?: boolean;
+  /** Pre-select a domain filter on mount (e.g., from recommendation links). */
+  initialDomainFilter?: "people" | "process" | "business_environment";
   storageNamespace: string;
   durationMinutes?: number;
   passThreshold?: number;
@@ -1533,7 +1535,8 @@ export function EngineRunner(props: {
   breakConfig?: { mode: BreakConfigMode };
 }) {
   const { title, subtitle, questions, scenarios, blueprint, mode, storageNamespace,
-          durationMinutes, passThreshold = 70, userId, bankSlug, setId, breakConfig } = props;
+          durationMinutes, passThreshold = 70, userId, bankSlug, setId, breakConfig,
+          initialDomainFilter } = props;
   const engine = useExamSession();
   const router = useRouter();
   const { isPro } = useAuth();
@@ -1613,7 +1616,13 @@ export function EngineRunner(props: {
     breakStartMsRef.current = null;
 
     engine.initIfNeeded({ bank: questions, defaultBlueprint: blueprint, mode, storageNamespace, userId, bankSlug, setId })
-      .then(() => { setInitialized(true); });
+      .then(() => {
+        // Apply initial domain filter from URL (e.g. recommendation links)
+        if (initialDomainFilter) {
+          engine.setDomainFilter(initialDomainFilter);
+        }
+        setInitialized(true);
+      });
 
     return () => {
       // On SPA navigation away, mark any unsubmitted attempt as abandoned
