@@ -810,6 +810,8 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
     > = {};
 
     for (const s of sr) {
+      // Skip unanswered questions (maxScore === 0)
+      if (s.maxScore === 0) continue;
       const meta = questionMeta.get(s.questionId);
       if (!meta) continue;
       const idx = topicIndex[meta.domain];
@@ -866,21 +868,26 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
   const modeLabel = attempt.mode === "exam" ? "Exam Simulation" : "Practice Session";
 
   const questionCount = attempt.state?.questionOrder?.length ?? 0;
-  const correctCount = result
-    ? result.scoreResults.filter((sr: any) => sr.isCorrect).length
-    : 0;
-  const incorrectCount = result
-    ? result.scoreResults.filter((sr: any) => !sr.isCorrect).length
-    : 0;
   const totalPoints = result ? result.totalScore : (attempt.total_score ?? 0);
   const maxPoints = result ? result.maxScore : (attempt.max_score ?? 0);
 
+  // Only count attempted questions (maxScore > 0) for correct/incorrect
+  const correctCount = result
+    ? result.scoreResults.filter((sr: any) => sr.maxScore > 0 && sr.isCorrect).length
+    : 0;
+  const incorrectCount = result
+    ? result.scoreResults.filter((sr: any) => sr.maxScore > 0 && !sr.isCorrect).length
+    : 0;
+
   // Answered vs unanswered tracking
-  // Support both new results (with answeredCount) and legacy results (without it)
+  // New results have explicit answeredCount; legacy results fall back to
+  // counting scoreResults with maxScore > 0 (attempted questions).
   const answeredCount: number =
     result && typeof (result as any).answeredCount === "number"
       ? (result as any).answeredCount
-      : correctCount; // legacy fallback: at minimum, correct answers were answered
+      : result
+        ? result.scoreResults.filter((sr: any) => sr.maxScore > 0).length
+        : 0;
   const unansweredCount: number =
     result && typeof (result as any).unansweredCount === "number"
       ? (result as any).unansweredCount
@@ -1271,15 +1278,17 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
       )}
 
       {/* ── Question-by-Question ────────────────────────────── */}
-      {result && result.scoreResults.length > 0 && (
+      {result && answeredCount > 0 && (
         <SectionCard $delay={340}>
           <SectionToggleBtn onClick={() => setShowQuestions((v) => !v)}>
-            Question Breakdown ({correctCount} of {result.scoreResults.length} correct)
+            Question Breakdown ({correctCount} of {answeredCount} correct)
             <SectionArrow $open={showQuestions}>▼</SectionArrow>
           </SectionToggleBtn>
           {showQuestions && (
             <QList>
-              {result.scoreResults.map((sr, idx) => (
+              {result.scoreResults
+                .filter((sr) => sr.maxScore > 0)
+                .map((sr, idx) => (
                 <QRow key={sr.questionId} $correct={sr.isCorrect}>
                   <QIcon $correct={sr.isCorrect}>
                     {sr.isCorrect ? "✓" : "✗"}

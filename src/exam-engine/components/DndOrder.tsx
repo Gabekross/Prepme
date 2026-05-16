@@ -169,7 +169,7 @@ export function DndOrder(props: {
     if (!overId || activeId === overId) return;
     const oldIndex = orderedIds.indexOf(activeId);
     const newIndex = orderedIds.indexOf(overId);
-    onChange({ type: "dnd_order", orderedIds: arrayMove(orderedIds, oldIndex, newIndex) });
+    onChange({ type: "dnd_order", orderedIds: arrayMove(orderedIds, oldIndex, newIndex), userInteracted: true } as any);
   }
 
   function move(id: string, dir: -1 | 1) {
@@ -177,7 +177,7 @@ export function DndOrder(props: {
     const idx = orderedIds.indexOf(id);
     const nextIdx = idx + dir;
     if (nextIdx < 0 || nextIdx >= orderedIds.length) return;
-    onChange({ type: "dnd_order", orderedIds: arrayMove(orderedIds, idx, nextIdx) });
+    onChange({ type: "dnd_order", orderedIds: arrayMove(orderedIds, idx, nextIdx), userInteracted: true } as any);
   }
 
   const itemText = (id: string) => question.payload.items.find((i) => i.id === id)?.text ?? id;

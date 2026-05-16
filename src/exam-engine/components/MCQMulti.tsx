@@ -197,8 +197,13 @@ export function MCQMulti(props: {
   function toggle(id: string) {
     if (showCorrect) return;
     const next = new Set(chosen);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      // Enforce max selection limit: if at capacity, ignore new selections
+      if (maxSel && next.size >= maxSel) return;
+      next.add(id);
+    }
     onChange({ type: "mcq_multi", choiceIds: Array.from(next) });
   }
 

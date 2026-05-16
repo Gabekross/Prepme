@@ -852,9 +852,9 @@ export default function HomeClient() {
           for the PMP Exam
         </H1>
         <HeroSub>
-          Realistic PMP-style exam simulations, practice questions,
-          performance analytics, and structured study tools designed
-          to help you prepare effectively for exam day.
+          Practice with realistic PMP exam simulations, timed mock exams,
+          and targeted PMP practice questions designed to help you
+          prepare effectively for exam day.
         </HeroSub>
         <HeroCTAs>
           <PrimaryCTA href="/bank/pmp">

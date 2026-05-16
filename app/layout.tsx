@@ -6,29 +6,41 @@ import { AuthProvider } from "@/lib/auth/AuthProvider";
 
 export const metadata: Metadata = {
   title: {
-    default: "PMP Mastery Lab — Realistic PMP Practice Exams and Study Tools",
+    default: "PMP Practice Exam Simulator | PMP Mock Tests & Practice Questions",
     template: "%s | PMP Mastery Lab",
   },
   description:
-    "Free PMP mock exam with adaptive difficulty, real-time weakness targeting, and full timed simulations. 400+ questions, 3 exam simulations. PMBOK 7th Edition aligned.",
+    "Prepare for the PMP exam with realistic PMP-style exam simulations, timed mock tests, practice questions, performance analytics, and structured study tools designed for effective exam preparation.",
   keywords: [
-    "PMP exam questions 2026",
-    "PMP mock exam free",
+    "PMP practice exam",
+    "PMP mock exam",
     "PMP exam simulator",
-    "how to pass PMP first try",
-    "PMP practice test",
-    "PMP exam preparation",
-    "PMP study tool",
-    "PMP exam simulation",
+    "PMP practice questions",
+    "PMP exam prep",
+    "PMP simulation exam",
+    "PMP timed exam",
+    "PMP exam questions",
+    "PMP readiness test",
+    "PMP study platform",
+    "PMI exam preparation",
+    "Project Management Professional exam prep",
     "PMBOK 7th edition",
     "PMP certification prep",
+    "PMP mock test",
   ],
   authors: [{ name: "PMP Mastery Lab" }],
   openGraph: {
-    title: "PMP Mastery Lab — Realistic PMP Practice Exams and Study Tools",
+    title: "PMP Practice Exam Simulator | PMP Mock Tests & Practice Questions",
     description:
-      "Train like the real PMP exam. Adaptive difficulty, weakness targeting, full timed simulations. Free to start.",
+      "Prepare for the PMP exam with realistic timed simulations, mock exams, practice questions, and performance analytics. Free to start.",
     type: "website",
+    siteName: "PMP Mastery Lab",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PMP Practice Exam Simulator | PMP Mock Tests & Practice Questions",
+    description:
+      "Realistic PMP exam simulations, timed mock tests, and targeted practice questions to help you prepare effectively for the PMP certification exam.",
   },
 };
 

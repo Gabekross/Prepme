@@ -24,7 +24,21 @@ export function weightedScoreQuestion(q: Question, response: any): WeightedScore
   const raw = scoreQuestion(q, response);
   const diff: Difficulty = q.difficulty ?? DEFAULT_DIFFICULTY;
   const weight = DIFFICULTY_WEIGHTS[diff] ?? 1.0;
-  const rawFraction = raw.maxScore > 0 ? raw.score / raw.maxScore : 0;
+
+  // Unanswered questions (maxScore === 0) get zero weighted scores too,
+  // so they don't inflate analytics denominators.
+  if (raw.maxScore === 0) {
+    return {
+      ...raw,
+      difficulty: diff,
+      difficultyWeight: weight,
+      rawFraction: 0,
+      weightedScore: 0,
+      weightedMaxScore: 0,
+    };
+  }
+
+  const rawFraction = raw.score / raw.maxScore;
 
   return {
     ...raw,
@@ -127,6 +141,9 @@ export function weightedScoreAttempt(attempt: Attempt, questions: Question[]): W
   let totalDiff = 0;
 
   for (const sr of scoreResults) {
+    // Skip unanswered questions (maxScore === 0) from all analytics
+    if (sr.maxScore === 0) continue;
+
     const q = byId[sr.questionId];
     if (!q) continue;
 

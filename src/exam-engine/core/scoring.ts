@@ -10,26 +10,73 @@ function eqText(a: string, b: string, caseInsensitive?: boolean) {
   return caseInsensitive ? aa.toLowerCase() === bb.toLowerCase() : aa === bb;
 }
 
-function emptyResult(questionId: string, maxScore = 1): ScoreResult {
-  return { questionId, isCorrect: false, score: 0, maxScore };
-}
+/* ── Centralized "was this question actually attempted?" check ───────────── */
 
 /**
+ * Returns true only if the user intentionally provided a meaningful response.
+ * Used by scoring, analytics, and results to separate "attempted but wrong"
+ * from "never touched."
+ */
+export function isQuestionAttempted(q: Question, response: any): boolean {
+  if (!response || typeof response !== "object") return false;
+
+  switch (q.type) {
+    case "mcq_single":
+      return "choiceId" in response && !!response.choiceId;
+
+    case "mcq_multi":
+      return (
+        "choiceIds" in response &&
+        Array.isArray(response.choiceIds) &&
+        response.choiceIds.length > 0
+      );
+
+    case "dnd_match":
+      // At least one prompt must be mapped to a target
+      return (
+        "mapping" in response &&
+        Object.values(response.mapping ?? {}).some((v: any) => v != null && v !== "")
+      );
+
+    case "dnd_order":
+      // Only counts as attempted if the user explicitly interacted.
+      // The UI initializes DnD-order with the default item order, so we
+      // check for the `userInteracted` flag the component sets on drag.
+      // If the flag is missing (legacy data), fall back to checking
+      // whether the response has orderedIds AND differs from the
+      // question's default item order (payload.items).
+      if ("userInteracted" in response) return !!response.userInteracted;
+      if (!("orderedIds" in response) || !Array.isArray(response.orderedIds) || response.orderedIds.length === 0) {
+        return false;
+      }
+      // Legacy fallback: compare against default payload order
+      const defaultOrder = q.payload.items.map((i: any) => i.id);
+      return JSON.stringify(response.orderedIds) !== JSON.stringify(defaultOrder);
+
+    case "hotspot":
+      return "selectedRegionId" in response && !!response.selectedRegionId;
+
+    case "fill_blank": {
+      const vals = response.values ?? {};
+      return Object.values(vals).some((v: any) => `${v ?? ""}`.trim() !== "");
+    }
+
+    default:
+      return false;
+  }
+}
+
+/* ── Per-question scoring ────────────────────────────────────────────────── */
+
+/**
+ * Score a single question.
+ * If the question was not attempted, returns score=0, maxScore=0.
  * Production-safe: never throws on missing/undefined response.
  */
 export function scoreQuestion(q: Question, response: any): ScoreResult {
-  // No response = incorrect/zero (but keep maxScore per type)
-  if (!response || typeof response !== "object") {
-    switch (q.type) {
-      case "dnd_match":
-        return emptyResult(q.id, Object.keys(q.answerKey.mapping).length);
-      case "dnd_order":
-        return emptyResult(q.id, q.answerKey.orderedIds.length);
-      case "fill_blank":
-        return emptyResult(q.id, Object.keys(q.answerKey.values).length);
-      default:
-        return emptyResult(q.id, 1);
-    }
+  // Unanswered → zero score AND zero maxScore (excluded from totals)
+  if (!isQuestionAttempted(q, response)) {
+    return { questionId: q.id, isCorrect: false, score: 0, maxScore: 0 };
   }
 
   switch (q.type) {
@@ -124,33 +171,14 @@ export function scoreQuestion(q: Question, response: any): ScoreResult {
   }
 }
 
-/**
- * Returns true if the user actually provided a response (not null/undefined/empty object).
- */
-function hasResponse(response: any): boolean {
-  if (!response || typeof response !== "object") return false;
-
-  // MCQ single: needs a choiceId
-  if ("choiceId" in response) return !!response.choiceId;
-  // MCQ multi: needs at least one choice
-  if ("choiceIds" in response) return Array.isArray(response.choiceIds) && response.choiceIds.length > 0;
-  // DnD match: needs at least one mapping entry
-  if ("mapping" in response) return Object.keys(response.mapping ?? {}).length > 0;
-  // DnD order: needs at least one item
-  if ("orderedIds" in response) return Array.isArray(response.orderedIds) && response.orderedIds.length > 0;
-  // Hotspot: needs a selected region
-  if ("selectedRegionId" in response) return !!response.selectedRegionId;
-  // Fill blank: needs at least one non-empty value
-  if ("values" in response) {
-    const vals = response.values ?? {};
-    return Object.values(vals).some((v: any) => `${v ?? ""}`.trim() !== "");
-  }
-
-  return false;
-}
+/* ── Full-attempt scoring ────────────────────────────────────────────────── */
 
 /**
- * Production-safe: skips missing questions in byId mapping (prevents q.type crash).
+ * Score an entire attempt. Only attempted questions contribute to totals.
+ * Unanswered questions get scoreResult {score:0, maxScore:0} and are
+ * excluded from byDomain/byType/incorrectQuestionIds.
+ *
+ * Production-safe: skips missing questions in byId mapping.
  */
 export function scoreAttempt(attempt: Attempt, questions: Question[]): AttemptResult {
   const byId = Object.fromEntries(questions.map((q) => [q.id, q])) as Record<string, Question>;
@@ -160,16 +188,19 @@ export function scoreAttempt(attempt: Attempt, questions: Question[]): AttemptRe
 
   for (const qid of attempt.questionOrder) {
     const q = byId[qid];
-
-    // If the attempt references a question that isn't loaded, skip it safely
     if (!q) continue;
 
     const r = attempt.responsesByQuestionId[qid];
-    if (hasResponse(r)) answeredCount++;
+    const attempted = isQuestionAttempted(q, r);
+    if (attempted) answeredCount++;
+
     scoreResults.push(scoreQuestion(q, r));
   }
 
-  const unansweredCount = scoreResults.length - answeredCount;
+  const totalQuestions = scoreResults.length;
+  const unansweredCount = totalQuestions - answeredCount;
+
+  // Only answered questions contribute to score totals
   const totalScore = scoreResults.reduce((s, r) => s + r.score, 0);
   const maxScore = scoreResults.reduce((s, r) => s + r.maxScore, 0);
 
@@ -191,6 +222,9 @@ export function scoreAttempt(attempt: Attempt, questions: Question[]): AttemptRe
   const incorrectQuestionIds: string[] = [];
 
   for (const sr of scoreResults) {
+    // Skip unanswered questions (maxScore === 0) from analytics
+    if (sr.maxScore === 0) continue;
+
     const q = byId[sr.questionId];
     if (!q) continue;
 
