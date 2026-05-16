@@ -12,7 +12,7 @@ import { QuestionRenderer } from "@/src/exam-engine/ui/QuestionRenderer";
 
 /* ── types ──────────────────────────────────────────────────────────────── */
 
-type FilterMode = "all" | "incorrect" | "flagged";
+type FilterMode = "all" | "incorrect" | "unanswered" | "flagged";
 
 type AttemptRow = {
   id: string;
@@ -155,6 +155,19 @@ const FlagBadge = styled.span`
   color: ${(p) => p.theme.warning};
   border: 1px solid ${(p) => p.theme.warningBorder};
   font-weight: 700;
+`;
+
+const UnansweredBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  background: ${(p) => p.theme.name === "dark" ? "rgba(148,163,184,0.12)" : "rgba(100,116,139,0.08)"};
+  color: ${(p) => p.theme.muted};
+  border: 1px solid ${(p) => p.theme.cardBorder};
 `;
 
 /* ── explanation card ───────────────────────────────────────────────────── */
@@ -348,19 +361,34 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
     return new Set(Object.entries(flags).filter(([, v]) => v).map(([k]) => k));
   }, [attempt?.state]);
 
-  // Full ordered question list (only attempted, i.e. maxScore > 0)
+  // Full ordered question list — ALL questions in exam order (including unanswered)
   const allQuestionIds = useMemo(() => {
     const order: string[] = attempt?.state?.questionOrder ?? [];
-    return order.filter((qid) => {
-      const sr = scoreResultMap.get(qid);
-      return sr && sr.maxScore > 0;
-    });
-  }, [attempt?.state, scoreResultMap]);
+    // Only include questions we have loaded in the bank
+    return order.filter((qid) => questionMap[qid]);
+  }, [attempt?.state, questionMap]);
 
-  const incorrectIds = useMemo(
+  // Attempted questions (maxScore > 0)
+  const attemptedIds = useMemo(
     () => allQuestionIds.filter((qid) => {
       const sr = scoreResultMap.get(qid);
+      return sr && sr.maxScore > 0;
+    }),
+    [allQuestionIds, scoreResultMap]
+  );
+
+  const incorrectIds = useMemo(
+    () => attemptedIds.filter((qid) => {
+      const sr = scoreResultMap.get(qid);
       return sr && !sr.isCorrect;
+    }),
+    [attemptedIds, scoreResultMap]
+  );
+
+  const unansweredIds = useMemo(
+    () => allQuestionIds.filter((qid) => {
+      const sr = scoreResultMap.get(qid);
+      return !sr || sr.maxScore === 0;
     }),
     [allQuestionIds, scoreResultMap]
   );
@@ -374,10 +402,11 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
   const filteredIds = useMemo(() => {
     switch (filter) {
       case "incorrect": return incorrectIds;
+      case "unanswered": return unansweredIds;
       case "flagged": return flaggedIds;
       default: return allQuestionIds;
     }
-  }, [filter, allQuestionIds, incorrectIds, flaggedIds]);
+  }, [filter, allQuestionIds, incorrectIds, unansweredIds, flaggedIds]);
 
   // Reset index when filter changes
   useEffect(() => {
@@ -415,7 +444,7 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
   if (authLoading || loading) return <Message>Loading review...</Message>;
   if (error) return <Message>{error}</Message>;
   if (!attempt) return <Message>Attempt not found.</Message>;
-  if (allQuestionIds.length === 0) return <Message>No attempted questions to review.</Message>;
+  if (allQuestionIds.length === 0) return <Message>No questions to review.</Message>;
 
   return (
     <Wrap>
@@ -437,6 +466,11 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
         <FilterBtn $active={filter === "incorrect"} onClick={() => setFilter("incorrect")}>
           Incorrect <FilterCount>({incorrectIds.length})</FilterCount>
         </FilterBtn>
+        {unansweredIds.length > 0 && (
+          <FilterBtn $active={filter === "unanswered"} onClick={() => setFilter("unanswered")}>
+            Unanswered <FilterCount>({unansweredIds.length})</FilterCount>
+          </FilterBtn>
+        )}
         <FilterBtn $active={filter === "flagged"} onClick={() => setFilter("flagged")}>
           Flagged <FilterCount>({flaggedIds.length})</FilterCount>
         </FilterBtn>
@@ -450,10 +484,12 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
               <QuestionNumber>Question {currentIdx + 1} of {filteredIds.length}</QuestionNumber>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 {isFlagged && <FlagBadge>Flagged</FlagBadge>}
-                {currentScoreResult && (
+                {currentScoreResult && currentScoreResult.maxScore > 0 ? (
                   <ResultBadge $correct={currentScoreResult.isCorrect}>
                     {currentScoreResult.isCorrect ? "✓ Correct" : "✗ Incorrect"}
                   </ResultBadge>
+                ) : (
+                  <UnansweredBadge>— Not Answered</UnansweredBadge>
                 )}
               </div>
             </QuestionHeader>
@@ -508,6 +544,8 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
               ? "You didn't flag any questions during this attempt."
               : filter === "incorrect"
               ? "All questions were answered correctly!"
+              : filter === "unanswered"
+              ? "All questions were answered."
               : "No questions to display."}
           </Message>
         </QuestionCard>

@@ -1316,18 +1316,21 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
       )}
 
       {/* ── Review & Actions ──────────────────────────────── */}
-      {answeredCount > 0 && (
-        <ActionRow>
-          <PrimaryAction href={`/dashboard/results/${attemptId}/review`}>
-            Review All Questions
-          </PrimaryAction>
-          {incorrectCount > 0 && (
-            <SecondaryAction href={`/dashboard/results/${attemptId}/review?filter=incorrect`}>
-              Review Incorrect ({incorrectCount})
-            </SecondaryAction>
-          )}
-        </ActionRow>
-      )}
+      <ActionRow>
+        <PrimaryAction href={`/dashboard/results/${attemptId}/review`}>
+          Review All Questions
+        </PrimaryAction>
+        {incorrectCount > 0 && (
+          <SecondaryAction href={`/dashboard/results/${attemptId}/review?filter=incorrect`}>
+            Review Incorrect ({incorrectCount})
+          </SecondaryAction>
+        )}
+        {unansweredCount > 0 && (
+          <SecondaryAction href={`/dashboard/results/${attemptId}/review?filter=unanswered`}>
+            Review Unanswered ({unansweredCount})
+          </SecondaryAction>
+        )}
+      </ActionRow>
 
       <ActionRow>
         <SecondaryAction href={`/bank/${attempt.bank_slug}`}>
