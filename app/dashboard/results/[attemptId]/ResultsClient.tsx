@@ -291,7 +291,7 @@ const QList = styled.div`
   margin-top: 12px;
 `;
 
-const QRow = styled.div<{ $correct: boolean }>`
+const QRow = styled(Link)<{ $correct: boolean }>`
   display: flex;
   align-items: center;
   gap: 10px;
@@ -300,6 +300,10 @@ const QRow = styled.div<{ $correct: boolean }>`
   background: ${(p) => p.$correct ? p.theme.successSoft : p.theme.errorSoft};
   border: 1px solid ${(p) => p.$correct ? p.theme.successBorder : p.theme.errorBorder};
   font-size: 13px;
+  text-decoration: none;
+  transition: opacity 150ms ease, transform 100ms ease;
+  cursor: pointer;
+  &:hover { opacity: 0.8; transform: translateX(2px); }
 `;
 
 const QIcon = styled.span<{ $correct: boolean }>`
@@ -1289,7 +1293,11 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
               {result.scoreResults
                 .filter((sr) => sr.maxScore > 0)
                 .map((sr, idx) => (
-                <QRow key={sr.questionId} $correct={sr.isCorrect}>
+                <QRow
+                  key={sr.questionId}
+                  $correct={sr.isCorrect}
+                  href={`/dashboard/results/${attemptId}/review?q=${idx}`}
+                >
                   <QIcon $correct={sr.isCorrect}>
                     {sr.isCorrect ? "✓" : "✗"}
                   </QIcon>
@@ -1307,11 +1315,24 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
         </SectionCard>
       )}
 
-      {/* ── Actions ─────────────────────────────────────────── */}
+      {/* ── Review & Actions ──────────────────────────────── */}
+      {answeredCount > 0 && (
+        <ActionRow>
+          <PrimaryAction href={`/dashboard/results/${attemptId}/review`}>
+            Review All Questions
+          </PrimaryAction>
+          {incorrectCount > 0 && (
+            <SecondaryAction href={`/dashboard/results/${attemptId}/review?filter=incorrect`}>
+              Review Incorrect ({incorrectCount})
+            </SecondaryAction>
+          )}
+        </ActionRow>
+      )}
+
       <ActionRow>
-        <PrimaryAction href={`/bank/${attempt.bank_slug}`}>
+        <SecondaryAction href={`/bank/${attempt.bank_slug}`}>
           Retake Exam
-        </PrimaryAction>
+        </SecondaryAction>
         <SecondaryAction href="/dashboard">
           Back to Dashboard
         </SecondaryAction>
