@@ -1899,7 +1899,7 @@ export default function DashboardClient() {
             <HistoryGate>
               <HistoryGateText>
                 {submitted.length - 3} older attempt{submitted.length - 3 === 1 ? "" : "s"} hidden.{" "}
-                <span>Study Mode unlocks your full attempt history.</span>
+                <span>Premium unlocks your full attempt history.</span>
               </HistoryGateText>
               <HistoryGateBtn onClick={() => setShowUpgrade(true)}>
                 Unlock History
@@ -1915,7 +1915,7 @@ export default function DashboardClient() {
           <UpgradeModalCard onClick={(e) => e.stopPropagation()}>
             <UpgradeTitle>Unlock Access</UpgradeTitle>
             <UpgradeText>
-              Most PMP candidates fail because they don&apos;t know where they&apos;re losing marks. Study Mode shows you exactly that.
+              Most PMP candidates fail because they don&apos;t know where they&apos;re losing marks. Premium shows you exactly that.
             </UpgradeText>
             <UpgradeFeature>
               <UpgradeFeatureItem>
@@ -1939,10 +1939,10 @@ export default function DashboardClient() {
                 Extended practice sessions (50 &amp; 90 questions)
               </UpgradeFeatureItem>
             </UpgradeFeature>
-            <UpgradePrice>$29</UpgradePrice>
-            <UpgradePriceNote>One-time payment · Lifetime access · Less than a practice exam book</UpgradePriceNote>
+            <UpgradePrice>$29.99</UpgradePrice>
+            <UpgradePriceNote>Every 3 months · Cancel anytime · Less than a practice exam book</UpgradePriceNote>
             <UpgradeModalBtn onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Unlock Study Mode"}
+              {checkoutLoading ? "Redirecting…" : "Unlock Premium"}
             </UpgradeModalBtn>
             <UpgradeConsentNote>
               By purchasing you agree to our{" "}

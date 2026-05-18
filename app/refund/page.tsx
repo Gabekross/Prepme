@@ -112,7 +112,7 @@ export default function RefundPage() {
 
       <HighlightCard>
         <HighlightText>
-          We offer a 7-day full refund on Study Mode — no questions asked, as long as you
+          We offer a 7-day full refund on Premium — no questions asked, as long as you
           haven&rsquo;t completed more than one full simulation.
         </HighlightText>
       </HighlightCard>
@@ -120,7 +120,7 @@ export default function RefundPage() {
       <Block>
         <BlockTitle>Our Commitment</BlockTitle>
         <P>
-          We want you to feel confident purchasing Study Mode. PMP prep is a real investment
+          We want you to feel confident subscribing to Premium. PMP prep is a real investment
           of time and money, and we stand behind the quality of our platform. If it&rsquo;s
           not right for you, we make it easy to get your money back.
         </P>
@@ -131,7 +131,7 @@ export default function RefundPage() {
       <Block>
         <BlockTitle>Digital Product Policy</BlockTitle>
         <P>
-          Study Mode ($29) is a digital product that provides immediate access to premium
+          Premium ($29.99/3 months) is a digital subscription that provides immediate access to premium
           features upon payment — including Sets B &amp; C, topic-level analytics, and the
           adaptive difficulty engine. Because access is granted instantly, we apply the
           following refund conditions.

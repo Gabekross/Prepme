@@ -567,7 +567,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
         <SuccessBanner>
           <SuccessTitle>Payment successful!</SuccessTitle>
           <SuccessText>
-            Your Study Mode is now active. All exam simulations and Study Mode features are unlocked.
+            Your Premium subscription is now active. All exam simulations and Premium features are unlocked.
           </SuccessText>
         </SuccessBanner>
       )}
@@ -582,7 +582,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
         <BankIcon><BankImg src="/images/ui/bank/bank-header.svg" alt="Question bank" /></BankIcon>
         <H1>{bank.name}</H1>
         <Desc>
-          {bank.description ?? "Choose a study mode to begin. Practice builds knowledge with instant feedback; Exam Simulation tests your readiness under real exam conditions."}
+          {bank.description ?? "Choose a mode to begin. Practice builds knowledge with instant feedback; Exam Simulation tests your readiness under real exam conditions."}
         </Desc>
       </Header>
 
@@ -670,7 +670,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
           </LockedCard>
         )}
 
-        {/* Set B — Study Mode only */}
+        {/* Set B — Premium only */}
         {isPro ? (
           <ModeCard href={`/bank/${bank.slug}/exam/set-b/instructions`} $variant="exam">
             <ModeHeader>
@@ -716,7 +716,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
           </LockedCard>
         )}
 
-        {/* Set C — Study Mode only */}
+        {/* Set C — Premium only */}
         {isPro ? (
           <ModeCard href={`/bank/${bank.slug}/exam/set-c/instructions`} $variant="exam">
             <ModeHeader>
@@ -767,9 +767,9 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
       {showUpgrade && (
         <UpgradeOverlay onClick={() => setShowUpgrade(false)}>
           <UpgradeCard onClick={(e) => e.stopPropagation()}>
-            <UpgradeTitle>Upgrade to Study Mode</UpgradeTitle>
+            <UpgradeTitle>Upgrade to Premium</UpgradeTitle>
             <UpgradeText>
-              Most PMP candidates fail because they don't know where they're losing marks. Study Mode shows you exactly that — and gives you 2 more full simulations to fix it.
+              Most PMP candidates fail because they don't know where they're losing marks. Premium shows you exactly that — and gives you 2 more full simulations to fix it.
             </UpgradeText>
             <UpgradeFeature>
               <UpgradeFeatureItem>
@@ -793,10 +793,10 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
                 Extended practice sessions (50 & 90 questions)
               </UpgradeFeatureItem>
             </UpgradeFeature>
-            <UpgradePrice>$29</UpgradePrice>
-            <UpgradePriceNote>One-time payment · Lifetime access · Less than a practice exam book</UpgradePriceNote>
+            <UpgradePrice>$29.99</UpgradePrice>
+            <UpgradePriceNote>Every 3 months · Cancel anytime · Less than a practice exam book</UpgradePriceNote>
             <UpgradeBtn onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Unlock Study Mode"}
+              {checkoutLoading ? "Redirecting…" : "Unlock Premium"}
             </UpgradeBtn>
             <UpgradeConsentNote>
               By purchasing you agree to our{" "}

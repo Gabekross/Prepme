@@ -377,7 +377,7 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
                   <LockedPresetBtn
                     key={n}
                     onClick={() => setShowUpgrade(true)}
-                    title="Study Mode feature"
+                    title="Premium feature"
                   >
                     <LockNum>{n}</LockNum>
                     <LockIcon>🔒</LockIcon>
@@ -411,9 +411,9 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
         {showUpgrade && (
           <UpgradeOverlay onClick={() => setShowUpgrade(false)}>
             <UpgradeCard onClick={(e) => e.stopPropagation()}>
-              <UpgradeTitle>Upgrade to Study Mode</UpgradeTitle>
+              <UpgradeTitle>Upgrade to Premium</UpgradeTitle>
               <UpgradeText>
-                Most PMP candidates fail because they don't know where they're losing marks. Study Mode shows you exactly that.
+                Most PMP candidates fail because they don't know where they're losing marks. Premium shows you exactly that.
               </UpgradeText>
               <UpgradeFeature>
                 <UpgradeFeatureItem>
@@ -437,10 +437,10 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
                   Real PMP break structure + Adaptive Training mode
                 </UpgradeFeatureItem>
               </UpgradeFeature>
-              <UpgradePrice>$29</UpgradePrice>
-              <UpgradePriceNote>One-time payment · Lifetime access · Less than a practice exam book</UpgradePriceNote>
+              <UpgradePrice>$29.99</UpgradePrice>
+              <UpgradePriceNote>Every 3 months · Cancel anytime · Less than a practice exam book</UpgradePriceNote>
               <UpgradeBtn onClick={startCheckout} disabled={checkoutLoading}>
-                {checkoutLoading ? "Redirecting…" : "Unlock Study Mode"}
+                {checkoutLoading ? "Redirecting…" : "Unlock Premium"}
               </UpgradeBtn>
               <UpgradeConsentNote>
                 By purchasing you agree to our{" "}

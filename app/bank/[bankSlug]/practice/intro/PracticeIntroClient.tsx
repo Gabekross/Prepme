@@ -984,14 +984,14 @@ export default function PracticeIntroClient({ bankSlug }: { bankSlug: string }) 
       {showUpgrade && (
         <UpgradeOverlay onClick={() => setShowUpgrade(false)}>
           <UpgradeCard onClick={(e) => e.stopPropagation()}>
-            <UpgradeTitle>Upgrade to Study Mode</UpgradeTitle>
+            <UpgradeTitle>Upgrade to Premium</UpgradeTitle>
             <UpgradeText>
-              Most PMP candidates fail because they don't know where they're losing marks. Study Mode shows you exactly that.
+              Most PMP candidates fail because they don't know where they're losing marks. Premium shows you exactly that.
             </UpgradeText>
-            <UpgradePrice>$29</UpgradePrice>
-            <UpgradePriceNote>One-time payment · Lifetime access · Less than a practice exam book</UpgradePriceNote>
+            <UpgradePrice>$29.99</UpgradePrice>
+            <UpgradePriceNote>Every 3 months · Cancel anytime · Less than a practice exam book</UpgradePriceNote>
             <UpgradeBtn onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Unlock Study Mode"}
+              {checkoutLoading ? "Redirecting…" : "Unlock Premium"}
             </UpgradeBtn>
             <UpgradeConsentNote>
               By purchasing you agree to our{" "}

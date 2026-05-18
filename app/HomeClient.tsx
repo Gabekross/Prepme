@@ -989,10 +989,10 @@ export default function HomeClient() {
 
           <PricingCard $featured>
             <PricingBadge>Most Popular</PricingBadge>
-            <PricingTier>Study Mode</PricingTier>
+            <PricingTier>Premium</PricingTier>
             <PricingTagline>Everything you need to pass first time</PricingTagline>
             <PricingPrice>
-              $29 <PricingPeriod>one-time</PricingPeriod>
+              $29.99 <PricingPeriod>/ 3 months</PricingPeriod>
             </PricingPrice>
             <PricingDesc>
               3 full 180-question simulations plus an adaptive engine that learns your weak spots and targets them every session.
@@ -1008,7 +1008,7 @@ export default function HomeClient() {
               ))}
             </PricingList>
             <PricingCTABtn $featured onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Unlock Study Mode — $29"}
+              {checkoutLoading ? "Redirecting…" : "Unlock Premium — $29.99/3 mo"}
             </PricingCTABtn>
             <ConsentNote>
               By purchasing you agree to our{" "}

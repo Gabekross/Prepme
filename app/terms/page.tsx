@@ -126,9 +126,9 @@ export default function TermsPage() {
             modified or withdrawn at any time with reasonable notice.
           </Li>
           <Li>
-            <strong>Study Mode ($29 one-time):</strong> A single, non-recurring payment grants
-            lifetime access to Study Mode features as described at the time of purchase.
-            &ldquo;Lifetime&rdquo; means for as long as the Service remains operational.
+            <strong>Premium ($29.99 every 3 months):</strong> A recurring subscription billed
+            every three months grants access to Premium features as described at the time of
+            purchase, for as long as the subscription remains active.
           </Li>
         </Ul>
         <P>

@@ -9,7 +9,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 /**
  * POST /api/checkout
  *
- * Creates a Stripe Checkout Session for the Pro upgrade ($29 one-time).
+ * Creates a Stripe Checkout Session for the Premium subscription ($29.99 / 3 months).
  * Requires the user to be signed in (passes userId in metadata for webhook).
  */
 export async function POST(req: NextRequest) {
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     const origin = req.headers.get("origin") || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
     const session = await stripe.checkout.sessions.create({
-      mode: "payment",
+      mode: "subscription",
       payment_method_types: ["card"],
       line_items: [
         {

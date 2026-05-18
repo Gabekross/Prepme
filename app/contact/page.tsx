@@ -152,7 +152,7 @@ export default function ContactPage() {
           <CardLabel>Support</CardLabel>
           <CardTitle>Account &amp; Billing</CardTitle>
           <CardBody>
-            Questions about your account, Study Mode access, or a payment issue?
+            Questions about your account, Premium access, or a payment issue?
             We&rsquo;ll get back to you fast.
           </CardBody>
           <CardMeta>Response time: 1–2 business days</CardMeta>
