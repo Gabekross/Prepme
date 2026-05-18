@@ -118,6 +118,25 @@ export default function RefundPage() {
       </HighlightCard>
 
       <Block>
+        <BlockTitle>Subscription Policy</BlockTitle>
+        <P>
+          Because PMP Mastery Lab provides immediate access to digital study materials,
+          exam simulations, analytics, and premium features, subscription payments are
+          generally non-refundable.
+        </P>
+        <P>
+          You may cancel your subscription at any time, and access will remain active
+          until the end of your current billing period.
+        </P>
+        <P>
+          If you experience technical issues or believe you were charged incorrectly,
+          please contact support and we will review your case individually.
+        </P>
+      </Block>
+
+      <Divider />
+
+      <Block>
         <BlockTitle>Our Commitment</BlockTitle>
         <P>
           We want you to feel confident subscribing to Premium. PMP prep is a real investment
