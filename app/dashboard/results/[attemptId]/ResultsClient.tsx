@@ -50,6 +50,22 @@ const growWidth = keyframes`
   from { width: 0%; }
 `;
 
+const popIn = keyframes`
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+`;
+
+const confettiFall = keyframes`
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(120px) rotate(720deg); opacity: 0; }
+`;
+
+const pulseGlow = keyframes`
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.3); }
+  50%      { box-shadow: 0 0 0 12px rgba(59,130,246,0); }
+`;
+
 /* ── styled components ──────────────────────────────────────────────────── */
 
 const Wrap = styled.div`
@@ -76,21 +92,6 @@ const BreadcrumbLink = styled(Link)`
 `;
 
 const BreadcrumbSep = styled.span`opacity: 0.4;`;
-
-const HeroCard = styled.div<{ $pass: boolean }>`
-  background: ${(p) => p.theme.cardBg};
-  border: 1px solid ${(p) => p.$pass ? p.theme.successBorder : p.theme.errorBorder};
-  border-radius: 24px;
-  padding: 32px 24px;
-  text-align: center;
-  box-shadow: ${(p) => p.theme.shadow};
-  margin-bottom: 20px;
-  animation: ${fadeUp} 400ms 60ms ease both;
-
-  @media (max-width: 480px) {
-    padding: 24px 16px;
-  }
-`;
 
 const HeroLabel = styled.div<{ $pass: boolean }>`
   display: inline-flex;
@@ -132,6 +133,84 @@ const HeroMeta = styled.div`
   margin-top: 12px;
   opacity: 0.7;
 `;
+
+const HeroResultIcon = styled.div<{ $pass: boolean }>`
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 16px;
+  font-size: 28px;
+  background: ${(p) => p.$pass ? p.theme.successSoft : p.theme.errorSoft};
+  color: ${(p) => p.$pass ? p.theme.success : p.theme.error};
+  animation: ${popIn} 500ms 200ms ease both;
+  ${(p) => !p.$pass && `animation: ${popIn} 500ms 200ms ease both, ${pulseGlow} 2s 800ms ease infinite;`}
+`;
+
+const ConfettiWrap = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+`;
+
+const ConfettiPiece = styled.div<{ $left: number; $delay: number; $color: string }>`
+  position: absolute;
+  top: -10px;
+  left: ${(p) => p.$left}%;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: ${(p) => p.$color};
+  animation: ${confettiFall} 1.5s ${(p) => p.$delay}ms ease forwards;
+`;
+
+const HeroCardInner = styled.div<{ $pass: boolean }>`
+  position: relative;
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.$pass ? p.theme.successBorder : p.theme.errorBorder};
+  border-radius: 24px;
+  padding: 32px 24px;
+  text-align: center;
+  box-shadow: ${(p) => p.theme.shadow};
+  margin-bottom: 20px;
+  animation: ${fadeUp} 400ms 60ms ease both;
+  overflow: hidden;
+
+  @media (max-width: 480px) {
+    padding: 24px 16px;
+  }
+`;
+
+const ScoreDelta = styled.div<{ $positive: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  margin-top: 8px;
+  background: ${(p) => p.$positive ? p.theme.successSoft : p.theme.errorSoft};
+  color: ${(p) => p.$positive ? p.theme.success : p.theme.error};
+  animation: ${fadeUp} 500ms 400ms ease both;
+`;
+
+const EncouragementText = styled.div`
+  font-size: 13px;
+  font-weight: 600;
+  color: ${(p) => p.theme.accent};
+  margin-top: 12px;
+  line-height: 1.5;
+  animation: ${fadeUp} 600ms 600ms ease both;
+`;
+
+const CONFETTI_COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
 const StatGrid = styled.div`
   display: grid;
@@ -431,6 +510,48 @@ const HalfNote = styled.div`
   font-size: 10.5px;
   color: ${(p) => p.theme.muted};
   margin-top: 2px;
+`;
+
+/* ── what to do next ────────────────────────────────────────────────────── */
+
+const NextStepCard = styled.div`
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.accentSoft};
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: ${(p) => p.theme.shadow};
+  animation: ${fadeUp} 400ms 200ms ease both;
+`;
+
+const NextStepTitle = styled.h2`
+  font-size: 15px;
+  font-weight: 800;
+  color: ${(p) => p.theme.text};
+  margin: 0 0 8px;
+  letter-spacing: -0.2px;
+`;
+
+const NextStepDesc = styled.p`
+  font-size: 13px;
+  color: ${(p) => p.theme.muted};
+  line-height: 1.6;
+  margin: 0 0 14px;
+`;
+
+const NextStepBtn = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 800;
+  text-decoration: none;
+  background: ${(p) => p.theme.accent};
+  color: white;
+  transition: opacity 150ms ease;
+  &:hover { opacity: 0.85; }
 `;
 
 /* ── footer actions ─────────────────────────────────────────────────────── */
@@ -748,13 +869,14 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
   const [error, setError] = useState("");
   const [showDomains, setShowDomains] = useState(true);
   const [showTopics, setShowTopics] = useState(false);
-  const [showTime, setShowTime] = useState(false);
+  const [showTime, setShowTime] = useState(true);
   const [showQuestions, setShowQuestions] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [copied, setCopied] = useState(false);
   const [questionMeta, setQuestionMeta] = useState<Map<string, { domain: Domain; tags: string[] }>>(
     new Map()
   );
+  const [prevScore, setPrevScore] = useState<number | null>(null);
 
   useEffect(() => {
     if (authLoading || !user) return;
@@ -784,6 +906,27 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
       }
     })();
   }, [user, authLoading, sb, attemptId]);
+
+  useEffect(() => {
+    if (!attempt || !user) return;
+    (async () => {
+      try {
+        const { data } = await sb
+          .from("attempts")
+          .select("score_percent")
+          .eq("user_id", user.id)
+          .eq("bank_slug", attempt.bank_slug)
+          .eq("mode", attempt.mode)
+          .eq("status", "submitted")
+          .neq("id", attempt.id)
+          .not("score_percent", "is", null)
+          .order("submitted_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data?.score_percent != null) setPrevScore(data.score_percent);
+      } catch { /* non-critical */ }
+    })();
+  }, [attempt, user, sb]);
 
   useEffect(() => {
     if (!attempt?.bank_slug) return;
@@ -1018,21 +1161,52 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
         <>
 
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <HeroCard $pass={passed}>
+      <HeroCardInner $pass={passed}>
+        {passed && (
+          <ConfettiWrap>
+            {Array.from({ length: 24 }).map((_, i) => (
+              <ConfettiPiece
+                key={i}
+                $left={4 + Math.round((i / 24) * 92)}
+                $delay={i * 60}
+                $color={CONFETTI_COLORS[i % CONFETTI_COLORS.length]}
+              />
+            ))}
+          </ConfettiWrap>
+        )}
+        <HeroResultIcon $pass={passed}>
+          {passed ? "🎉" : "💪"}
+        </HeroResultIcon>
         <HeroLabel $pass={passed}>
           {passed ? "Passed" : "Not Passed"}
         </HeroLabel>
         <HeroScore>{scorePercent}%</HeroScore>
+        {prevScore !== null && (() => {
+          const delta = scorePercent - prevScore;
+          if (delta === 0) return null;
+          return (
+            <ScoreDelta $positive={delta > 0}>
+              {delta > 0 ? `+${delta}%` : `${delta}%`} from last attempt
+            </ScoreDelta>
+          );
+        })()}
         <HeroSubtext>
           {modeLabel}{setLabel(attempt.set_id)}
           {passed
             ? ` — Congratulations! You passed with ${scorePercent}%.`
-            : ` — You need ${passThreshold}% to pass. Keep studying!`}
+            : ` — You need ${passThreshold}% to pass.`}
         </HeroSubtext>
+        {!passed && (
+          <EncouragementText>
+            {scorePercent >= 60
+              ? `You're close! Focus on your weakest domain and you'll get there.`
+              : `Every PMP candidate starts somewhere. Review your results below and target the gaps.`}
+          </EncouragementText>
+        )}
         {attempt.submitted_at && (
           <HeroMeta>{formatDate(attempt.submitted_at)}</HeroMeta>
         )}
-      </HeroCard>
+      </HeroCardInner>
 
       {/* ── Completion warning for partial attempts ────────────── */}
       {isPartialAttempt && (
@@ -1043,34 +1217,6 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
             : ""}
         </CompletionBanner>
       )}
-
-      {/* ── Pro upsell for free users ────────────────────────── */}
-      {!isPro && attempt.mode === "exam" && (() => {
-        const gap = passThreshold - scorePercent;
-        let title: string;
-        let sub: string;
-        if (!passed) {
-          title = `You're ${gap} point${gap === 1 ? "" : "s"} away from passing`;
-          sub = `Topic-level breakdown shows exactly which topics are costing you marks. Unlock it, fix the gaps, and run Set B to confirm you're ready.`;
-        } else if (scorePercent < 75) {
-          title = "You passed Set A — but are you ready for the real thing?";
-          sub = `Sets B & C use different question patterns. See your topic-level weak spots now so they don't surprise you on exam day.`;
-        } else {
-          title = "Strong result. Make sure it wasn't luck.";
-          sub = `Verify your readiness across 2 more full simulations and get a topic-level mastery report before you book your exam date.`;
-        }
-        return (
-          <UpsellBanner>
-            <UpsellText>
-              <UpsellTitle>{title}</UpsellTitle>
-              <UpsellSub>{sub}</UpsellSub>
-            </UpsellText>
-            <UpsellBtn onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Unlock Premium — $29.99/3 mo"}
-            </UpsellBtn>
-          </UpsellBanner>
-        );
-      })()}
 
       {/* ── No scoring notice ──────────────────────────────── */}
       {!hasScoring && (
@@ -1137,6 +1283,68 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
           )}
         </SectionCard>
       )}
+
+      {/* ── Pro upsell for free users ────────────────────────── */}
+      {!isPro && attempt.mode === "exam" && (() => {
+        const gap = passThreshold - scorePercent;
+        let title: string;
+        let sub: string;
+        if (!passed) {
+          title = `You're ${gap} point${gap === 1 ? "" : "s"} away from passing`;
+          sub = `Topic-level breakdown shows exactly which topics are costing you marks. Unlock it, fix the gaps, and run Set B to confirm you're ready.`;
+        } else if (scorePercent < 75) {
+          title = "You passed Set A — but are you ready for the real thing?";
+          sub = `Sets B & C use different question patterns. See your topic-level weak spots now so they don't surprise you on exam day.`;
+        } else {
+          title = "Strong result. Make sure it wasn't luck.";
+          sub = `Verify your readiness across 2 more full simulations and get a topic-level mastery report before you book your exam date.`;
+        }
+        return (
+          <UpsellBanner>
+            <UpsellText>
+              <UpsellTitle>{title}</UpsellTitle>
+              <UpsellSub>{sub}</UpsellSub>
+            </UpsellText>
+            <UpsellBtn onClick={startCheckout} disabled={checkoutLoading}>
+              {checkoutLoading ? "Redirecting…" : "Unlock Premium — $29.99/3 mo"}
+            </UpsellBtn>
+          </UpsellBanner>
+        );
+      })()}
+
+      {/* ── What To Do Next ──────────────────────────────────── */}
+      {result && (() => {
+        const domainScores = (Object.entries(result.byDomain) as [string, { correct: number; total: number }][])
+          .filter(([, d]) => d.total > 0)
+          .map(([domain, d]) => ({
+            domain,
+            label: DOMAIN_LABELS[domain] ?? domain,
+            pct: Math.round((d.correct / d.total) * 100),
+          }))
+          .sort((a, b) => a.pct - b.pct);
+        const weakest = domainScores[0];
+        if (!weakest) return null;
+
+        const action = passed
+          ? {
+              title: "Solidify Your Strengths",
+              desc: `Great result! Your weakest area was ${weakest.label} at ${weakest.pct}%. A targeted practice session will help lock in your knowledge before exam day.`,
+            }
+          : {
+              title: "Your Next Step",
+              desc: `Focus on ${weakest.label} — your weakest domain at ${weakest.pct}%. A targeted practice session here will have the biggest impact on your score.`,
+            };
+
+        return (
+          <NextStepCard>
+            <NextStepTitle>{action.title}</NextStepTitle>
+            <NextStepDesc>{action.desc}</NextStepDesc>
+            <NextStepBtn href={`/bank/${attempt.bank_slug}/practice/intro`}>
+              Practice {weakest.label} Questions
+            </NextStepBtn>
+          </NextStepCard>
+        );
+      })()}
 
       {/* ── Topic Breakdown ─────────────────────────────────── */}
       {result && (

@@ -767,6 +767,55 @@ const ReadinessDesc = styled.div`
 
 /* ── NEW: next recommended session ─────────────────────────────────────── */
 
+const ResumeBanner = styled.div`
+  background: ${(p) => p.theme.warningSoft};
+  border: 1px solid ${(p) => p.theme.warningBorder};
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  animation: ${fadeUp} 400ms ease both;
+  flex-wrap: wrap;
+`;
+
+const ResumeText = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const ResumeTitle = styled.div`
+  font-size: 14px;
+  font-weight: 800;
+  color: ${(p) => p.theme.text};
+  margin-bottom: 3px;
+`;
+
+const ResumeSub = styled.div`
+  font-size: 13px;
+  color: ${(p) => p.theme.muted};
+  line-height: 1.45;
+`;
+
+const ResumeBtn = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  background: ${(p) => p.theme.warning};
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 150ms ease;
+  flex-shrink: 0;
+  &:hover { opacity: 0.88; }
+`;
+
 const NextSessionCard = styled.div`
   background: ${(p) => p.theme.accentSoft};
   border: 1px solid ${(p) => p.theme.accent}28;
@@ -1187,6 +1236,7 @@ export default function DashboardClient() {
 
   /* ── derived data ────────────────────────────────────────────────────── */
 
+  const inProgress = useMemo(() => attempts.filter((a) => a.status === "in_progress"), [attempts]);
   const submitted = useMemo(() => attempts.filter((a) => a.status === "submitted"), [attempts]);
   const examAttempts = useMemo(() => submitted.filter((a) => a.mode === "exam"), [submitted]);
   const practiceAttempts = useMemo(() => submitted.filter((a) => a.mode === "practice"), [submitted]);
@@ -1201,6 +1251,19 @@ export default function DashboardClient() {
         : null,
     [examAttempts]
   );
+
+  const bestExamScore = useMemo(() => {
+    if (examAttempts.length === 0) return null;
+    return Math.max(...examAttempts.map((a) => a.score_percent ?? 0));
+  }, [examAttempts]);
+
+  const improvement = useMemo(() => {
+    const scored = [...submitted]
+      .filter((a) => a.score_percent !== null)
+      .sort((a, b) => new Date(a.submitted_at ?? a.created_at).getTime() - new Date(b.submitted_at ?? b.created_at).getTime());
+    if (scored.length < 2) return null;
+    return (scored[scored.length - 1].score_percent ?? 0) - (scored[0].score_percent ?? 0);
+  }, [submitted]);
 
   const practiceResults = useMemo(
     () => allResults.filter((r) => r.mode === "practice").map((r) => r.result as AttemptResult),
@@ -1573,19 +1636,53 @@ export default function DashboardClient() {
         <Subtitle>Track your progress and review past exam attempts.</Subtitle>
       </Header>
 
+      {/* ── Resume In-Progress ──────────────────────────────────── */}
+      {inProgress.length > 0 && (() => {
+        const ip = inProgress[0];
+        const modeText = ip.mode === "exam" ? "Exam Simulation" : "Practice Session";
+        const timeAgo = new Date(ip.created_at);
+        const diffMin = Math.round((Date.now() - timeAgo.getTime()) / 60000);
+        const agoText = diffMin < 60
+          ? `Started ${diffMin}m ago`
+          : diffMin < 1440
+            ? `Started ${Math.round(diffMin / 60)}h ago`
+            : `Started ${Math.round(diffMin / 1440)}d ago`;
+        return (
+          <ResumeBanner>
+            <ResumeText>
+              <ResumeTitle>You have an unfinished {modeText}</ResumeTitle>
+              <ResumeSub>
+                {agoText}{ip.set_id ? ` · ${ip.set_id.replace("_", " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}` : ""}
+              </ResumeSub>
+            </ResumeText>
+            <ResumeBtn href={
+              ip.mode === "exam" && ip.set_id
+                ? `/bank/${ip.bank_slug}/exam/${ip.set_id}/instructions`
+                : `/bank/${ip.bank_slug}/practice/intro`
+            }>
+              Resume
+            </ResumeBtn>
+          </ResumeBanner>
+        );
+      })()}
+
       {/* ── Summary Stats ─────────────────────────────────────── */}
       <StatsGrid>
         <StatCard>
-          <StatValue>{examAttempts.length}</StatValue>
-          <StatLabel>Exams Taken</StatLabel>
-        </StatCard>
-        <StatCard>
-          <StatValue>{practiceAttempts.length}</StatValue>
-          <StatLabel>Practice Sessions</StatLabel>
+          <StatValue>{bestExamScore !== null ? `${bestExamScore}%` : "—"}</StatValue>
+          <StatLabel>Best Exam Score</StatLabel>
         </StatCard>
         <StatCard>
           <StatValue>{avgScore !== null ? `${avgScore}%` : "—"}</StatValue>
           <StatLabel>Avg Exam Score</StatLabel>
+        </StatCard>
+        <StatCard>
+          <StatValue>
+            {improvement !== null
+              ? `${improvement > 0 ? "+" : ""}${improvement}%`
+              : "—"}
+          </StatValue>
+          <StatLabel>Improvement</StatLabel>
         </StatCard>
         <StatCard>
           <StatValue>{passedExams.length}</StatValue>
