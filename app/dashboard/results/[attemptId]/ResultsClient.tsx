@@ -411,6 +411,45 @@ const QDomain = styled.span`
   text-align: right;
 `;
 
+const QDomainGroup = styled.div`
+  margin-top: 10px;
+  &:first-child { margin-top: 0; }
+`;
+
+const QDomainGroupHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: ${(p) => p.theme.muted};
+  border-bottom: 1px solid ${(p) => p.theme.divider};
+  margin-bottom: 6px;
+`;
+
+const QFilterRow = styled.div`
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+  margin-bottom: 6px;
+`;
+
+const QFilterBtn = styled.button<{ $active: boolean }>`
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid ${(p) => p.$active ? p.theme.accent : p.theme.cardBorder};
+  background: ${(p) => p.$active ? p.theme.accentSoft : "transparent"};
+  color: ${(p) => p.$active ? p.theme.accent : p.theme.muted};
+  cursor: pointer;
+  transition: all 150ms ease;
+  &:hover { opacity: 0.8; }
+`;
+
 /* ── time analysis ──────────────────────────────────────────────────────── */
 
 const TimeGrid = styled.div`
@@ -871,6 +910,7 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
   const [showTopics, setShowTopics] = useState(false);
   const [showTime, setShowTime] = useState(true);
   const [showQuestions, setShowQuestions] = useState(false);
+  const [qFilter, setQFilter] = useState<"all" | "incorrect" | "unanswered">("incorrect");
   const [showShare, setShowShare] = useState(false);
   const [copied, setCopied] = useState(false);
   const [questionMeta, setQuestionMeta] = useState<Map<string, { domain: Domain; tags: string[] }>>(
@@ -1497,28 +1537,77 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
             <SectionArrow $open={showQuestions}>▼</SectionArrow>
           </SectionToggleBtn>
           {showQuestions && (
-            <QList>
-              {result.scoreResults
-                .filter((sr) => sr.maxScore > 0)
-                .map((sr, idx) => (
-                <QRow
-                  key={sr.questionId}
-                  $correct={sr.isCorrect}
-                  href={`/dashboard/results/${attemptId}/review?q=${idx}`}
-                >
-                  <QIcon $correct={sr.isCorrect}>
-                    {sr.isCorrect ? "✓" : "✗"}
-                  </QIcon>
-                  <QNumber>Q{idx + 1}</QNumber>
-                  <QDomain>
-                    {sr.score}/{sr.maxScore} pts
-                    {timeSpent[sr.questionId]
-                      ? ` · ${formatMs(timeSpent[sr.questionId])}`
-                      : ""}
-                  </QDomain>
-                </QRow>
-              ))}
-            </QList>
+            <>
+              <QFilterRow>
+                <QFilterBtn $active={qFilter === "incorrect"} onClick={() => setQFilter("incorrect")}>
+                  Incorrect ({incorrectCount})
+                </QFilterBtn>
+                <QFilterBtn $active={qFilter === "all"} onClick={() => setQFilter("all")}>
+                  All ({answeredCount})
+                </QFilterBtn>
+                {unansweredCount > 0 && (
+                  <QFilterBtn $active={qFilter === "unanswered"} onClick={() => setQFilter("unanswered")}>
+                    Unanswered ({unansweredCount})
+                  </QFilterBtn>
+                )}
+              </QFilterRow>
+              <QList>
+                {(() => {
+                  const indexed = result.scoreResults.map((sr, idx) => ({ sr, idx }));
+                  const filtered = indexed.filter(({ sr }) => {
+                    if (qFilter === "incorrect") return sr.maxScore > 0 && !sr.isCorrect;
+                    if (qFilter === "unanswered") return sr.maxScore === 0;
+                    return sr.maxScore > 0;
+                  });
+
+                  const domOrder: Record<string, number> = { people: 0, process: 1, business_environment: 2 };
+                  const groups: Record<string, { label: string; order: number; items: typeof filtered }> = {};
+
+                  for (const item of filtered) {
+                    const meta = questionMeta.get(item.sr.questionId);
+                    const domain = meta?.domain ?? "unknown";
+                    const label = DOMAIN_LABELS[domain] ?? "Other";
+                    if (!groups[domain]) {
+                      groups[domain] = { label, order: domOrder[domain] ?? 9, items: [] };
+                    }
+                    groups[domain].items.push(item);
+                  }
+
+                  const sorted = Object.values(groups).sort((a, b) => a.order - b.order);
+
+                  if (sorted.length === 0) {
+                    return <QDomain style={{ padding: "12px 0", textAlign: "center" }}>No questions match this filter.</QDomain>;
+                  }
+
+                  return sorted.map((g) => (
+                    <QDomainGroup key={g.label}>
+                      <QDomainGroupHeader>
+                        <span>{g.label}</span>
+                        <span>{g.items.filter(i => i.sr.isCorrect).length}/{g.items.length}</span>
+                      </QDomainGroupHeader>
+                      {g.items.map(({ sr, idx }) => (
+                        <QRow
+                          key={sr.questionId}
+                          $correct={sr.isCorrect}
+                          href={`/dashboard/results/${attemptId}/review?q=${idx}`}
+                        >
+                          <QIcon $correct={sr.isCorrect}>
+                            {sr.isCorrect ? "✓" : "✗"}
+                          </QIcon>
+                          <QNumber>Q{idx + 1}</QNumber>
+                          <QDomain>
+                            {sr.score}/{sr.maxScore} pts
+                            {timeSpent[sr.questionId]
+                              ? ` · ${formatMs(timeSpent[sr.questionId])}`
+                              : ""}
+                          </QDomain>
+                        </QRow>
+                      ))}
+                    </QDomainGroup>
+                  ));
+                })()}
+              </QList>
+            </>
           )}
         </SectionCard>
       )}

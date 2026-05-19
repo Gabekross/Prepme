@@ -157,6 +157,21 @@ const AttemptList = styled.div`
   animation: ${fadeUp} 400ms 140ms ease both;
 `;
 
+const ViewAllBtn = styled.button`
+  display: block;
+  margin: 10px auto 0;
+  padding: 8px 20px;
+  border-radius: 10px;
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  background: transparent;
+  color: ${(p) => p.theme.muted};
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 150ms ease;
+  &:hover { color: ${(p) => p.theme.text}; border-color: ${(p) => p.theme.text}; }
+`;
+
 const AttemptCard = styled.div`
   background: ${(p) => p.theme.cardBg};
   border: 1px solid ${(p) => p.theme.cardBorder};
@@ -317,9 +332,9 @@ const AnalyticsSection = styled.div`
   animation: ${fadeUp} 400ms 100ms ease both;
 `;
 
-const AnalyticsGrid = styled.div`
+const AnalyticsGrid = styled.div<{ $stack?: boolean }>`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: ${(p) => (p.$stack ? "1fr" : "1fr 1fr")};
   gap: 14px;
   margin-bottom: 14px;
 
@@ -816,6 +831,74 @@ const ResumeBtn = styled(Link)`
   &:hover { opacity: 0.88; }
 `;
 
+const CountdownCard = styled.div`
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.accent}33;
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  animation: ${fadeUp} 400ms ease both;
+  flex-wrap: wrap;
+`;
+
+const CountdownLeft = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const CountdownLabel = styled.div`
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: ${(p) => p.theme.muted};
+  margin-bottom: 4px;
+`;
+
+const CountdownDays = styled.div`
+  font-size: 22px;
+  font-weight: 900;
+  color: ${(p) => p.theme.accent};
+  letter-spacing: -0.5px;
+`;
+
+const CountdownDate = styled.div`
+  font-size: 12px;
+  color: ${(p) => p.theme.muted};
+  margin-top: 2px;
+`;
+
+const CountdownInput = styled.input`
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  background: ${(p) => p.theme.cardBg};
+  color: ${(p) => p.theme.text};
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  flex-shrink: 0;
+  &:focus { border-color: ${(p) => p.theme.accent}; }
+`;
+
+const CountdownClear = styled.button`
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  background: transparent;
+  color: ${(p) => p.theme.muted};
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 150ms ease;
+  &:hover { color: ${(p) => p.theme.text}; border-color: ${(p) => p.theme.text}; }
+`;
+
 const NextSessionCard = styled.div`
   background: ${(p) => p.theme.accentSoft};
   border: 1px solid ${(p) => p.theme.accent}28;
@@ -1148,6 +1231,19 @@ export default function DashboardClient() {
   const { user, loading: authLoading, isPro } = useAuth();
   const { startCheckout, loading: checkoutLoading } = useUpgrade();
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showAllAttempts, setShowAllAttempts] = useState(false);
+  const [examDate, setExamDate] = useState<string>("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("pmp_exam_date");
+    if (saved) setExamDate(saved);
+  }, []);
+
+  const daysUntilExam = useMemo(() => {
+    if (!examDate) return null;
+    const diff = new Date(examDate).getTime() - Date.now();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  }, [examDate]);
   const router = useRouter();
   const theme = useTheme() as AppTheme;
   const sb = useMemo(() => supabaseBrowser(), []);
@@ -1666,6 +1762,38 @@ export default function DashboardClient() {
         );
       })()}
 
+      {/* ── Exam Date Countdown ──────────────────────────────── */}
+      <CountdownCard>
+        <CountdownLeft>
+          <CountdownLabel>PMP Exam Date</CountdownLabel>
+          {examDate && daysUntilExam !== null ? (
+            <>
+              <CountdownDays>
+                {daysUntilExam > 0 ? `${daysUntilExam} day${daysUntilExam === 1 ? "" : "s"} away` : daysUntilExam === 0 ? "Today!" : "Passed"}
+              </CountdownDays>
+              <CountdownDate>{new Date(examDate).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}</CountdownDate>
+            </>
+          ) : (
+            <CountdownDate>Set your exam date to see a countdown</CountdownDate>
+          )}
+        </CountdownLeft>
+        <CountdownInput
+          type="date"
+          value={examDate}
+          onChange={(e) => {
+            const v = e.target.value;
+            setExamDate(v);
+            if (v) localStorage.setItem("pmp_exam_date", v);
+            else localStorage.removeItem("pmp_exam_date");
+          }}
+        />
+        {examDate && (
+          <CountdownClear onClick={() => { setExamDate(""); localStorage.removeItem("pmp_exam_date"); }}>
+            Clear
+          </CountdownClear>
+        )}
+      </CountdownCard>
+
       {/* ── Summary Stats ─────────────────────────────────────── */}
       <StatsGrid>
         <StatCard>
@@ -1798,7 +1926,7 @@ export default function DashboardClient() {
                 </AnalyticsCard>
               )}
 
-              <AnalyticsGrid>
+              <AnalyticsGrid $stack={!isPro}>
                 {domainEntries.length > 0 && (
                   <AnalyticsCard>
                     <AnalyticsCardTitle>
@@ -1965,7 +2093,10 @@ export default function DashboardClient() {
         <>
           <SectionTitle>Recent Attempts</SectionTitle>
           <AttemptList>
-            {(isPro ? submitted : submitted.slice(0, 3)).map((a) => (
+            {(isPro
+              ? (showAllAttempts ? submitted : submitted.slice(0, 3))
+              : submitted.slice(0, 3)
+            ).map((a) => (
               <AttemptCard
                 key={a.id}
                 onClick={() => router.push(`/dashboard/results/${a.id}`)}
@@ -1992,6 +2123,11 @@ export default function DashboardClient() {
               </AttemptCard>
             ))}
           </AttemptList>
+          {isPro && submitted.length > 3 && (
+            <ViewAllBtn onClick={() => setShowAllAttempts((v) => !v)}>
+              {showAllAttempts ? "Show less" : `View all ${submitted.length} attempts`}
+            </ViewAllBtn>
+          )}
           {!isPro && submitted.length > 3 && (
             <HistoryGate>
               <HistoryGateText>
