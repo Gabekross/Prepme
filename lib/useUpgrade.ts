@@ -46,10 +46,19 @@ export function useUpgrade() {
         throw new Error(data.error || "Checkout failed");
       }
 
-      // Redirect to Stripe Checkout
-      window.location.href = data.url;
+      // Validate the URL points to Stripe before redirecting
+      const checkoutUrl = data.url;
+      try {
+        const parsed = new URL(checkoutUrl);
+        if (!parsed.hostname.endsWith(".stripe.com")) {
+          throw new Error("Invalid checkout URL");
+        }
+      } catch {
+        throw new Error("Invalid checkout URL");
+      }
+      window.location.href = checkoutUrl;
     } catch (err: any) {
-      console.error("Checkout error:", err);
+      console.error("Checkout error:", err?.message ?? "unknown");
       alert("Something went wrong. Please try again.");
     } finally {
       setLoading(false);

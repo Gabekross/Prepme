@@ -49,4 +49,62 @@ describe("Security headers middleware", () => {
     const res = middleware(makeRequest("/api/checkout"));
     expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
   });
+
+  describe("Content-Security-Policy", () => {
+    it("sets CSP header", () => {
+      const res = middleware(makeRequest());
+      const csp = res.headers.get("Content-Security-Policy")!;
+      expect(csp).toBeTruthy();
+    });
+
+    it("restricts default-src to self", () => {
+      const res = middleware(makeRequest());
+      const csp = res.headers.get("Content-Security-Policy")!;
+      expect(csp).toContain("default-src 'self'");
+    });
+
+    it("allows Supabase in connect-src", () => {
+      const res = middleware(makeRequest());
+      const csp = res.headers.get("Content-Security-Policy")!;
+      expect(csp).toContain("connect-src 'self' https://*.supabase.co");
+    });
+
+    it("allows Google Fonts in style-src and font-src", () => {
+      const res = middleware(makeRequest());
+      const csp = res.headers.get("Content-Security-Policy")!;
+      expect(csp).toContain("https://fonts.googleapis.com");
+      expect(csp).toContain("https://fonts.gstatic.com");
+    });
+
+    it("blocks framing (frame-src none, frame-ancestors none)", () => {
+      const res = middleware(makeRequest());
+      const csp = res.headers.get("Content-Security-Policy")!;
+      expect(csp).toContain("frame-src 'none'");
+      expect(csp).toContain("frame-ancestors 'none'");
+    });
+
+    it("blocks object/embed (object-src none)", () => {
+      const res = middleware(makeRequest());
+      const csp = res.headers.get("Content-Security-Policy")!;
+      expect(csp).toContain("object-src 'none'");
+    });
+
+    it("restricts base-uri to self", () => {
+      const res = middleware(makeRequest());
+      const csp = res.headers.get("Content-Security-Policy")!;
+      expect(csp).toContain("base-uri 'self'");
+    });
+
+    it("restricts form-action to self", () => {
+      const res = middleware(makeRequest());
+      const csp = res.headers.get("Content-Security-Policy")!;
+      expect(csp).toContain("form-action 'self'");
+    });
+
+    it("upgrades insecure requests", () => {
+      const res = middleware(makeRequest());
+      const csp = res.headers.get("Content-Security-Policy")!;
+      expect(csp).toContain("upgrade-insecure-requests");
+    });
+  });
 });

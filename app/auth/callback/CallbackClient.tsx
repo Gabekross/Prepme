@@ -85,10 +85,7 @@ export default function CallbackClient() {
             return;
           }
 
-          console.log(
-            "[auth/callback] Session established for:",
-            data.session?.user?.email ?? "unknown"
-          );
+          console.log("[auth/callback] Session established");
           setStatus("success");
           window.location.replace(next);
         })
