@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { supabaseBrowser } from "@/lib/supabase/browser";
+import { safeRedirect } from "@/lib/security/safeRedirect";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -241,7 +242,7 @@ export default function LoginClient() {
   const sb = useMemo(() => supabaseBrowser(), []);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnTo = searchParams.get("returnTo");
+  const returnTo = safeRedirect(searchParams.get("returnTo"), "/bank/pmp");
 
   const [tab, setTab] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
@@ -272,7 +273,7 @@ export default function LoginClient() {
 
     await new Promise((r) => setTimeout(r, 300));
 
-    const destination = admin ? "/admin/questions" : (returnTo ?? "/bank/pmp");
+    const destination = admin ? "/admin/questions" : returnTo;
     window.location.href = destination;
   }
 

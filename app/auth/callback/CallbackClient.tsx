@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/browser";
+import { safeRedirect } from "@/lib/security/safeRedirect";
 import styled, { keyframes } from "styled-components";
 import Link from "next/link";
 
@@ -59,7 +60,7 @@ export default function CallbackClient() {
     exchangeAttempted.current = true;
 
     const code = searchParams.get("code");
-    const next = searchParams.get("next") ?? "/bank/pmp";
+    const next = safeRedirect(searchParams.get("next"), "/bank/pmp");
     const error = searchParams.get("error");
     const errorDescription = searchParams.get("error_description");
     const isPasswordReset = next === "/reset-password";

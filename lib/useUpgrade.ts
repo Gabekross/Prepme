@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { supabaseBrowser } from "@/lib/supabase/browser";
 
 /**
  * Hook that triggers Stripe Checkout for Pro upgrade.
@@ -21,9 +22,21 @@ export function useUpgrade() {
 
     setLoading(true);
     try {
+      const sb = supabaseBrowser();
+      const { data: sessionData } = await sb.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+
+      if (!accessToken) {
+        window.location.href = "/login";
+        return;
+      }
+
       const res = await fetch("/api/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({ userId: user.id }),
       });
 

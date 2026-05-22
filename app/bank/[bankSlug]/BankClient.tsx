@@ -500,11 +500,19 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
       const { data } = await sb.auth.getUser();
       if (!data.user || cancelled) return;
 
+      // Get access token for authenticated API call
+      const { data: sessionData } = await sb.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken || cancelled) return;
+
       // Call verify endpoint — checks Stripe for completed session and grants pro
       try {
         const res = await fetch("/api/verify-upgrade", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
           body: JSON.stringify({ userId: data.user.id }),
         });
         const result = await res.json();
