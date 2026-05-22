@@ -45,12 +45,13 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query.limit(50);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("[attempts] Query error:", error.message);
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 
     return NextResponse.json({ attempts: data });
   } catch (e: any) {
-    console.error("[attempts] Unexpected error:", e);
+    console.error("[attempts] Unexpected error:", e?.message ?? "unknown");
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

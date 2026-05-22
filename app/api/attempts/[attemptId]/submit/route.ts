@@ -163,7 +163,7 @@ export async function POST(
       scorePercent,
     });
   } catch (e: any) {
-    console.error("[submit] Unexpected error:", e);
+    console.error("[submit] Unexpected error:", e?.message ?? "unknown");
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

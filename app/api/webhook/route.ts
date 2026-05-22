@@ -105,10 +105,10 @@ async function grantPro(sb: any, userId: string) {
       .insert({ user_id: userId, role: "pro" });
 
     if (error) {
-      console.error("Failed to insert pro role:", error);
+      console.error("Failed to insert pro role:", error?.message ?? "unknown");
       return;
     }
-    console.log(`Pro role granted to user ${userId}`);
+    console.log(`Pro role granted to user ${userId.slice(0, 8)}…`);
   }
 }
 
@@ -121,10 +121,10 @@ async function revokePro(sb: any, userId: string) {
     .eq("role", "pro");
 
   if (error) {
-    console.error("Failed to revoke pro role:", error);
+    console.error("Failed to revoke pro role:", error?.message ?? "unknown");
     return;
   }
-  console.log(`Pro role revoked for user ${userId}`);
+  console.log(`Pro role revoked for user ${userId.slice(0, 8)}…`);
 }
 
 /**
@@ -161,7 +161,7 @@ async function resolveUserId(
   );
 
   if (!match) {
-    console.error("No Supabase user found for Stripe customer");
+    console.error("No Supabase user found for Stripe customer email hash:", customerId.slice(0, 8));
     return null;
   }
   return match.id;

@@ -8,7 +8,10 @@ function isoNow() {
 }
 
 function uid() {
-  return `att_${Math.random().toString(16).slice(2)}_${Date.now()}`;
+  const bytes = new Uint8Array(12);
+  crypto.getRandomValues(bytes);
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return `att_${hex}_${Date.now()}`;
 }
 
 function defaultResponseFor(q: Question): Response {

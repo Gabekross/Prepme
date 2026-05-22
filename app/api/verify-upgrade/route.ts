@@ -81,14 +81,14 @@ export async function POST(req: NextRequest) {
         .insert({ user_id: userId, role: "pro" });
 
       if (error) {
-        console.error("Failed to insert pro role:", error);
+        console.error("Failed to insert pro role:", error?.message ?? "unknown");
         return NextResponse.json({ error: "Database error" }, { status: 500 });
       }
     }
 
     return NextResponse.json({ isPro: true });
   } catch (err: any) {
-    console.error("Verify upgrade error:", err);
+    console.error("Verify upgrade error:", err?.message ?? "unknown");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
