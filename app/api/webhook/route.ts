@@ -127,6 +127,13 @@ async function revokePro(sb: any, userId: string) {
   console.log(`Pro role revoked for user ${userId}`);
 }
 
+/**
+ * Resolve a Stripe customer ID to a Supabase user ID.
+ *
+ * SECURITY: Uses paginated listUsers with a per_page limit of 1 instead of
+ * loading ALL users into memory. This prevents memory exhaustion as the user
+ * base grows and reduces the blast radius of any logging/error bugs.
+ */
 async function resolveUserId(
   stripeClient: Stripe,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -136,11 +143,25 @@ async function resolveUserId(
   const customer = await stripeClient.customers.retrieve(customerId);
   if (customer.deleted || !customer.email) return null;
 
-  const { data: users } = await sb.auth.admin.listUsers();
-  const match = users?.find((u: any) => u.email === customer.email);
+  // Look up by email using a targeted filter instead of fetching all users
+  const { data, error } = await sb.auth.admin.listUsers({
+    page: 1,
+    perPage: 1,
+    filter: customer.email,
+  });
+
+  if (error) {
+    console.error("Failed to look up user by email:", error.message);
+    return null;
+  }
+
+  // The filter may return partial matches — verify exact email match
+  const match = (data?.users ?? []).find(
+    (u: any) => u.email?.toLowerCase() === customer.email!.toLowerCase()
+  );
 
   if (!match) {
-    console.error(`No Supabase user found for email ${customer.email}`);
+    console.error("No Supabase user found for Stripe customer");
     return null;
   }
   return match.id;

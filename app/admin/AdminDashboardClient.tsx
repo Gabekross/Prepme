@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import Link from "next/link";
-import { requireAdminClient } from "@/src/admin/requireAdmin";
+import { requireAdminServer } from "@/src/admin/requireAdmin";
 
 /* ── animations ─────────────────────────────────────────────────────────── */
 
@@ -166,7 +166,7 @@ export default function AdminDashboardClient() {
 
   useEffect(() => {
     (async () => {
-      const result = await requireAdminClient();
+      const result = await requireAdminServer();
       if (!result.ok) {
         const msgs: Record<string, string> = {
           not_signed_in: "You must be signed in to view this page.",

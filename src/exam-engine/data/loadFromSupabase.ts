@@ -92,3 +92,44 @@ export async function loadQuestions(bankId: string): Promise<Question[]> {
     explanation: q.explanation ?? undefined,
   })) as Question[];
 }
+
+/**
+ * Load questions WITHOUT answer keys or explanations.
+ *
+ * SECURITY: Use this for active exam/practice sessions where the user is
+ * still answering questions. Answer keys are only available server-side
+ * (via the scoring endpoint) and in the review page (post-submission).
+ *
+ * This prevents users from inspecting DevTools/network tab to see correct
+ * answers during an active session.
+ */
+export async function loadQuestionsForExam(bankId: string): Promise<Question[]> {
+  const sb = supabaseBrowser();
+
+  const { data, error } = await sb
+    .from("questions")
+    .select(
+      "question_key,type,domain,prompt,scenario_key,difficulty,tags,access_tier,set_id,version,media,payload"
+    )
+    .eq("bank_id", bankId);
+
+  if (error) throw error;
+
+  return (data as Partial<DbQuestion>[]).map((q) => ({
+    id: q.question_key,
+    type: q.type,
+    domain: q.domain,
+    prompt: q.prompt,
+    scenarioId: q.scenario_key ?? undefined,
+    difficulty: (q.difficulty ?? undefined) as any,
+    tags: q.tags ?? [],
+    accessTier: q.access_tier,
+    setId: q.set_id,
+    version: q.version,
+    media: q.media ?? undefined,
+    payload: q.payload,
+    // Stub answer keys — engine uses these for structure, scoring is done server-side
+    answerKey: {} as any,
+    explanation: undefined,
+  })) as Question[];
+}

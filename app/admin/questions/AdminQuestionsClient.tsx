@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import { requireAdminClient } from "@/src/admin/requireAdmin";
+import { requireAdminServer } from "@/src/admin/requireAdmin";
 import type { Question, Scenario } from "@/src/exam-engine/core/types";
 import { QuestionRenderer } from "@/src/exam-engine/ui/QuestionRenderer";
 import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
@@ -789,7 +789,7 @@ export default function AdminQuestionsClient() {
   useEffect(() => {
     (async () => {
       setMsg("Checking admin access…");
-      const gate = await requireAdminClient();
+      const gate = await requireAdminServer();
       if (!gate.ok) {
         setReady(false);
         setMsg(

@@ -109,10 +109,10 @@ export default function EngineClient() {
   useEffect(() => {
   (async () => {
     try {
-      const { loadBankBySlug, loadQuestions, loadScenarios } = await import("@/src/exam-engine/data/loadFromSupabase");
+      const { loadBankBySlug, loadQuestionsForExam, loadScenarios } = await import("@/src/exam-engine/data/loadFromSupabase");
 
       const bank = await loadBankBySlug("pmp"); // you’ll create this bank row
-      const [qs, scns] = await Promise.all([loadQuestions(bank.id), loadScenarios(bank.id)]);
+      const [qs, scns] = await Promise.all([loadQuestionsForExam(bank.id), loadScenarios(bank.id)]);
 
       engine.initIfNeeded({
         bank: qs,

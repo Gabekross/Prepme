@@ -6,7 +6,7 @@ import Link from "next/link";
 import type { Question, Scenario, SetId } from "@/src/exam-engine/core/types";
 import type { BankConfig } from "@/src/exam-engine/data/loadFromSupabase";
 import { EngineRunner } from "@/src/exam-engine/ui/EngineRunner";
-import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
+import { loadBankBySlug, loadQuestionsForExam, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
 import { balanceSimulationBlueprint } from "@/src/exam-engine/core/simulationBalance";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useRouter } from "next/navigation";
@@ -501,7 +501,7 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
         const bank = await loadBankBySlug(bankSlug);
         if (cancelled) return;
         setBankConfig(bank);
-        const [qs, scns] = await Promise.all([loadQuestions(bank.id), loadScenarios(bank.id)]);
+        const [qs, scns] = await Promise.all([loadQuestionsForExam(bank.id), loadScenarios(bank.id)]);
         if (cancelled) return;
 
         let finalQs: Question[];
