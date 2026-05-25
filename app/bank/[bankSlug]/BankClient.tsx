@@ -170,22 +170,6 @@ const ModeHeader = styled.div`
   gap: 14px;
 `;
 
-const ModeIcon = styled.div`
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  overflow: hidden;
-`;
-
-const ModeImg = styled.img`
-  width: 52px;
-  height: 52px;
-  object-fit: contain;
-`;
-
 const ModeTitleGroup = styled.div`
   flex: 1;
 `;
@@ -599,7 +583,6 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
       <Grid>
         <ModeCard href={`/bank/${bank.slug}/practice/intro`} $variant="practice">
           <ModeHeader>
-            <ModeIcon><ModeImg src="/images/ui/bank/practice.svg" alt="Practice mode" /></ModeIcon>
             <ModeTitleGroup>
               <ModeTitle>Practice Mode</ModeTitle>
               <ModeSubtitle>Learn at your own pace with guided feedback</ModeSubtitle>
@@ -632,11 +615,10 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
       <SectionLabel style={{ marginTop: 36 }}>Exam Simulations</SectionLabel>
 
       <Grid>
-        {/* Set A — paid access */}
+        {/* Set A — Premium only */}
         {isPro ? (
           <ModeCard href={`/bank/${bank.slug}/exam/set-a/instructions`} $variant="exam">
             <ModeHeader>
-              <ModeIcon><ModeImg src="/images/ui/bank/set-a.svg" alt="Set A" /></ModeIcon>
               <ModeTitleGroup>
                 <ModeTitle>Simulation — Set A</ModeTitle>
                 <ModeSubtitle>Full 180-question timed simulation, real exam conditions</ModeSubtitle>
@@ -649,7 +631,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
               </FeatureItem>
               <FeatureItem>
                 <FeatureDot $variant="exam">✓</FeatureDot>
-                Score breakdown by domain and question type
+                Score breakdown by domain
               </FeatureItem>
             </FeatureList>
             <CardCta $variant="exam">Start Set A</CardCta>
@@ -658,7 +640,6 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
           <LockedCard onClick={() => setShowUpgrade(true)}>
             <LockBadge>&#x1f512; Locked</LockBadge>
             <ModeHeader>
-              <ModeIcon><ModeImg src="/images/ui/bank/set-a.svg" alt="Set A" /></ModeIcon>
               <ModeTitleGroup>
                 <ModeTitle>Simulation — Set A</ModeTitle>
                 <ModeSubtitle>Full 180-question timed simulation, real exam conditions</ModeSubtitle>
@@ -671,18 +652,17 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
               </FeatureItem>
               <FeatureItem>
                 <FeatureDot $variant="exam">✓</FeatureDot>
-                Score breakdown by domain and question type
+                Score breakdown by domain
               </FeatureItem>
             </FeatureList>
             <CardCta $variant="exam">Unlock Set A</CardCta>
           </LockedCard>
         )}
 
-        {/* Set B — Premium only */}
+        {/* Set B — Premium only (hidden for free users) */}
         {isPro ? (
           <ModeCard href={`/bank/${bank.slug}/exam/set-b/instructions`} $variant="exam">
             <ModeHeader>
-              <ModeIcon><ModeImg src="/images/ui/bank/set-b.svg" alt="Set B" /></ModeIcon>
               <ModeTitleGroup>
                 <ModeTitle>Simulation — Set B</ModeTitle>
                 <ModeSubtitle>Fresh questions — no overlap with Set A</ModeSubtitle>
@@ -704,7 +684,6 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
           <LockedCard onClick={() => setShowUpgrade(true)}>
             <LockBadge>&#x1f512; Locked</LockBadge>
             <ModeHeader>
-              <ModeIcon><ModeImg src="/images/ui/bank/set-b.svg" alt="Set B" /></ModeIcon>
               <ModeTitleGroup>
                 <ModeTitle>Simulation — Set B</ModeTitle>
                 <ModeSubtitle>Find the gaps Set A didn't expose</ModeSubtitle>
@@ -724,11 +703,10 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
           </LockedCard>
         )}
 
-        {/* Set C — Premium only */}
+        {/* Set C — Premium only (hidden for free users) */}
         {isPro ? (
           <ModeCard href={`/bank/${bank.slug}/exam/set-c/instructions`} $variant="exam">
             <ModeHeader>
-              <ModeIcon><ModeImg src="/images/ui/bank/set-c.svg" alt="Set C" /></ModeIcon>
               <ModeTitleGroup>
                 <ModeTitle>Simulation — Set C</ModeTitle>
                 <ModeSubtitle>Fresh questions — no overlap with Sets A or B</ModeSubtitle>
@@ -750,7 +728,6 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
           <LockedCard onClick={() => setShowUpgrade(true)}>
             <LockBadge>&#x1f512; Locked</LockBadge>
             <ModeHeader>
-              <ModeIcon><ModeImg src="/images/ui/bank/set-c.svg" alt="Set C" /></ModeIcon>
               <ModeTitleGroup>
                 <ModeTitle>Simulation — Set C</ModeTitle>
                 <ModeSubtitle>The final readiness check before exam day</ModeSubtitle>
