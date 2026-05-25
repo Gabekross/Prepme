@@ -120,7 +120,7 @@ describe("GET /api/admin/users", () => {
 
   it("returns 401 without token", async () => {
     const res = await GET(makeGetRequest("test@example.com"));
-    expect(res.status).toBe(401);
+    expect(res!.status).toBe(401);
   });
 
   it("returns 403 for non-admin", async () => {
@@ -131,13 +131,13 @@ describe("GET /api/admin/users", () => {
     mockSelectAdminRole.mockResolvedValueOnce({ data: [], error: null });
 
     const res = await GET(makeGetRequest("test@example.com", "token"));
-    expect(res.status).toBe(403);
+    expect(res!.status).toBe(403);
   });
 
   it("returns 400 for short query", async () => {
     setupAdmin();
     const res = await GET(makeGetRequest("a", "token"));
-    expect(res.status).toBe(400);
+    expect(res!.status).toBe(400);
   });
 
   it("returns matched users with roles", async () => {
@@ -157,7 +157,7 @@ describe("GET /api/admin/users", () => {
       error: null,
     });
 
-    const res = await GET(makeGetRequest("test@example.com", "token"));
+    const res = (await GET(makeGetRequest("test@example.com", "token")))!;
     const json = await res.json();
 
     expect(res.status).toBe(200);
@@ -171,20 +171,20 @@ describe("POST /api/admin/users", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns 401 without token", async () => {
-    const res = await POST(
+    const res = (await POST(
       makePostRequest({ userId: "u1", role: "admin", action: "grant" })
-    );
+    ))!;
     expect(res.status).toBe(401);
   });
 
   it("returns 400 for invalid role", async () => {
     setupAdmin();
-    const res = await POST(
+    const res = (await POST(
       makePostRequest(
         { userId: "u1", role: "superadmin", action: "grant" },
         "token"
       )
-    );
+    ))!;
     const json = await res.json();
     expect(res.status).toBe(400);
     expect(json.error).toContain("admin");
@@ -192,12 +192,12 @@ describe("POST /api/admin/users", () => {
 
   it("prevents self-lockout (cannot revoke own admin)", async () => {
     setupAdmin();
-    const res = await POST(
+    const res = (await POST(
       makePostRequest(
         { userId: "admin-1", role: "admin", action: "revoke" },
         "token"
       )
-    );
+    ))!;
     const json = await res.json();
     expect(res.status).toBe(400);
     expect(json.error).toContain("cannot revoke your own");
@@ -208,12 +208,12 @@ describe("POST /api/admin/users", () => {
     mockSelectExisting.mockResolvedValueOnce({ data: null });
     mockInsertRole.mockResolvedValueOnce({ error: null });
 
-    const res = await POST(
+    const res = (await POST(
       makePostRequest(
         { userId: "u2", role: "admin", action: "grant" },
         "token"
       )
-    );
+    ))!;
     const json = await res.json();
 
     expect(res.status).toBe(200);
@@ -228,12 +228,12 @@ describe("POST /api/admin/users", () => {
     setupAdmin();
     mockSelectExisting.mockResolvedValueOnce({ data: { id: "existing" } });
 
-    const res = await POST(
+    const res = (await POST(
       makePostRequest(
         { userId: "u2", role: "pro", action: "grant" },
         "token"
       )
-    );
+    ))!;
     const json = await res.json();
 
     expect(res.status).toBe(200);
@@ -245,12 +245,12 @@ describe("POST /api/admin/users", () => {
     setupAdmin();
     mockDeleteRole.mockResolvedValueOnce({ error: null });
 
-    const res = await POST(
+    const res = (await POST(
       makePostRequest(
         { userId: "u2", role: "pro", action: "revoke" },
         "token"
       )
-    );
+    ))!;
     const json = await res.json();
 
     expect(res.status).toBe(200);

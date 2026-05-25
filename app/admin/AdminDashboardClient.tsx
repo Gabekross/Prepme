@@ -117,6 +117,33 @@ const StatCard = styled.div<{ $accent?: string }>`
   }
 `;
 
+const StatCardLink = styled(Link)<{ $accent?: string }>`
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 16px;
+  padding: 20px 18px;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  display: block;
+  cursor: pointer;
+  transition: border-color 160ms, transform 160ms;
+
+  &:hover {
+    border-color: ${(p) => p.$accent ?? p.theme.accent}80;
+    transform: translateY(-2px);
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: ${(p) =>
+      p.$accent ? `${p.$accent}08` : "transparent"};
+    pointer-events: none;
+  }
+`;
+
 const StatValue = styled.div<{ $accent?: string; $small?: boolean }>`
   font-size: ${(p) => (p.$small ? "28px" : "36px")};
   font-weight: 900;
@@ -460,25 +487,25 @@ export default function AdminDashboardClient() {
           </StatsGrid>
         ) : (
           <StatsGrid>
-            <StatCard $accent="#6366f1">
+            <StatCardLink href="/admin/users" $accent="#6366f1">
               <StatValue $accent="#6366f1">{fmt(data.users.total)}</StatValue>
               <StatLabel>Total Users</StatLabel>
               <StatSub>All registered accounts</StatSub>
-            </StatCard>
+            </StatCardLink>
 
-            <StatCard $accent="#22c55e">
+            <StatCardLink href="/admin/users" $accent="#22c55e">
               <StatValue $accent="#22c55e">{fmt(data.users.new7d)}</StatValue>
               <StatLabel>New (7 days)</StatLabel>
               <StatSub>{fmt(data.users.new30d)} in last 30d</StatSub>
-            </StatCard>
+            </StatCardLink>
 
-            <StatCard $accent="#3b82f6">
+            <StatCardLink href="/admin/users" $accent="#3b82f6">
               <StatValue $accent="#3b82f6">
                 {fmt(data.users.active7d)}
               </StatValue>
               <StatLabel>Active (7 days)</StatLabel>
               <StatSub>{fmt(data.users.active30d)} in last 30d</StatSub>
-            </StatCard>
+            </StatCardLink>
 
             <StatCard $accent="#f59e0b">
               <StatValue $accent="#f59e0b" $small>
@@ -510,11 +537,11 @@ export default function AdminDashboardClient() {
           </StatsGrid>
         ) : (
           <StatsGrid>
-            <StatCard $accent="#8b5cf6">
+            <StatCardLink href="/admin/users" $accent="#8b5cf6">
               <StatValue $accent="#8b5cf6">{fmt(data.revenue.totalPro)}</StatValue>
               <StatLabel>Pro Subscribers</StatLabel>
               <StatSub>Active paid accounts</StatSub>
-            </StatCard>
+            </StatCardLink>
 
             <StatCard $accent="#22c55e">
               <StatValue $accent="#22c55e" $small>
@@ -524,13 +551,13 @@ export default function AdminDashboardClient() {
               <StatSub>Free to Pro</StatSub>
             </StatCard>
 
-            <StatCard $accent="#ef4444">
+            <StatCardLink href="/admin/users" $accent="#ef4444">
               <StatValue $accent="#ef4444">
                 {fmt(data.revenue.inactiveProUsers)}
               </StatValue>
               <StatLabel>Churn Risk</StatLabel>
               <StatSub>Pro users inactive 30d+</StatSub>
-            </StatCard>
+            </StatCardLink>
 
             <StatCard $accent="#f59e0b">
               <StatValue $accent="#f59e0b" $small>
