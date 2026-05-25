@@ -715,6 +715,13 @@ export default function AdminDashboardClient() {
               <NavDesc>Browse and edit question bank</NavDesc>
             </div>
           </NavCard>
+          <NavCard href="/admin/users">
+            <NavIcon>👥</NavIcon>
+            <div>
+              <NavLabel>Users</NavLabel>
+              <NavDesc>Search users and manage roles</NavDesc>
+            </div>
+          </NavCard>
         </NavGrid>
       </Section>
     </Page>
