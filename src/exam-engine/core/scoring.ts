@@ -81,14 +81,14 @@ export function scoreQuestion(q: Question, response: any): ScoreResult {
 
   switch (q.type) {
     case "mcq_single": {
-      const ok = response.choiceId === q.answerKey.correctChoiceId;
+      const ok = response.choiceId === q.answerKey?.correctChoiceId;
       return { questionId: q.id, isCorrect: ok, score: ok ? 1 : 0, maxScore: 1 };
     }
 
     case "mcq_multi": {
-      const correct = new Set(q.answerKey.correctChoiceIds);
+      const correct = new Set(q.answerKey?.correctChoiceIds ?? []);
       const chosen = new Set((response.choiceIds ?? []) as string[]);
-      const scoring = q.answerKey.scoring ?? "strict";
+      const scoring = q.answerKey?.scoring ?? "strict";
 
       if (scoring === "strict") {
         const ok = chosen.size === correct.size && [...chosen].every((x) => correct.has(x));
@@ -104,7 +104,7 @@ export function scoreQuestion(q: Question, response: any): ScoreResult {
 
     case "dnd_match": {
       const mapping: Record<string, string | null | undefined> = response.mapping ?? {};
-      const key = q.answerKey.mapping;
+      const key = q.answerKey?.mapping ?? {};
       const prompts = Object.keys(key);
 
       let correctCount = 0;
@@ -123,7 +123,7 @@ export function scoreQuestion(q: Question, response: any): ScoreResult {
 
     case "dnd_order": {
       const orderedIds: string[] = Array.isArray(response.orderedIds) ? response.orderedIds : [];
-      const key = q.answerKey.orderedIds;
+      const key = q.answerKey?.orderedIds ?? [];
 
       let correctPos = 0;
       for (let i = 0; i < Math.min(orderedIds.length, key.length); i++) {
@@ -134,15 +134,15 @@ export function scoreQuestion(q: Question, response: any): ScoreResult {
     }
 
     case "hotspot": {
-      const ok = response.selectedRegionId === q.answerKey.correctRegionId;
+      const ok = response.selectedRegionId === q.answerKey?.correctRegionId;
       return { questionId: q.id, isCorrect: ok, score: ok ? 1 : 0, maxScore: 1 };
     }
 
     case "fill_blank": {
       const vals: Record<string, string> = response.values ?? {};
-      const key = q.answerKey.values;
-      const tol = q.answerKey.numericTolerance ?? 0;
-      const ci = q.answerKey.caseInsensitive;
+      const key = q.answerKey?.values ?? {};
+      const tol = q.answerKey?.numericTolerance ?? 0;
+      const ci = q.answerKey?.caseInsensitive;
 
       let correct = 0;
       let total = 0;

@@ -1882,10 +1882,14 @@ export function EngineRunner(props: {
   const domain = engine.filters.domain as Domain | "all";
 
   const result = useMemo(() => {
-    if (!engine.attempt || !engine.bank) return null;
-    if (!engine.attempt.submittedAt) return null;
-    const qs = engine.bank.filter((q) => engine.attempt!.questionOrder.includes(q.id));
-    return scoreAttempt(engine.attempt, qs);
+    try {
+      if (!engine.attempt || !engine.bank) return null;
+      if (!engine.attempt.submittedAt) return null;
+      const qs = engine.bank.filter((q) => engine.attempt!.questionOrder.includes(q.id));
+      return scoreAttempt(engine.attempt, qs);
+    } catch {
+      return null;
+    }
   }, [engine.attempt, engine.bank]);
 
   const adaptiveSummary: AdaptiveSummary | null = useMemo(() => {
