@@ -166,7 +166,7 @@ export function MCQSingle(props: {
 }) {
   const { question, response, optionOrder, onChange, showCorrect } = props;
   const choiceId = response.type === "mcq_single" ? response.choiceId : null;
-  const correctId = question.answerKey.correctChoiceId;
+  const correctId = question.answerKey?.correctChoiceId;
 
   const choices = useMemo(() => {
     const raw = Array.isArray((question as any).payload?.choices) ? (question as any).payload.choices : [];

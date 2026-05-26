@@ -95,9 +95,9 @@ function normalizeNumeric(s: string) {
 }
 
 function isBlankCorrect(q: Extract<Question, { type: "fill_blank" }>, blankId: string, value: string) {
-  const accepted = q.answerKey.values[blankId] ?? [];
-  const ci = q.answerKey.caseInsensitive;
-  const tol = q.answerKey.numericTolerance ?? 0;
+  const accepted = q.answerKey?.values?.[blankId] ?? [];
+  const ci = q.answerKey?.caseInsensitive;
+  const tol = q.answerKey?.numericTolerance ?? 0;
 
   if (q.payload.inputMode === "numeric") {
     const g = Number(normalizeNumeric(value));
@@ -136,7 +136,7 @@ export function FillBlank(props: {
         const hasValue = val.trim().length > 0;
         const correct = showCorrect ? isBlankCorrect(question, b.id, val) : null;
         const state: InputState = showCorrect && hasValue ? (correct ? "correct" : "incorrect") : "neutral";
-        const correctHint = question.answerKey.values[b.id]?.[0];
+        const correctHint = question.answerKey?.values?.[b.id]?.[0];
 
         return (
           <FieldWrap key={b.id}>

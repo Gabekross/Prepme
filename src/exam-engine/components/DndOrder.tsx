@@ -160,7 +160,7 @@ export function DndOrder(props: {
   const orderedIds = response.type === "dnd_order"
     ? response.orderedIds
     : question.payload.items.map((i) => i.id);
-  const correct = question.answerKey.orderedIds;
+  const correct = question.answerKey?.orderedIds;
 
   function onDragEnd(e: DragEndEvent) {
     if (showCorrect) return;
@@ -184,7 +184,7 @@ export function DndOrder(props: {
 
   function stateForIndex(idx: number, id: string): OrderState {
     if (!showCorrect) return "neutral";
-    return correct[idx] === id ? "correct" : "incorrect";
+    return correct?.[idx] === id ? "correct" : "incorrect";
   }
 
   return (

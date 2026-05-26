@@ -101,7 +101,7 @@ export function Hotspot(props: {
   const selectedRegionId = response.type === "hotspot" ? response.selectedRegionId : null;
   const click = response.type === "hotspot" ? response.click : undefined;
 
-  const correctId = question.answerKey.correctRegionId;
+  const correctId = question.answerKey?.correctRegionId;
   const chosenId = selectedRegionId;
 
   const markerState: MarkerState =

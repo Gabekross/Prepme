@@ -202,7 +202,7 @@ export function DndMatch(props: {
           <PromptRow>
             {question.payload.prompts.map((p) => {
               const assignedId = mapping[p.id] ?? null;
-              const correctId = question.answerKey.mapping[p.id];
+              const correctId = question.answerKey?.mapping?.[p.id];
               const ok = !!(showCorrect && assignedId && assignedId === correctId);
               const incorrect = !!(showCorrect && assignedId && assignedId !== correctId);
               return (

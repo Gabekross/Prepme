@@ -185,7 +185,7 @@ export function MCQMulti(props: {
   const { question, response, optionOrder, onChange, showCorrect } = props;
 
   const chosen = response.type === "mcq_multi" ? new Set(response.choiceIds) : new Set<string>();
-  const correct = new Set(question.answerKey.correctChoiceIds);
+  const correct = new Set(question.answerKey?.correctChoiceIds ?? []);
 
   const choices = useMemo(() => {
     const raw = Array.isArray((question as any).payload?.choices) ? (question as any).payload.choices : [];
@@ -219,7 +219,7 @@ export function MCQMulti(props: {
 
   const allCorrectSelected =
     showCorrect &&
-    question.answerKey.correctChoiceIds.every((id: string) => chosen.has(id)) &&
+    (question.answerKey?.correctChoiceIds ?? []).every((id: string) => chosen.has(id)) &&
     [...chosen].every((id: string) => correct.has(id));
 
   const minSel = question.payload.minSelections ?? 1;
