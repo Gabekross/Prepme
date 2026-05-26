@@ -15,6 +15,7 @@ import { AdaptiveResults } from "./AdaptiveResults";
 import { ProcessingOverlay } from "./ProcessingOverlay";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useUpgrade } from "@/lib/useUpgrade";
+import { loadBankBySlug, loadQuestions } from "../data/loadFromSupabase";
 
 /* ── animations ─────────────────────────────────────────────────────────── */
 
@@ -1556,6 +1557,7 @@ export function EngineRunner(props: {
   const [showProcessing, setShowProcessing] = useState(false);
   const handleProcessingComplete = useCallback(() => setShowProcessing(false), []);
   const [showReviewAfterSubmit, setShowReviewAfterSubmit] = useState(true);
+  const [explanationsMap, setExplanationsMap] = useState<Record<string, string>>({});
   const [showDomainSection, setShowDomainSection] = useState(true);
   const [showInsightsSection, setShowInsightsSection] = useState(false);
   const [showQuestionList, setShowQuestionList] = useState(false);
@@ -1600,6 +1602,7 @@ export function EngineRunner(props: {
     setRevealed({});
     setSubmittedQ({});
     setShowExplain({});
+    setExplanationsMap({});
     setIncorrectOnly(false);
     setFlaggedOnly(false);
     setShowSubmitConfirm(false);
@@ -1694,6 +1697,27 @@ export function EngineRunner(props: {
     return () => clearInterval(id);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [durationMinutes, mode, engine.attempt?.id, engine.attempt?.submittedAt, isOnBreak]);
+
+  // ── Load explanations after submission ────────────────────────────────────
+  useEffect(() => {
+    if (!engine.attempt?.submittedAt || !bankSlug) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const bank = await loadBankBySlug(bankSlug);
+        const fullQs = await loadQuestions(bank.id);
+        if (cancelled) return;
+        const map: Record<string, string> = {};
+        for (const q of fullQs) {
+          if (q.explanation) map[q.id] = q.explanation;
+        }
+        setExplanationsMap(map);
+      } catch {
+        // Best-effort — explanations remain empty if fetch fails
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [engine.attempt?.submittedAt, bankSlug]);
 
   // ── Break helpers ─────────────────────────────────────────────────────────
 
@@ -1813,6 +1837,7 @@ export function EngineRunner(props: {
       setRevealed({});
       setSubmittedQ({});
       setShowExplain({});
+      setExplanationsMap({});
       const s = new LocalAttemptStorage(storageNamespace);
       if (s.clearLatest) await s.clearLatest();
       if ((engine as any).hardRestart) {
@@ -2042,6 +2067,7 @@ export function EngineRunner(props: {
     setRevealed({});
     setSubmittedQ({});
     setShowExplain({});
+    setExplanationsMap({});
     const s = new LocalAttemptStorage(storageNamespace);
     if (s.clearLatest) await s.clearLatest();
     await engine.hardRestart({ bank: questions, blueprint, mode, reshuffleQuestions: true, storageNamespace });
@@ -2051,6 +2077,7 @@ export function EngineRunner(props: {
     setRevealed({});
     setSubmittedQ({});
     setShowExplain({});
+    setExplanationsMap({});
     await engine.retryIncorrectOnly();
   }
 
@@ -2063,6 +2090,7 @@ export function EngineRunner(props: {
     setIncorrectOnly(false);
     setFlaggedOnly(false);
     setShowSubmitConfirm(false);
+    setExplanationsMap({});
     const s = new LocalAttemptStorage(storageNamespace);
     if (s.clearLatest) await s.clearLatest();
     await engine.hardRestart({ bank: questions, blueprint, mode, reshuffleQuestions: true, storageNamespace });
@@ -2512,8 +2540,8 @@ export function EngineRunner(props: {
                 </div>
               </ExplanationHeader>
               <ExplanationBody>
-                {current?.explanation?.trim()
-                  ? current.explanation
+                {(current?.explanation?.trim() || explanationsMap[current?.id ?? ""]?.trim())
+                  ? (current?.explanation?.trim() || explanationsMap[current?.id ?? ""])
                   : "No explanation has been provided for this question yet."}
               </ExplanationBody>
             </ExplanationCard>
@@ -2615,8 +2643,8 @@ export function EngineRunner(props: {
                   </div>
                 </ExplanationHeader>
                 <ExplanationBody>
-                  {current.explanation?.trim()
-                    ? current.explanation
+                  {(current.explanation?.trim() || explanationsMap[current.id]?.trim())
+                    ? (current.explanation?.trim() || explanationsMap[current.id])
                     : "No explanation has been provided for this question yet."}
                 </ExplanationBody>
               </ExplanationCard>
