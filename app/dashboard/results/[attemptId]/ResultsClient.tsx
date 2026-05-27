@@ -1048,7 +1048,8 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
   if (error) return <P>{error}</P>;
   if (!attempt) return <P>Attempt not found.</P>;
 
-  const result = attempt.result;
+  const rawResult = attempt.result;
+  const result = rawResult && Array.isArray(rawResult.scoreResults) ? rawResult : null;
   const hasScoring = result !== null && attempt.total_score !== null;
   const passed = attempt.passed ?? false;
   const scorePercent = attempt.score_percent ?? 0;
@@ -1166,6 +1167,27 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
         <BreadcrumbSep>/</BreadcrumbSep>
         <span>Results</span>
       </Breadcrumb>
+
+      {/* ── Missing scoring data — attempt submitted before scoring fix ── */}
+      {!hasScoring && attempt.submitted_at && (
+        <>
+          <SectionCard $delay={100}>
+            <SectionTitle>Scoring Unavailable</SectionTitle>
+            <P>
+              This attempt was submitted before a recent update and does not have
+              detailed scoring data. Retake the exam to see a full score breakdown.
+            </P>
+          </SectionCard>
+          <ActionRow>
+            <PrimaryAction href={`/bank/${attempt.bank_slug}`}>
+              Retake Exam
+            </PrimaryAction>
+            <SecondaryAction href="/dashboard">
+              Back to Dashboard
+            </SecondaryAction>
+          </ActionRow>
+        </>
+      )}
 
       {/* ── Empty attempt state ──────────────────────────────── */}
       {isEmptyAttempt && hasScoring && (

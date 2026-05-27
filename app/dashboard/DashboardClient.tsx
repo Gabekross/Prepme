@@ -1272,7 +1272,7 @@ export default function DashboardClient() {
 
       setAllResults(
         rows
-          .filter((r) => r.status === "submitted" && r.result !== null)
+          .filter((r) => r.status === "submitted" && r.result !== null && Array.isArray(r.result.scoreResults))
           .map((r) => ({
             id: r.id,
             mode: r.mode,
