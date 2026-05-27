@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { Question, Scenario } from "@/src/exam-engine/core/types";
 import { EngineRunner } from "@/src/exam-engine/ui/EngineRunner";
-import { loadBankBySlug, loadQuestionsForExam, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
+import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useUpgrade } from "@/lib/useUpgrade";
 import { pmpBank } from "@/src/exam-engine/data/seed.pmp";
@@ -338,7 +338,7 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
     (async () => {
       try {
         const bank = await loadBankBySlug(bankSlug);
-        const [qs, scns] = await Promise.all([loadQuestionsForExam(bank.id), loadScenarios(bank.id)]);
+        const [qs, scns] = await Promise.all([loadQuestions(bank.id), loadScenarios(bank.id)]);
         const practiceOnly = qs.filter((q) => (q.setId ?? "free") === "free");
         setQuestions(practiceOnly.length ? practiceOnly : practiceSeedBank);
         setScenarios(scns);

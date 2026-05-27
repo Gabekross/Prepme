@@ -1559,6 +1559,7 @@ export function EngineRunner(props: {
   const handleProcessingComplete = useCallback(() => setShowProcessing(false), []);
   const [showReviewAfterSubmit, setShowReviewAfterSubmit] = useState(true);
   const [explanationsMap, setExplanationsMap] = useState<Record<string, string>>({});
+  const [reviewQuestions, setReviewQuestions] = useState<Question[] | null>(null);
   const [showDomainSection, setShowDomainSection] = useState(true);
   const [showInsightsSection, setShowInsightsSection] = useState(false);
   const [showQuestionList, setShowQuestionList] = useState(false);
@@ -1604,6 +1605,7 @@ export function EngineRunner(props: {
     setSubmittedQ({});
     setShowExplain({});
     setExplanationsMap({});
+    setReviewQuestions(null);
     setIncorrectOnly(false);
     setFlaggedOnly(false);
     setShowSubmitConfirm(false);
@@ -1650,13 +1652,15 @@ export function EngineRunner(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, questions, storageNamespace]);
 
+  const displayQuestions = engine.attempt?.submittedAt && reviewQuestions?.length ? reviewQuestions : questions;
+
   const current = useMemo(() => {
     if (!engine.attempt) return null;
     const order = engine.attempt.questionOrder ?? [];
-    if (!order.length) return questions[0] ?? null;
+    if (!order.length) return displayQuestions[0] ?? null;
     const qid = order[engine.attempt.currentIndex];
-    return questions.find((q) => q.id === qid) ?? questions[0] ?? null;
-  }, [engine.attempt, questions]);
+    return displayQuestions.find((q) => q.id === qid) ?? displayQuestions[0] ?? null;
+  }, [engine.attempt, displayQuestions]);
 
   const currentId = current?.id ?? null;
 
@@ -1712,6 +1716,7 @@ export function EngineRunner(props: {
         for (const q of fullQs) {
           if (q.explanation) map[q.id] = q.explanation;
         }
+        setReviewQuestions(fullQs);
         setExplanationsMap(map);
       } catch {
         // Best-effort — explanations remain empty if fetch fails
@@ -1839,6 +1844,7 @@ export function EngineRunner(props: {
       setSubmittedQ({});
       setShowExplain({});
       setExplanationsMap({});
+      setReviewQuestions(null);
       const s = new LocalAttemptStorage(storageNamespace);
       if (s.clearLatest) await s.clearLatest();
       if ((engine as any).hardRestart) {
@@ -1886,12 +1892,13 @@ export function EngineRunner(props: {
     try {
       if (!engine.attempt || !engine.bank) return null;
       if (!engine.attempt.submittedAt) return null;
-      const qs = engine.bank.filter((q) => engine.attempt!.questionOrder.includes(q.id));
+      const source = reviewQuestions?.length ? reviewQuestions : engine.bank;
+      const qs = source.filter((q) => engine.attempt!.questionOrder.includes(q.id));
       return scoreAttempt(engine.attempt, qs);
     } catch {
       return null;
     }
-  }, [engine.attempt, engine.bank]);
+  }, [engine.attempt, engine.bank, reviewQuestions]);
 
   const adaptiveSummary: AdaptiveSummary | null = useMemo(() => {
     try {
@@ -1928,9 +1935,9 @@ export function EngineRunner(props: {
   }, [result]);
 
   const allQsMap = useMemo(() => {
-    const all = [...(engine.bank ?? []), ...(engine.questions ?? [])];
+    const all = [...(engine.bank ?? []), ...(engine.questions ?? []), ...(reviewQuestions ?? [])];
     return new Map(all.map((q) => [q.id, q]));
-  }, [engine.bank, engine.questions]);
+  }, [engine.bank, engine.questions, reviewQuestions]);
 
   const answeredCount = useMemo(() => {
     if (!engine.attempt) return 0;
@@ -2073,6 +2080,7 @@ export function EngineRunner(props: {
     setSubmittedQ({});
     setShowExplain({});
     setExplanationsMap({});
+    setReviewQuestions(null);
     const s = new LocalAttemptStorage(storageNamespace);
     if (s.clearLatest) await s.clearLatest();
     await engine.hardRestart({ bank: questions, blueprint, mode, reshuffleQuestions: true, storageNamespace });
@@ -2083,6 +2091,7 @@ export function EngineRunner(props: {
     setSubmittedQ({});
     setShowExplain({});
     setExplanationsMap({});
+    setReviewQuestions(null);
     await engine.retryIncorrectOnly();
   }
 
@@ -2096,6 +2105,7 @@ export function EngineRunner(props: {
     setFlaggedOnly(false);
     setShowSubmitConfirm(false);
     setExplanationsMap({});
+    setReviewQuestions(null);
     const s = new LocalAttemptStorage(storageNamespace);
     if (s.clearLatest) await s.clearLatest();
     await engine.hardRestart({ bank: questions, blueprint, mode, reshuffleQuestions: true, storageNamespace });

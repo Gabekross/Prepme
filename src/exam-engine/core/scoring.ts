@@ -4,6 +4,10 @@ function norm(s: string) {
   return s.trim();
 }
 
+function normNumeric(value: string) {
+  return value.trim().replace(/[$,\s]/g, "");
+}
+
 function eqText(a: string, b: string, caseInsensitive?: boolean) {
   const aa = norm(a);
   const bb = norm(b);
@@ -153,9 +157,9 @@ export function scoreQuestion(q: Question, response: any): ScoreResult {
         const accepted = key[blankId];
 
         if (q.payload.inputMode === "numeric") {
-          const g = Number(given);
+          const g = Number(normNumeric(given));
           const ok = accepted.some((v) => {
-            const t = Number(v);
+            const t = Number(normNumeric(`${v}`));
             if (Number.isNaN(g) || Number.isNaN(t)) return false;
             return Math.abs(g - t) <= tol;
           });

@@ -170,6 +170,23 @@ function applyDomainFilter(questions: Question[], domain: DomainFilter) {
   return questions.filter((q) => q.domain === domain);
 }
 
+function hasScoringAnswerKey(q: Question) {
+  switch (q.type) {
+    case "mcq_single":
+      return !!q.answerKey?.correctChoiceId;
+    case "mcq_multi":
+      return Array.isArray(q.answerKey?.correctChoiceIds) && q.answerKey.correctChoiceIds.length > 0;
+    case "dnd_match":
+      return !!q.answerKey?.mapping && Object.keys(q.answerKey.mapping).length > 0;
+    case "dnd_order":
+      return Array.isArray(q.answerKey?.orderedIds) && q.answerKey.orderedIds.length > 0;
+    case "hotspot":
+      return !!q.answerKey?.correctRegionId;
+    case "fill_blank":
+      return !!q.answerKey?.values && Object.keys(q.answerKey.values).length > 0;
+  }
+}
+
 /** Visible question ids under the current filter */
 function buildVisibleSet(visible: Question[] | null) {
   return new Set((visible ?? []).map((q) => q.id));
@@ -599,9 +616,39 @@ export const useExamSession = create<State>((set, get) => ({
     if (!att || !att.submittedAt) return;
 
     try {
+      const bankSlug = get()._bankSlug;
+      const userId = get()._userId;
+
+      if (userId && bankSlug) {
+        const { data } = await supabaseBrowser().auth.getSession();
+        const token = data.session?.access_token;
+
+        if (token) {
+          const res = await fetch(`/api/attempts/${encodeURIComponent(att.id)}/submit`, {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ attempt: att, bankSlug, passThreshold }),
+          });
+
+          if (res.ok) {
+            console.info("[persistScoringResult] Saved with server-side scoring:", att.id);
+            return;
+          }
+
+          console.warn("[persistScoringResult] Server-side scoring failed:", res.status);
+        }
+      }
+
       // Score the attempt
       const attemptQuestions = questions.filter((q) => att.questionOrder.includes(q.id));
       if (attemptQuestions.length === 0) return;
+      if (!attemptQuestions.every(hasScoringAnswerKey)) {
+        console.warn("[persistScoringResult] Skipping client scoring because answer keys are not available");
+        return;
+      }
 
       const result = scoreAttempt(att, attemptQuestions);
       // Use question-level counts for pass/fail (not raw points)

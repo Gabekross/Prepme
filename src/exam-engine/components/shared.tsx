@@ -57,9 +57,9 @@ export const Badge = styled.span<{ $state?: AnswerState }>`
     p.$state === "missed"
       ? `
     border-style: dashed;
-    border-color: ${p.theme.warningBorder};
-    background: ${p.theme.warningSoft};
-    color: ${p.theme.warning};
+    border-color: ${p.theme.successBorder};
+    background: ${p.theme.successSoft};
+    color: ${p.theme.success};
   `
       : ""}
 `;
@@ -116,9 +116,9 @@ export const OptionButton = styled.button<{ $state?: AnswerState; $selected?: bo
     p.$state === "missed"
       ? `
     border-style: dashed;
-    border-color: ${p.theme.warningBorder};
-    box-shadow: 0 0 0 3px ${p.theme.warningSoft};
-    background: ${p.theme.warningSoft};
+    border-color: ${p.theme.successBorder};
+    box-shadow: 0 0 0 3px ${p.theme.successSoft};
+    background: ${p.theme.successSoft};
   `
       : ""}
 `;

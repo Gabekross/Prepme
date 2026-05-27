@@ -29,9 +29,10 @@ export async function POST(
 
     // Parse request body
     const body = await req.json();
-    const { attempt, bankSlug } = body as {
+    const { attempt, bankSlug, passThreshold: requestedPassThreshold } = body as {
       attempt: Attempt;
       bankSlug: string;
+      passThreshold?: number;
     };
 
     if (!attempt || !bankSlug) {
@@ -119,7 +120,10 @@ export async function POST(
 
     // Score the attempt server-side
     const result = scoreAttempt(attempt, attemptQuestions);
-    const passThreshold = attempt.blueprint.passThreshold ?? 70;
+    const passThreshold =
+      typeof requestedPassThreshold === "number"
+        ? requestedPassThreshold
+        : ((attempt.blueprint as any).passThreshold ?? 70);
     // Use question-level counts for pass/fail (not raw points)
     const questionsCorrect = result.scoreResults.filter((sr) => sr.isCorrect).length;
     const questionsTotal = result.scoreResults.length;
