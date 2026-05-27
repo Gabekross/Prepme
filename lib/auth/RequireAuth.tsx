@@ -74,8 +74,12 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   // Redirect unauthenticated users to login
   useEffect(() => {
     if (!loading && !user) {
-      console.log("[RequireAuth] No session, redirecting to /login from:", pathname);
-      router.replace(`/login?returnTo=${encodeURIComponent(pathname)}`);
+      const query = typeof window !== "undefined"
+        ? window.location.search.replace(/^\?/, "")
+        : "";
+      const returnTo = query ? `${pathname}?${query}` : pathname;
+      console.log("[RequireAuth] No session, redirecting to /login from:", returnTo);
+      router.replace(`/login?returnTo=${encodeURIComponent(returnTo)}`);
     }
   }, [loading, user, router, pathname]);
 

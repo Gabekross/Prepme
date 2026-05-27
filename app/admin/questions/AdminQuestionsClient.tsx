@@ -1172,7 +1172,7 @@ export default function AdminQuestionsClient() {
 
   function bulkExportCurrentList() {
     const filename = `export-${bankSlug}-${new Date().toISOString().slice(0, 10)}.json`;
-    downloadJson(filename, rows.map((r) => ({
+    downloadJson(filename, filteredRows.map((r) => ({
       question_key: r.question_key, type: r.type, domain: r.domain, prompt: r.prompt,
       scenario_key: r.scenario_key, difficulty: r.difficulty, tags: r.tags ?? [],
       access_tier: r.access_tier, set_id: r.set_id, version: r.version ?? 1,

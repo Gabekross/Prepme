@@ -778,7 +778,7 @@ function MiniQuiz({ onClose }: { onClose: () => void }) {
 
 type Tab = "overview" | "rules" | "navigation" | "tips";
 
-const PAID_SETS = ["set-a", "set-b", "set-c"];
+const PAID_SETS = ["set-a", "set-b", "set-c", "set_a", "set_b", "set_c"];
 
 interface Props {
   bankSlug: string;

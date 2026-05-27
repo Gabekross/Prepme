@@ -1,18 +1,46 @@
 "use client";
 
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import styled, { keyframes } from "styled-components";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import type { Question, Scenario, AttemptResult } from "@/src/exam-engine/core/types";
+import type { Question, Scenario, AttemptResult, Response } from "@/src/exam-engine/core/types";
 import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
 import { QuestionRenderer } from "@/src/exam-engine/ui/QuestionRenderer";
 
 /* ── types ──────────────────────────────────────────────────────────────── */
 
 type FilterMode = "all" | "incorrect" | "unanswered" | "flagged";
+
+const FILTERS: FilterMode[] = ["all", "incorrect", "unanswered", "flagged"];
+
+function parseFilter(value: string | null): FilterMode {
+  return FILTERS.includes(value as FilterMode) ? (value as FilterMode) : "all";
+}
+
+function parseQuestionIndex(value: string | null): number {
+  const n = Number.parseInt(value ?? "0", 10);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+function defaultResponseFor(question: Question): Response {
+  switch (question.type) {
+    case "mcq_multi":
+      return { type: "mcq_multi", choiceIds: [] };
+    case "dnd_match":
+      return { type: "dnd_match", mapping: {} };
+    case "dnd_order":
+      return { type: "dnd_order", orderedIds: [] };
+    case "hotspot":
+      return { type: "hotspot", selectedRegionId: null };
+    case "fill_blank":
+      return { type: "fill_blank", values: {} };
+    default:
+      return { type: "mcq_single", choiceId: null };
+  }
+}
 
 type AttemptRow = {
   id: string;
@@ -286,10 +314,11 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
   const [error, setError] = useState("");
 
   // Filter & nav state
-  const initialFilter = (searchParams.get("filter") as FilterMode) || "all";
-  const initialQ = parseInt(searchParams.get("q") ?? "0", 10);
+  const initialFilter = parseFilter(searchParams.get("filter"));
+  const initialQ = parseQuestionIndex(searchParams.get("q"));
   const [filter, setFilter] = useState<FilterMode>(initialFilter);
   const [currentIdx, setCurrentIdx] = useState(initialQ);
+  const didMountFilter = useRef(false);
 
   // Load attempt
   useEffect(() => {
@@ -410,8 +439,17 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
 
   // Reset index when filter changes
   useEffect(() => {
+    if (!didMountFilter.current) {
+      didMountFilter.current = true;
+      return;
+    }
     setCurrentIdx(0);
   }, [filter]);
+
+  useEffect(() => {
+    if (filteredIds.length === 0) return;
+    setCurrentIdx((i) => Math.max(0, Math.min(i, filteredIds.length - 1)));
+  }, [filteredIds.length]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -435,7 +473,9 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
   const currentQid = filteredIds[currentIdx];
   const currentQuestion = currentQid ? questionMap[currentQid] : null;
   const currentScenario = currentQuestion?.scenarioId ? scenarioMap[currentQuestion.scenarioId] : undefined;
-  const currentResponse = currentQid ? (attempt?.state?.responsesByQuestionId?.[currentQid] ?? null) : null;
+  const currentResponse = currentQid && currentQuestion
+    ? (attempt?.state?.responsesByQuestionId?.[currentQid] ?? defaultResponseFor(currentQuestion))
+    : null;
   const currentOptionOrder = currentQid ? (attempt?.state?.optionOrderByQuestionId?.[currentQid] ?? []) : [];
   const currentScoreResult = currentQid ? scoreResultMap.get(currentQid) : null;
   const isFlagged = currentQid ? flaggedSet.has(currentQid) : false;

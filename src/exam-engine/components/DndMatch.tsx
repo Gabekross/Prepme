@@ -154,20 +154,22 @@ export function DndMatch(props: {
   const { question, response, optionOrder, onChange, showCorrect } = props;
   const mapping = response.type === "dnd_match" ? response.mapping : {};
   const [selectedAnswerId, setSelectedAnswerId] = useState<string | null>(null);
+  const prompts = Array.isArray((question as any).payload?.prompts) ? question.payload.prompts : [];
+  const rawAnswers = Array.isArray((question as any).payload?.answers) ? question.payload.answers : [];
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
   const answers = useMemo(() => {
-    const map = Object.fromEntries(question.payload.answers.map((a) => [a.id, a]));
-    const ordered = optionOrder?.length ? optionOrder : question.payload.answers.map((a) => a.id);
+    const map = Object.fromEntries(rawAnswers.map((a) => [a.id, a]));
+    const ordered = optionOrder?.length ? optionOrder : rawAnswers.map((a) => a.id);
     return ordered.map((id) => map[id]).filter(Boolean);
-  }, [question.payload.answers, optionOrder]);
+  }, [rawAnswers, optionOrder]);
 
   const assigned = new Set(Object.values(mapping).filter(Boolean) as string[]);
   const availableIds = answers.map((a) => a.id).filter((id) => !assigned.has(id));
 
   function answerText(id: string | null | undefined) {
-    return question.payload.answers.find((a) => a.id === id)?.text ?? "";
+    return rawAnswers.find((a) => a.id === id)?.text ?? "";
   }
 
   function clear(promptId: string) {
@@ -200,7 +202,7 @@ export function DndMatch(props: {
         <Divider />
         <DndContext sensors={sensors} onDragEnd={onDragEnd}>
           <PromptRow>
-            {question.payload.prompts.map((p) => {
+            {prompts.map((p) => {
               const assignedId = mapping[p.id] ?? null;
               const correctId = question.answerKey?.mapping?.[p.id];
               const ok = !!(showCorrect && assignedId && assignedId === correctId);

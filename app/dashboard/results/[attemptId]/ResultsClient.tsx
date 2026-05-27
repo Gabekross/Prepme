@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import styled, { keyframes } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useUpgrade } from "@/lib/useUpgrade";
@@ -145,7 +145,9 @@ const HeroResultIcon = styled.div<{ $pass: boolean }>`
   background: ${(p) => p.$pass ? p.theme.successSoft : p.theme.errorSoft};
   color: ${(p) => p.$pass ? p.theme.success : p.theme.error};
   animation: ${popIn} 500ms 200ms ease both;
-  ${(p) => !p.$pass && `animation: ${popIn} 500ms 200ms ease both, ${pulseGlow} 2s 800ms ease infinite;`}
+  ${(p) => !p.$pass && css`
+    animation: ${popIn} 500ms 200ms ease both, ${pulseGlow} 2s 800ms ease infinite;
+  `}
 `;
 
 const ConfettiWrap = styled.div`
@@ -1401,7 +1403,7 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
           <NextStepCard>
             <NextStepTitle>{action.title}</NextStepTitle>
             <NextStepDesc>{action.desc}</NextStepDesc>
-            <NextStepBtn href={`/bank/${attempt.bank_slug}/practice/intro`}>
+            <NextStepBtn href={`/bank/${attempt.bank_slug}/practice?count=25&domain=${weakest.domain}`}>
               Practice {weakest.label} Questions
             </NextStepBtn>
           </NextStepCard>

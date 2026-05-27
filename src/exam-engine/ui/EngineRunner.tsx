@@ -1245,7 +1245,8 @@ function isAnswered(question: Question | null, response: Response): boolean {
       if (response?.type !== "dnd_order" || !Array.isArray(response.orderedIds) || response.orderedIds.length === 0) return false;
       // The initial response pre-populates orderedIds with the item list order.
       // Only count as "answered" if the user has actually reordered.
-      const initial = question.payload.items.map((i: any) => i.id);
+      const items = Array.isArray((question as any).payload?.items) ? (question as any).payload.items : [];
+      const initial = items.map((i: any) => i.id);
       return response.orderedIds.some((id: string, idx: number) => id !== initial[idx]);
     }
     case "hotspot":

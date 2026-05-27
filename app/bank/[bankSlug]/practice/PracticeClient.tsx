@@ -301,7 +301,7 @@ const UpgradeCloseBtn = styled.button`
 /* ── component ──────────────────────────────────────────────────────────── */
 
 export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
-  const { user, isPro } = useAuth();
+  const { user, isPro, phase } = useAuth();
   const { startCheckout, loading: checkoutLoading } = useUpgrade();
   const searchParams = useSearchParams();
   const [questions, setQuestions] = useState<Question[] | null>(null);
@@ -311,7 +311,8 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
 
   // Read ?count from URL (set by PracticeIntroClient); fall back to 20
   const countParam = searchParams.get("count");
-  const initialCount = countParam ? Math.max(1, parseInt(countParam, 10)) : 20;
+  const requestedCount = countParam ? Math.max(1, parseInt(countParam, 10)) : 20;
+  const initialCount = Number.isFinite(requestedCount) ? requestedCount : 20;
   const [questionCount, setQuestionCount] = useState<number>(initialCount);
 
   // Read ?domain from URL (set by recommendation links); validates against known domains
@@ -323,6 +324,15 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
 
   // If a count was passed via URL, skip the setup screen
   const [started, setStarted] = useState<boolean>(!!countParam);
+
+  useEffect(() => {
+    if (phase !== "ready") return;
+    if (PRO_PRESETS.includes(questionCount) && !isPro) {
+      setQuestionCount(20);
+      setStarted(false);
+      setShowUpgrade(true);
+    }
+  }, [phase, isPro, questionCount]);
 
   useEffect(() => {
     (async () => {

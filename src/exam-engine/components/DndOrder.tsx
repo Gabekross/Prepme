@@ -156,10 +156,11 @@ export function DndOrder(props: {
 }) {
   const { question, response, onChange, showCorrect } = props;
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  const items = Array.isArray((question as any).payload?.items) ? question.payload.items : [];
 
   const orderedIds = response.type === "dnd_order"
     ? response.orderedIds
-    : question.payload.items.map((i) => i.id);
+    : items.map((i) => i.id);
   const correct = question.answerKey?.orderedIds;
 
   function onDragEnd(e: DragEndEvent) {
@@ -180,7 +181,7 @@ export function DndOrder(props: {
     onChange({ type: "dnd_order", orderedIds: arrayMove(orderedIds, idx, nextIdx), userInteracted: true } as any);
   }
 
-  const itemText = (id: string) => question.payload.items.find((i) => i.id === id)?.text ?? id;
+  const itemText = (id: string) => items.find((i) => i.id === id)?.text ?? id;
 
   function stateForIndex(idx: number, id: string): OrderState {
     if (!showCorrect) return "neutral";

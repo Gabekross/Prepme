@@ -87,11 +87,11 @@ export async function POST(
 
     // Map Supabase rows to Question type
     const mappedQuestions: Question[] = questions.map((q: any) => ({
-      id: q.id,
+      id: q.question_key,
       type: q.type,
       domain: q.domain,
       prompt: q.prompt,
-      scenarioId: q.scenario_id ?? undefined,
+      scenarioId: q.scenario_key ?? undefined,
       tags: q.tags ?? [],
       difficulty: q.difficulty,
       accessTier: q.access_tier ?? "free",

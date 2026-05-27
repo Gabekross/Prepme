@@ -122,8 +122,8 @@ export function FillBlank(props: {
 }) {
   const { question, response, onChange, showCorrect } = props;
   const values = response.type === "fill_blank" ? response.values : {};
-  const blanks = question.payload.blanks;
-  const isNumeric = question.payload.inputMode === "numeric";
+  const blanks = Array.isArray((question as any).payload?.blanks) ? question.payload.blanks : [];
+  const isNumeric = question.payload?.inputMode === "numeric";
 
   return (
     <Stack>

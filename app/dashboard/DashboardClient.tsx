@@ -189,6 +189,11 @@ const AttemptCard = styled.div`
     transform: translateY(-2px);
   }
 
+  &:focus-visible {
+    outline: 2px solid ${(p) => p.theme.accent};
+    outline-offset: 3px;
+  }
+
   @media (max-width: 480px) {
     flex-direction: column;
     align-items: flex-start;
@@ -1748,7 +1753,7 @@ export default function DashboardClient() {
             <ResumeText>
               <ResumeTitle>You have an unfinished {modeText}</ResumeTitle>
               <ResumeSub>
-                {agoText}{ip.set_id ? ` · ${ip.set_id.replace("_", " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}` : ""}
+                {agoText}{ip.set_id ? ` · ${ip.set_id.replace("_", " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}` : ""} · restart available
               </ResumeSub>
             </ResumeText>
             <ResumeBtn href={
@@ -1756,7 +1761,7 @@ export default function DashboardClient() {
                 ? `/bank/${ip.bank_slug}/exam/${ip.set_id}/instructions`
                 : `/bank/${ip.bank_slug}/practice/intro`
             }>
-              Resume
+              Restart
             </ResumeBtn>
           </ResumeBanner>
         );
@@ -2099,7 +2104,16 @@ export default function DashboardClient() {
             ).map((a) => (
               <AttemptCard
                 key={a.id}
+                role="link"
+                tabIndex={0}
+                aria-label={`Open results for ${a.mode === "exam" ? "Exam Simulation" : "Practice Session"}${a.set_id ? ` ${setLabel(a.set_id)}` : ""}`}
                 onClick={() => router.push(`/dashboard/results/${a.id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    router.push(`/dashboard/results/${a.id}`);
+                  }
+                }}
               >
                 <AttemptInfo>
                   <AttemptTitle>

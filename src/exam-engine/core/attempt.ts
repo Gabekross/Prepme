@@ -14,6 +14,10 @@ function uid() {
   return `att_${hex}_${Date.now()}`;
 }
 
+function payloadArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
 function defaultResponseFor(q: Question): Response {
   switch (q.type) {
     case "mcq_single":
@@ -21,13 +25,26 @@ function defaultResponseFor(q: Question): Response {
     case "mcq_multi":
       return { type: "mcq_multi", choiceIds: [] };
     case "dnd_match":
-      return { type: "dnd_match", mapping: Object.fromEntries(q.payload.prompts.map((p) => [p.id, null])) };
+      return {
+        type: "dnd_match",
+        mapping: Object.fromEntries(
+          payloadArray<{ id: string }>((q as any).payload?.prompts).map((p) => [p.id, null])
+        ),
+      };
     case "dnd_order":
-      return { type: "dnd_order", orderedIds: q.payload.items.map((i) => i.id) };
+      return {
+        type: "dnd_order",
+        orderedIds: payloadArray<{ id: string }>((q as any).payload?.items).map((i) => i.id),
+      };
     case "hotspot":
       return { type: "hotspot", selectedRegionId: null };
     case "fill_blank":
-      return { type: "fill_blank", values: Object.fromEntries(q.payload.blanks.map((b) => [b.id, ""])) };
+      return {
+        type: "fill_blank",
+        values: Object.fromEntries(
+          payloadArray<{ id: string }>((q as any).payload?.blanks).map((b) => [b.id, ""])
+        ),
+      };
   }
 }
 
@@ -50,9 +67,15 @@ export function createAttempt(args: {
   const optionOrderByQuestionId: Record<string, string[]> = {};
   selected.forEach((q) => {
     if (q.type === "mcq_single" || q.type === "mcq_multi") {
-      optionOrderByQuestionId[q.id] = shuffleArray(q.payload.choices.map((c) => c.id), rand);
+      optionOrderByQuestionId[q.id] = shuffleArray(
+        payloadArray<{ id: string }>((q as any).payload?.choices).map((c) => c.id),
+        rand
+      );
     } else if (q.type === "dnd_match") {
-      optionOrderByQuestionId[q.id] = shuffleArray(q.payload.answers.map((a) => a.id), rand);
+      optionOrderByQuestionId[q.id] = shuffleArray(
+        payloadArray<{ id: string }>((q as any).payload?.answers).map((a) => a.id),
+        rand
+      );
     } else {
       optionOrderByQuestionId[q.id] = [];
     }

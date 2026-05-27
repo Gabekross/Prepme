@@ -103,6 +103,8 @@ export function Hotspot(props: {
 
   const correctId = question.answerKey?.correctRegionId;
   const chosenId = selectedRegionId;
+  const regions = Array.isArray((question as any).payload?.regions) ? question.payload.regions : [];
+  const coordinateSpace = question.payload?.coordinateSpace ?? "percent";
 
   const markerState: MarkerState =
     showCorrect && chosenId
@@ -112,8 +114,8 @@ export function Hotspot(props: {
       : "neutral";
 
   function regionFromPoint(px: number, py: number) {
-    for (const r of question.payload.regions) {
-      if (question.payload.coordinateSpace === "percent") {
+    for (const r of regions) {
+      if (coordinateSpace === "percent") {
         if (px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h) return r.id;
       }
     }
