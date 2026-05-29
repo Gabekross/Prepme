@@ -84,6 +84,18 @@ export async function GET(req: NextRequest) {
     const conversionRate =
       totalUsers > 0 ? Math.round((totalPro / totalUsers) * 10000) / 100 : 0;
 
+    const userSummaries = allUsers
+      .map((u: any) => ({
+        id: u.id,
+        email: u.email ?? "No email",
+        createdAt: u.created_at,
+        lastSignIn: u.last_sign_in_at ?? null,
+        isPro: proUserIds.has(u.id),
+      }))
+      .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+
+    const proSubscriberSummaries = userSummaries.filter((u) => u.isPro);
+
     // ── Attempts data (all submitted) ──────────────────────────────────
     const { data: attempts } = await admin
       .from("attempts")
@@ -224,6 +236,7 @@ export async function GET(req: NextRequest) {
         new30d: newUsers30d,
         active7d: activeUsers7d,
         active30d: activeUsers30d,
+        recent: userSummaries.slice(0, 12),
       },
 
       // Revenue & Subscriptions
@@ -235,6 +248,7 @@ export async function GET(req: NextRequest) {
           totalPro > 0
             ? Math.round((inactiveProUsers / totalPro) * 10000) / 100
             : 0,
+        proSubscribers: proSubscriberSummaries.slice(0, 12),
       },
 
       // Engagement

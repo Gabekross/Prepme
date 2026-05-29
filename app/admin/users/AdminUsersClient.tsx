@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from "react";
 import styled, { keyframes } from "styled-components";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { requireAdminServer } from "@/src/admin/requireAdmin";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
@@ -241,12 +242,16 @@ type UserResult = {
 /* ── component ──────────────────────────────────────────────────────────── */
 
 export default function AdminUsersClient() {
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const initialEmailQuery = searchParams.get("email") ?? "";
+
+  const [query, setQuery] = useState(initialEmailQuery);
   const [users, setUsers] = useState<UserResult[]>([]);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
   const [toast, setToast] = useState<{
     msg: string;
     type: "success" | "error";
@@ -282,12 +287,10 @@ export default function AdminUsersClient() {
     return data.session?.access_token;
   }
 
-  async function searchUsers(e: React.FormEvent) {
-    e.preventDefault();
-    if (!query.trim() || query.trim().length < 2) return;
-
+  async function fetchUsers(searchTerm: string, markSearched: boolean) {
+    const trimmed = searchTerm.trim();
     setLoading(true);
-    setSearched(true);
+    setSearched(markSearched);
 
     try {
       const token = await getToken();
@@ -296,10 +299,14 @@ export default function AdminUsersClient() {
         return;
       }
 
-      const res = await fetch(
-        `/api/admin/users?email=${encodeURIComponent(query.trim())}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const url =
+        trimmed.length > 0
+          ? `/api/admin/users?email=${encodeURIComponent(trimmed)}`
+          : "/api/admin/users";
+
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (!res.ok) {
         const json = await res.json();
@@ -315,6 +322,19 @@ export default function AdminUsersClient() {
       setLoading(false);
     }
   }
+
+  async function searchUsers(e: React.FormEvent) {
+    e.preventDefault();
+    if (!query.trim() || query.trim().length < 2) return;
+    await fetchUsers(query, true);
+  }
+
+  React.useEffect(() => {
+    if (!checked || authError || hasLoadedInitial) return;
+    setHasLoadedInitial(true);
+    void fetchUsers(initialEmailQuery, initialEmailQuery.trim().length > 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checked, authError, hasLoadedInitial, initialEmailQuery]);
 
   async function handleRole(
     userId: string,
@@ -404,7 +424,7 @@ export default function AdminUsersClient() {
         <BackLink href="/admin">&larr; Back to Dashboard</BackLink>
         <Title>User Management</Title>
         <Subtitle>
-          Search users by email and manage their roles.
+          Browse recent users, search by email, and manage their roles.
         </Subtitle>
       </Header>
 
@@ -423,6 +443,10 @@ export default function AdminUsersClient() {
 
       {searched && users.length === 0 && !loading && (
         <InfoMsg>No users found matching &quot;{query}&quot;</InfoMsg>
+      )}
+
+      {!searched && users.length === 0 && !loading && (
+        <InfoMsg>No users found.</InfoMsg>
       )}
 
       <UserList>

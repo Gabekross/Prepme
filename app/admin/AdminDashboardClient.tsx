@@ -274,6 +274,79 @@ const TableCell = styled.div<{ $accent?: string }>`
   font-weight: ${(p) => (p.$accent ? 700 : "inherit")};
 `;
 
+const EmailPanels = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+
+  @media (max-width: 760px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const EmailPanel = styled.div`
+  background: ${(p) => p.theme.cardBg};
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 16px;
+  overflow: hidden;
+`;
+
+const EmailPanelHeader = styled.div`
+  padding: 14px 16px;
+  border-bottom: 1px solid ${(p) => p.theme.cardBorder};
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`;
+
+const EmailPanelTitle = styled.div`
+  font-size: 14px;
+  font-weight: 800;
+  color: ${(p) => p.theme.text};
+`;
+
+const EmailPanelLink = styled(Link)`
+  font-size: 12px;
+  font-weight: 700;
+  color: ${(p) => p.theme.accent};
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+const EmailRow = styled(Link)`
+  display: grid;
+  gap: 4px;
+  padding: 12px 16px;
+  border-bottom: 1px solid ${(p) => p.theme.cardBorder};
+  color: inherit;
+  text-decoration: none;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: ${(p) => p.theme.cardBg2};
+  }
+`;
+
+const EmailText = styled.div`
+  font-size: 13px;
+  font-weight: 700;
+  color: ${(p) => p.theme.text};
+  overflow-wrap: anywhere;
+`;
+
+const EmailMeta = styled.div`
+  font-size: 12px;
+  color: ${(p) => p.theme.muted};
+`;
+
 /* ── nav links ──────────────────────────────────────────────────────────── */
 
 const NavGrid = styled.div`
@@ -348,12 +421,14 @@ type DashboardData = {
     new30d: number;
     active7d: number;
     active30d: number;
+    recent: UserSummary[];
   };
   revenue: {
     totalPro: number;
     conversionRate: number;
     inactiveProUsers: number;
     churnRiskPct: number;
+    proSubscribers: UserSummary[];
   };
   engagement: {
     totalSubmitted: number;
@@ -379,6 +454,14 @@ type DashboardData = {
   }[];
 };
 
+type UserSummary = {
+  id: string;
+  email: string;
+  createdAt: string | null;
+  lastSignIn: string | null;
+  isPro: boolean;
+};
+
 /* ── helpers ─────────────────────────────────────────────────────────────── */
 
 const fmt = (n: number | undefined) =>
@@ -395,6 +478,18 @@ const setLabel = (id: string) => {
     set_c: "Set C",
   };
   return labels[id] ?? id;
+};
+
+const searchHref = (email: string) =>
+  `/admin/users?email=${encodeURIComponent(email)}`;
+
+const formatDate = (d: string | null | undefined) => {
+  if (!d) return "No activity yet";
+  return new Date(d).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 };
 
 /* ── component ──────────────────────────────────────────────────────────── */
@@ -732,6 +827,55 @@ export default function AdminDashboardClient() {
       )}
 
       {/* ── Quick Links ────────────────────────────────────────────── */}
+      {data && (
+        <Section>
+          <SectionTitle>User Emails</SectionTitle>
+          <EmailPanels>
+            <EmailPanel>
+              <EmailPanelHeader>
+                <EmailPanelTitle>Recent Users</EmailPanelTitle>
+                <EmailPanelLink href="/admin/users">Search all</EmailPanelLink>
+              </EmailPanelHeader>
+              {data.users.recent.length > 0 ? (
+                data.users.recent.map((u) => (
+                  <EmailRow key={u.id} href={searchHref(u.email)}>
+                    <EmailText>{u.email}</EmailText>
+                    <EmailMeta>Joined {formatDate(u.createdAt)}</EmailMeta>
+                  </EmailRow>
+                ))
+              ) : (
+                <EmailRow href="/admin/users">
+                  <EmailText>No users found</EmailText>
+                  <EmailMeta>Search user accounts</EmailMeta>
+                </EmailRow>
+              )}
+            </EmailPanel>
+
+            <EmailPanel>
+              <EmailPanelHeader>
+                <EmailPanelTitle>Pro Subscribers</EmailPanelTitle>
+                <EmailPanelLink href="/admin/users">Search all</EmailPanelLink>
+              </EmailPanelHeader>
+              {data.revenue.proSubscribers.length > 0 ? (
+                data.revenue.proSubscribers.map((u) => (
+                  <EmailRow key={u.id} href={searchHref(u.email)}>
+                    <EmailText>{u.email}</EmailText>
+                    <EmailMeta>
+                      Last sign-in {formatDate(u.lastSignIn)}
+                    </EmailMeta>
+                  </EmailRow>
+                ))
+              ) : (
+                <EmailRow href="/admin/users">
+                  <EmailText>No pro subscribers yet</EmailText>
+                  <EmailMeta>Search user accounts</EmailMeta>
+                </EmailRow>
+              )}
+            </EmailPanel>
+          </EmailPanels>
+        </Section>
+      )}
+
       <Section>
         <SectionTitle>Quick Links</SectionTitle>
         <NavGrid>

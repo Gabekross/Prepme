@@ -47,23 +47,27 @@ export async function GET(req: NextRequest) {
     if ("error" in result) return result.error;
     const { admin } = result;
 
-    const email = req.nextUrl.searchParams.get("email")?.trim();
+    const email = req.nextUrl.searchParams.get("email")?.trim() ?? "";
+    const isSearch = email.length > 0;
 
-    if (!email || email.length < 2) {
+    if (isSearch && email.length < 2) {
       return NextResponse.json(
         { error: "Provide at least 2 characters to search" },
         { status: 400 }
       );
     }
 
-    // Fetch users matching the email filter
+    // Fetch users. With no query this returns a browsable recent list; with
+    // a query it returns matching emails.
     // Cast to any to use the undocumented 'filter' param (works at runtime,
     // same pattern as webhook/route.ts resolveUserId)
-    const { data: usersData, error: listErr } = await (admin.auth.admin as any).listUsers({
+    const listOptions: Record<string, unknown> = {
       page: 1,
-      perPage: 20,
-      filter: email,
-    });
+      perPage: isSearch ? 20 : 50,
+    };
+    if (isSearch) listOptions.filter = email;
+
+    const { data: usersData, error: listErr } = await (admin.auth.admin as any).listUsers(listOptions);
 
     if (listErr) {
       console.error("Admin user search error:", listErr.message);
@@ -73,9 +77,11 @@ export async function GET(req: NextRequest) {
     const users = usersData?.users ?? [];
 
     // Filter for exact substring match (Supabase filter can be loose)
-    const matched = users.filter(
-      (u: any) => u.email?.toLowerCase().includes(email.toLowerCase())
-    );
+    const matched = isSearch
+      ? users.filter((u: any) =>
+          u.email?.toLowerCase().includes(email.toLowerCase())
+        )
+      : users;
 
     if (matched.length === 0) {
       return NextResponse.json({ users: [] });

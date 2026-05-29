@@ -273,7 +273,7 @@ export default function LoginClient() {
 
     await new Promise((r) => setTimeout(r, 300));
 
-    const destination = admin ? "/admin/questions" : returnTo;
+    const destination = admin ? "/admin" : returnTo;
     window.location.href = destination;
   }
 

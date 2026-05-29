@@ -494,7 +494,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <>
                 <NavLink href={signedIn ? "/bank/pmp" : "/"}>Exams</NavLink>
                 {signedIn && <NavLink href="/dashboard">Dashboard</NavLink>}
-                {isAdmin ? <NavLink href="/admin/questions">Admin</NavLink> : null}
+                {isAdmin ? <NavLink href="/admin">Admin</NavLink> : null}
                 <NavDivider />
                 {!signedIn ? (
                   <NavLink href="/login">Sign In</NavLink>
