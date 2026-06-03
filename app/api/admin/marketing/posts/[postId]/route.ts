@@ -4,6 +4,8 @@ import { withFallbackSlug } from "@/src/marketing/slug";
 
 export const dynamic = "force-dynamic";
 
+const editableStatuses = new Set(["draft", "review", "approved", "scheduled", "published", "archived"]);
+
 export async function GET(
   req: NextRequest,
   { params }: { params: { postId: string } }
@@ -63,13 +65,19 @@ export async function PATCH(
       "og_description",
       "og_image_url",
     ]) {
-      if (key in body) update[key] = body[key];
+      if (key in body) update[key] = body[key] === "" ? null : body[key];
     }
 
     if (typeof body.slug === "string") update.slug = withFallbackSlug(body.slug);
+    if (typeof body.status === "string" && editableStatuses.has(body.status)) {
+      update.status = body.status;
+    }
     if (body.status === "approved") {
-      update.status = "approved";
       update.approved_at = new Date().toISOString();
+    }
+    if (body.status === "review" || body.status === "draft" || body.status === "archived") {
+      update.scheduled_for = null;
+      update.published_at = null;
     }
 
     const { data, error } = await verified.admin
@@ -93,6 +101,44 @@ export async function PATCH(
     return NextResponse.json({ post: data });
   } catch (err: any) {
     console.error("[marketing/post] PATCH error:", err?.message ?? err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { postId: string } }
+) {
+  const verified = await verifyAdminRequest(req);
+  if (!verified.ok) return verified.response;
+
+  try {
+    const { data: post, error: postError } = await verified.admin
+      .from("blog_posts")
+      .select("id,title,slug,status")
+      .eq("id", params.postId)
+      .single();
+
+    if (postError) throw postError;
+
+    await verified.admin.from("marketing_events").insert({
+      event_name: "blog_post_deleted",
+      entity_type: "blog_post",
+      entity_id: params.postId,
+      actor_id: verified.userId,
+      properties: { title: post.title, slug: post.slug, status: post.status },
+    });
+
+    const { error } = await verified.admin
+      .from("blog_posts")
+      .delete()
+      .eq("id", params.postId);
+
+    if (error) throw error;
+
+    return NextResponse.json({ ok: true });
+  } catch (err: any) {
+    console.error("[marketing/post] DELETE error:", err?.message ?? err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

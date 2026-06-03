@@ -280,6 +280,26 @@ const AssetBody = styled.div`
   margin: 8px 0 10px;
 `;
 
+const ImagePreview = styled.div`
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  background: ${(p) => p.theme.cardBg2};
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 150px;
+  display: grid;
+  place-items: center;
+  color: ${(p) => p.theme.muted};
+  font-size: 12px;
+  font-weight: 800;
+
+  img {
+    width: 100%;
+    height: 190px;
+    object-fit: cover;
+    display: block;
+  }
+`;
+
 const Message = styled.div<{ $error?: boolean }>`
   color: ${(p) => (p.$error ? p.theme.error : p.theme.mutedStrong)};
   background: ${(p) => (p.$error ? p.theme.errorSoft : p.theme.cardBg2)};
@@ -430,6 +450,8 @@ export default function MarketingHubClient() {
           seo_description: activePost.seo_description,
           focus_keyword: activePost.focus_keyword,
           category_id: activePost.category_id,
+          featured_image_url: activePost.featured_image_url,
+          og_image_url: activePost.og_image_url,
           status,
         }),
       });
@@ -438,6 +460,53 @@ export default function MarketingHubClient() {
       await loadAll();
     } catch (err: any) {
       setError(err.message ?? "Could not save post.");
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  async function updatePostStatus(status: "review" | "archived") {
+    if (!activePost) return;
+    const label = status === "review" ? "unpublish" : "archive";
+    if (!window.confirm(`Are you sure you want to ${label} this blog post?`)) return;
+
+    setWorking(true);
+    setError(null);
+    try {
+      const json = await api(`/api/admin/marketing/posts/${activePost.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      });
+      setActivePost(json.post);
+      setMessage(status === "review" ? "Post unpublished and moved back to review." : "Post archived.");
+      await loadAll();
+      await loadPost(json.post.id);
+    } catch (err: any) {
+      setError(err.message ?? "Could not update post status.");
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  async function deletePost() {
+    if (!activePost) return;
+    const confirmed = window.confirm(
+      `Permanently delete "${activePost.title}"? This removes the blog post and generated channel assets. This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setWorking(true);
+    setError(null);
+    try {
+      await api(`/api/admin/marketing/posts/${activePost.id}`, {
+        method: "DELETE",
+      });
+      setActivePost(null);
+      setAssets([]);
+      setMessage("Post deleted.");
+      await loadAll();
+    } catch (err: any) {
+      setError(err.message ?? "Could not delete post.");
     } finally {
       setWorking(false);
     }
@@ -667,6 +736,33 @@ export default function MarketingHubClient() {
                 />
               </Label>
 
+              <TwoCol>
+                <Label>
+                  Featured Image URL
+                  <Input
+                    value={activePost.featured_image_url ?? ""}
+                    onChange={(e) => setActivePost({ ...activePost, featured_image_url: e.target.value })}
+                    placeholder="/images/blog/example.jpg or https://..."
+                  />
+                </Label>
+                <Label>
+                  Social Image URL
+                  <Input
+                    value={activePost.og_image_url ?? ""}
+                    onChange={(e) => setActivePost({ ...activePost, og_image_url: e.target.value })}
+                    placeholder="Optional Open Graph image URL"
+                  />
+                </Label>
+              </TwoCol>
+
+              <ImagePreview>
+                {activePost.featured_image_url ? (
+                  <img src={activePost.featured_image_url} alt="Featured image preview" />
+                ) : (
+                  "Featured image preview"
+                )}
+              </ImagePreview>
+
               <Row>
                 <Button onClick={() => savePost()} disabled={working}>Save Review</Button>
                 <Button onClick={() => savePost("approved")} disabled={working || activePost.status === "published"}>
@@ -683,6 +779,19 @@ export default function MarketingHubClient() {
                 />
                 <Button onClick={() => publish("schedule")} disabled={working || !scheduleFor}>
                   Schedule
+                </Button>
+                {activePost.status === "published" && (
+                  <Button onClick={() => updatePostStatus("review")} disabled={working}>
+                    Unpublish
+                  </Button>
+                )}
+                {activePost.status !== "archived" && (
+                  <Button onClick={() => updatePostStatus("archived")} disabled={working}>
+                    Archive
+                  </Button>
+                )}
+                <Button $danger onClick={deletePost} disabled={working}>
+                  Delete
                 </Button>
               </Row>
 
