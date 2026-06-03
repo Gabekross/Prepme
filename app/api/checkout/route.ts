@@ -10,7 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 /**
  * POST /api/checkout
  *
- * Creates a Stripe Checkout Session for the Premium subscription ($29.99 / 3 months).
+ * Creates a Stripe Checkout Session for the Premium subscription ($59.99 / year).
  * Requires the user to be signed in (passes userId in metadata for webhook).
  *
  * SECURITY: Requires Bearer token auth. The authenticated user's ID must

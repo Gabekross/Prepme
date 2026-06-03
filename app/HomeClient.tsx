@@ -992,7 +992,7 @@ export default function HomeClient() {
             <PricingTier>Premium</PricingTier>
             <PricingTagline>Everything you need to pass first time</PricingTagline>
             <PricingPrice>
-              $29.99 <PricingPeriod>/ 3 months</PricingPeriod>
+              $59.99 <PricingPeriod>/ year</PricingPeriod>
             </PricingPrice>
             <PricingDesc>
               3 full 180-question simulations plus an adaptive engine that learns your weak spots and targets them every session.
@@ -1008,7 +1008,7 @@ export default function HomeClient() {
               ))}
             </PricingList>
             <PricingCTABtn $featured onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Unlock Premium — $29.99/3 mo"}
+              {checkoutLoading ? "Redirecting…" : "Unlock Premium — $59.99/year"}
             </PricingCTABtn>
             <ConsentNote>
               By purchasing you agree to our{" "}

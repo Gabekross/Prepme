@@ -1370,7 +1370,7 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
               <UpsellSub>{sub}</UpsellSub>
             </UpsellText>
             <UpsellBtn onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Unlock Premium — $29.99/3 mo"}
+              {checkoutLoading ? "Redirecting…" : "Unlock Premium — $59.99/year"}
             </UpsellBtn>
           </UpsellBanner>
         );

@@ -988,8 +988,8 @@ export default function PracticeIntroClient({ bankSlug }: { bankSlug: string }) 
             <UpgradeText>
               Most PMP candidates fail because they don't know where they're losing marks. Premium shows you exactly that.
             </UpgradeText>
-            <UpgradePrice>$29.99</UpgradePrice>
-            <UpgradePriceNote>Every 3 months · Cancel anytime · Less than a practice exam book</UpgradePriceNote>
+            <UpgradePrice>$59.99</UpgradePrice>
+            <UpgradePriceNote>Billed yearly · Cancel anytime · Less than a practice exam book</UpgradePriceNote>
             <UpgradeBtn onClick={startCheckout} disabled={checkoutLoading}>
               {checkoutLoading ? "Redirecting…" : "Unlock Premium"}
             </UpgradeBtn>

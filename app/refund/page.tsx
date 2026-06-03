@@ -150,7 +150,7 @@ export default function RefundPage() {
       <Block>
         <BlockTitle>Digital Product Policy</BlockTitle>
         <P>
-          Premium ($29.99/3 months) is a digital subscription that provides immediate access to premium
+          Premium ($59.99/year) is a digital subscription that provides immediate access to premium
           features upon payment — including Sets B &amp; C, topic-level analytics, and the
           adaptive difficulty engine. Because access is granted instantly, we apply the
           following refund conditions.

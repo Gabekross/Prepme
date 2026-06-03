@@ -2417,7 +2417,7 @@ export function EngineRunner(props: {
                         See exactly which topics cost you marks — and which to fix first.
                       </TopicGateSub>
                       <TopicGateBtn onClick={startCheckout} disabled={checkoutLoading}>
-                        {checkoutLoading ? "Redirecting…" : "Unlock Premium — $29.99/3 mo"}
+                        {checkoutLoading ? "Redirecting…" : "Unlock Premium — $59.99/year"}
                       </TopicGateBtn>
                       <TopicGateConsentNote>
                         By purchasing you agree to our{" "}

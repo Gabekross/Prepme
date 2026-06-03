@@ -126,8 +126,8 @@ export default function TermsPage() {
             modified or withdrawn at any time with reasonable notice.
           </Li>
           <Li>
-            <strong>Premium ($29.99 every 3 months):</strong> A recurring subscription billed
-            every three months grants access to Premium features as described at the time of
+            <strong>Premium ($59.99 per year):</strong> A recurring subscription billed
+            yearly grants access to Premium features as described at the time of
             purchase, for as long as the subscription remains active.
           </Li>
         </Ul>

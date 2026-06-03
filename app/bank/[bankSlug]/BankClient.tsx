@@ -778,8 +778,8 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
                 Extended practice sessions (50 & 90 questions)
               </UpgradeFeatureItem>
             </UpgradeFeature>
-            <UpgradePrice>$29.99</UpgradePrice>
-            <UpgradePriceNote>Every 3 months · Cancel anytime · Less than a practice exam book</UpgradePriceNote>
+            <UpgradePrice>$59.99</UpgradePrice>
+            <UpgradePriceNote>Billed yearly · Cancel anytime · Less than a practice exam book</UpgradePriceNote>
             <UpgradeBtn onClick={startCheckout} disabled={checkoutLoading}>
               {checkoutLoading ? "Redirecting…" : "Unlock Premium"}
             </UpgradeBtn>

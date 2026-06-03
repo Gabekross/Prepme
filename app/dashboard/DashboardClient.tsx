@@ -2186,8 +2186,8 @@ export default function DashboardClient() {
                 Extended practice sessions (50 &amp; 90 questions)
               </UpgradeFeatureItem>
             </UpgradeFeature>
-            <UpgradePrice>$29.99</UpgradePrice>
-            <UpgradePriceNote>Every 3 months · Cancel anytime · Less than a practice exam book</UpgradePriceNote>
+            <UpgradePrice>$59.99</UpgradePrice>
+            <UpgradePriceNote>Billed yearly · Cancel anytime · Less than a practice exam book</UpgradePriceNote>
             <UpgradeModalBtn onClick={startCheckout} disabled={checkoutLoading}>
               {checkoutLoading ? "Redirecting…" : "Unlock Premium"}
             </UpgradeModalBtn>
