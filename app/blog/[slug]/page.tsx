@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import BlogPostClient from "./BlogPostClient";
-import { getPublishedPost, siteUrl } from "@/src/marketing/publicBlog";
+import { getPublishedPost, listRelatedPosts, siteUrl } from "@/src/marketing/publicBlog";
 
 export const revalidate = 300;
 export const dynamic = "force-dynamic";
@@ -42,6 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function BlogPostPage({ params }: Props) {
   const post = await getPublishedPost(params.slug);
   if (!post) notFound();
+  const relatedPosts = await listRelatedPosts(post);
 
   const canonical = post.canonical_url?.startsWith("http")
     ? post.canonical_url
@@ -63,6 +64,7 @@ export default async function BlogPostPage({ params }: Props) {
       "@type": "Organization",
       name: "PMP Mastery Lab",
     },
+    image: post.og_image_url || post.featured_image_url || undefined,
   };
 
   return (
@@ -71,7 +73,7 @@ export default async function BlogPostPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <BlogPostClient post={post} />
+      <BlogPostClient post={post} relatedPosts={relatedPosts} />
     </>
   );
 }

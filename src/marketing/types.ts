@@ -87,7 +87,7 @@ export type GeneratedMarketingContent = {
   assets: Array<{
     channel: ContentAssetChannel;
     variant: number;
-    title?: string;
+    title?: string | null;
     body: string;
   }>;
 };

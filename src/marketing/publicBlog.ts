@@ -38,3 +38,50 @@ export async function getPublishedPost(slug: string): Promise<BlogPost | null> {
 
   return (data as BlogPost | null) ?? null;
 }
+
+export async function listRelatedPosts(post: BlogPost, limit = 3): Promise<BlogPost[]> {
+  const now = new Date().toISOString();
+  let posts: BlogPost[] = [];
+
+  if (post.category_id) {
+    const { data, error } = await supabaseAdmin()
+      .from("blog_posts")
+      .select("*, blog_categories(id,name,slug,description)")
+      .eq("status", "published")
+      .lte("published_at", now)
+      .eq("category_id", post.category_id)
+      .neq("id", post.id)
+      .order("published_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error("[blog] Failed to list related category posts:", error.message);
+    } else {
+      posts = (data ?? []) as BlogPost[];
+    }
+  }
+
+  if (posts.length < limit) {
+    const { data, error } = await supabaseAdmin()
+      .from("blog_posts")
+      .select("*, blog_categories(id,name,slug,description)")
+      .eq("status", "published")
+      .lte("published_at", now)
+      .neq("id", post.id)
+      .order("published_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error("[blog] Failed to list fallback related posts:", error.message);
+      return posts;
+    }
+
+    const seen = new Set(posts.map((item) => item.id));
+    for (const item of (data ?? []) as BlogPost[]) {
+      if (!seen.has(item.id)) posts.push(item);
+      if (posts.length >= limit) break;
+    }
+  }
+
+  return posts;
+}

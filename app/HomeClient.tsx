@@ -958,7 +958,7 @@ export default function HomeClient() {
       <Divider />
 
       {/* ── 8. Pricing ───────────────────────────────────────────────── */}
-      <Section $delay={320}>
+      <Section id="pricing" $delay={320}>
         <SectionHeading>Simple Pricing</SectionHeading>
         <SectionSub>
           Start free. Upgrade when you are ready for full exam prep.
