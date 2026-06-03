@@ -5,6 +5,7 @@ type GenerateInput = {
   topic: string;
   primaryKeyword?: string;
   theme?: string;
+  baseUrl?: string;
 };
 
 const DEFAULT_MODEL = "gpt-4.1-mini";
@@ -14,6 +15,8 @@ function fallbackContent(input: GenerateInput): GeneratedMarketingContent {
   const primaryKeyword = input.primaryKeyword?.trim() || topic;
   const theme = input.theme?.trim() || "PMP Exam Prep";
   const slug = withFallbackSlug(topic);
+  const baseUrl = (input.baseUrl || "https://www.pmpmasterylab.com").replace(/\/$/, "");
+  const blogUrl = `${baseUrl}/blog/${slug}`;
   const title = `${topic}: A Practical PMP Guide`;
   const excerpt = `A PMP-focused guide to ${topic.toLowerCase()} with exam-ready framing, practical examples, and review prompts.`;
   const contentMarkdown = [
@@ -63,7 +66,7 @@ function fallbackContent(input: GenerateInput): GeneratedMarketingContent {
       {
         channel: "threads",
         variant: 1,
-        body: `${topic} is a PMP exam signal. Look for answers that clarify, collaborate, and protect value before escalating. Blog: /blog/${slug}`,
+        body: `${topic} is a PMP exam signal. Look for answers that clarify, collaborate, and protect value before escalating. Blog: ${blogUrl}`,
       },
       {
         channel: "threads",
@@ -73,23 +76,23 @@ function fallbackContent(input: GenerateInput): GeneratedMarketingContent {
       {
         channel: "linkedin",
         variant: 1,
-        body: `PMP candidates often miss ${topic} questions because they jump straight to the tool. The stronger exam move is to clarify the situation, engage the right people, and protect business value. Full guide: /blog/${slug}`,
+        body: `PMP candidates often miss ${topic} questions because they jump straight to the tool. The stronger exam move is to clarify the situation, engage the right people, and protect business value. Full guide: ${blogUrl}`,
       },
       {
         channel: "x",
         variant: 1,
-        body: `${topic} on the PMP exam: clarify first, collaborate next, escalate only when needed. Full guide: /blog/${slug}`,
+        body: `${topic} on the PMP exam: clarify first, collaborate next, escalate only when needed. Full guide: ${blogUrl}`,
       },
       {
         channel: "facebook",
         variant: 1,
-        body: `Studying ${topic} for the PMP exam? Focus on the decision pattern: understand the issue, support the team, engage stakeholders, and protect value. Read the guide: /blog/${slug}`,
+        body: `Studying ${topic} for the PMP exam? Focus on the decision pattern: understand the issue, support the team, engage stakeholders, and protect value. Read the guide: ${blogUrl}`,
       },
       {
         channel: "newsletter",
         variant: 1,
         title: `${topic} for PMP Candidates`,
-        body: `This week in PMP Mastery Lab: ${topic}. The exam often rewards answers that clarify the problem, support collaboration, and connect decisions to value. Read the full guide: /blog/${slug}`,
+        body: `This week in PMP Mastery Lab: ${topic}. The exam often rewards answers that clarify the problem, support collaboration, and connect decisions to value. Read the full guide: ${blogUrl}`,
       },
     ],
   };
@@ -174,8 +177,8 @@ export async function generateMarketingContent(input: GenerateInput): Promise<{
       body: JSON.stringify({
         model,
         instructions:
-          "You are PMP Mastery Lab's marketing strategist. Generate accurate, practical PMP exam prep content. Do not imply PMI endorsement, do not guarantee passing, and keep the blog as the source of truth.",
-        input: `Create a content pyramid for topic "${input.topic}". Primary keyword: "${input.primaryKeyword ?? ""}". Theme: "${input.theme ?? ""}". Return only structured JSON.`,
+          "You are PMP Mastery Lab's marketing strategist. Generate accurate, practical PMP exam prep content. Do not imply PMI endorsement, do not guarantee passing, and keep the blog as the source of truth. In every channel asset, use absolute public URLs beginning with the site domain; never use relative /blog/... paths.",
+        input: `Create a content pyramid for topic "${input.topic}". Primary keyword: "${input.primaryKeyword ?? ""}". Theme: "${input.theme ?? ""}". Site URL: "${input.baseUrl ?? "https://www.pmpmasterylab.com"}". Return only structured JSON.`,
         text: {
           format: {
             type: "json_schema",

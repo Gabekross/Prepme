@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminRequest } from "@/src/admin/verifyAdminRequest";
 import { generateMarketingContent } from "@/src/marketing/generator";
+import { siteUrl } from "@/src/marketing/publicBlog";
 import { withFallbackSlug } from "@/src/marketing/slug";
 
 export const dynamic = "force-dynamic";
@@ -51,6 +52,24 @@ async function ensureTags(admin: any, postId: string, tags: string[]) {
   }
 }
 
+function absoluteBlogUrl(slug: string) {
+  return `${siteUrl()}/blog/${slug}`;
+}
+
+function normalizeBlogLinks(text: string, blogUrl: string) {
+  return text
+    .replace(/https?:\/\/[^\s)\]}>"']+\/blog\/[a-z0-9-]+/gi, blogUrl)
+    .replace(/(^|[\s([{"'`])\/blog\/[a-z0-9-]+/gi, `$1${blogUrl}`);
+}
+
+function assetBodyWithBlogUrl(channel: string, body: string, blogUrl: string) {
+  const normalized = normalizeBlogLinks(body, blogUrl).trim();
+  if (channel === "master_article" || /https?:\/\/[^\s)\]}>"']+\/blog\/[a-z0-9-]+/i.test(normalized)) {
+    return normalized;
+  }
+  return `${normalized} Full guide: ${blogUrl}`;
+}
+
 export async function POST(req: NextRequest) {
   const verified = await verifyAdminRequest(req);
   if (!verified.ok) return verified.response;
@@ -70,11 +89,13 @@ export async function POST(req: NextRequest) {
       topic: topicInput,
       primaryKeyword,
       theme,
+      baseUrl: siteUrl(),
     });
 
     const admin = verified.admin;
     const topicSlug = await uniqueSlug(admin, "marketing_topics", content.topic.title);
     const postSlug = await uniqueSlug(admin, "blog_posts", content.blog.slug || content.blog.title);
+    const blogUrl = absoluteBlogUrl(postSlug);
 
     const { data: topic, error: topicError } = await admin
       .from("marketing_topics")
@@ -125,7 +146,7 @@ export async function POST(req: NextRequest) {
       channel: asset.channel,
       variant: asset.variant,
       title: asset.title ?? null,
-      body: asset.body,
+      body: assetBodyWithBlogUrl(asset.channel, asset.body, blogUrl),
       status: "review",
       metadata: {
         model,
