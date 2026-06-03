@@ -54,6 +54,7 @@ supabase/.cache
 # Database / Secrets
 # ===============================
 *.sql
+!supabase/migrations/20260529_create_marketing_hub.sql
 *.sqlite
 *.db
 

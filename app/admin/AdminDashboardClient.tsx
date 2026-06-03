@@ -886,6 +886,13 @@ export default function AdminDashboardClient() {
               <NavDesc>Browse and edit question bank</NavDesc>
             </div>
           </NavCard>
+          <NavCard href="/admin/marketing">
+            <NavIcon>M</NavIcon>
+            <div>
+              <NavLabel>Marketing Hub</NavLabel>
+              <NavDesc>Blog, SEO, and channel content</NavDesc>
+            </div>
+          </NavCard>
           <NavCard href="/admin/users">
             <NavIcon>👥</NavIcon>
             <div>
