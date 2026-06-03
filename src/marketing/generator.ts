@@ -155,11 +155,11 @@ export async function generateMarketingContent(input: GenerateInput): Promise<{
         items: {
           type: "object",
           additionalProperties: false,
-          required: ["channel", "variant", "body"],
+          required: ["channel", "variant", "title", "body"],
           properties: {
             channel: { type: "string", enum: ["master_article", "blog", "threads", "linkedin", "x", "facebook", "newsletter"] },
             variant: { type: "number" },
-            title: { type: "string" },
+            title: { type: ["string", "null"] },
             body: { type: "string" },
           },
         },
@@ -190,7 +190,10 @@ export async function generateMarketingContent(input: GenerateInput): Promise<{
       }),
     });
 
-    if (!res.ok) throw new Error(`OpenAI request failed: ${res.status}`);
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => "");
+      throw new Error(`OpenAI request failed: ${res.status}${errorText ? ` ${errorText}` : ""}`);
+    }
     const json = await res.json();
     const outputText = extractOutputText(json);
     const parsed = JSON.parse(outputText) as GeneratedMarketingContent;
