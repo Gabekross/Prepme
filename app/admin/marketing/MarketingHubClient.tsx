@@ -300,6 +300,83 @@ const ImagePreview = styled.div`
   }
 `;
 
+const ImagePicker = styled.div`
+  display: grid;
+  gap: 10px;
+`;
+
+const ImagePickerGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+
+  @media (max-width: 980px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (max-width: 560px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+`;
+
+const ImageOption = styled.div`
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  background: ${(p) => p.theme.cardBg2};
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 0;
+`;
+
+const ImageThumb = styled.button<{ $selected?: boolean }>`
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid ${(p) => (p.$selected ? p.theme.accent : p.theme.cardBorder)};
+  background: ${(p) => (p.$selected ? p.theme.accentSoft : p.theme.cardBg)};
+  padding: 0;
+  cursor: pointer;
+
+  img {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    display: block;
+  }
+`;
+
+const ImageOptionBody = styled.div`
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+`;
+
+const ImageOptionName = styled.div`
+  color: ${(p) => p.theme.text};
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.25;
+`;
+
+const ImageOptionActions = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+`;
+
+const MiniButton = styled.button`
+  border: 1px solid ${(p) => p.theme.buttonBorder};
+  background: ${(p) => p.theme.buttonBg};
+  color: ${(p) => p.theme.text};
+  border-radius: 8px;
+  padding: 7px 6px;
+  font-size: 11px;
+  font-weight: 850;
+  cursor: pointer;
+
+  &:hover {
+    background: ${(p) => p.theme.buttonHover};
+  }
+`;
+
 const Message = styled.div<{ $error?: boolean }>`
   color: ${(p) => (p.$error ? p.theme.error : p.theme.mutedStrong)};
   background: ${(p) => (p.$error ? p.theme.errorSoft : p.theme.cardBg2)};
@@ -316,6 +393,19 @@ const platformUrls: Record<string, (text: string) => string> = {
   x: (text) => `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
   facebook: () => "https://www.facebook.com/",
 };
+
+const blogImageOptions = [
+  { label: "PMP study dashboard", url: "/images/blog/pmp-study-dashboard.png" },
+  { label: "Risk matrix planning", url: "/images/blog/risk-matrix-planning.png" },
+  { label: "Agile team board", url: "/images/blog/agile-team-board.png" },
+  { label: "Exam analytics dashboard", url: "/images/blog/exam-analytics-dashboard.png" },
+  { label: "Servant leadership coaching", url: "/images/blog/servant-leadership-coaching.png" },
+  { label: "Stakeholder mapping", url: "/images/blog/stakeholder-mapping.png" },
+  { label: "Hybrid project workflow", url: "/images/blog/hybrid-project-workflow.png" },
+  { label: "Calm exam-day prep", url: "/images/blog/calm-exam-day-prep.png" },
+  { label: "Practice score improvement", url: "/images/blog/practice-score-improvement.png" },
+  { label: "Project decision-making", url: "/images/blog/project-decision-making.png" },
+];
 
 export default function MarketingHubClient() {
   const [checked, setChecked] = useState(false);
@@ -754,6 +844,46 @@ export default function MarketingHubClient() {
                   />
                 </Label>
               </TwoCol>
+
+              <ImagePicker>
+                <SectionTitle style={{ margin: 0 }}>Image Library</SectionTitle>
+                <ImagePickerGrid>
+                  {blogImageOptions.map((image) => {
+                    const isFeatured = activePost.featured_image_url === image.url;
+                    const isSocial = activePost.og_image_url === image.url;
+
+                    return (
+                      <ImageOption key={image.url}>
+                        <ImageThumb
+                          type="button"
+                          $selected={isFeatured || isSocial}
+                          onClick={() => setActivePost({ ...activePost, featured_image_url: image.url })}
+                          title={`Use ${image.label} as featured image`}
+                        >
+                          <img src={image.url} alt={image.label} loading="lazy" />
+                        </ImageThumb>
+                        <ImageOptionBody>
+                          <ImageOptionName>{image.label}</ImageOptionName>
+                          <ImageOptionActions>
+                            <MiniButton
+                              type="button"
+                              onClick={() => setActivePost({ ...activePost, featured_image_url: image.url })}
+                            >
+                              Featured
+                            </MiniButton>
+                            <MiniButton
+                              type="button"
+                              onClick={() => setActivePost({ ...activePost, og_image_url: image.url })}
+                            >
+                              Social
+                            </MiniButton>
+                          </ImageOptionActions>
+                        </ImageOptionBody>
+                      </ImageOption>
+                    );
+                  })}
+                </ImagePickerGrid>
+              </ImagePicker>
 
               <ImagePreview>
                 {activePost.featured_image_url ? (

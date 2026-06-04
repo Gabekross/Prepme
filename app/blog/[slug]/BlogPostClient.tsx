@@ -18,6 +18,7 @@ const BlogGlobals = createGlobalStyle`
 
 const Page = styled.article`
   animation: ${fadeUp} 260ms ease both;
+  overflow-x: clip;
 `;
 
 const Hero = styled.header`
@@ -32,11 +33,11 @@ const HeroInner = styled.div`
   margin: 0 auto;
   padding: 32px 20px 38px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 430px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 430px);
   gap: 34px;
   align-items: center;
 
-  @media (max-width: 900px) {
+  @media (max-width: 980px) {
     grid-template-columns: 1fr;
     padding-top: 26px;
   }
@@ -81,6 +82,9 @@ const Excerpt = styled.p`
 `;
 
 const HeroMedia = styled.div`
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   aspect-ratio: 16 / 10;
   border: 1px solid ${(p) => p.theme.cardBorder};
   border-radius: 8px;
@@ -91,6 +95,10 @@ const HeroMedia = styled.div`
     ${(p) => p.theme.cardBg};
   box-shadow: ${(p) => p.theme.shadow};
   min-height: 230px;
+
+  @media (max-width: 520px) {
+    min-height: 0;
+  }
 `;
 
 const HeroImage = styled.img`
