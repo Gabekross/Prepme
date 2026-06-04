@@ -869,12 +869,6 @@ export default function HomeClient() {
       </Hero>
 
       {/* ── 2. Trust Badges ──────────────────────────────────────────── */}
-      <BadgesRow>
-        <Badge>PMP 2026 Updated</Badge>
-        <Badge>Current PMP ECO</Badge>
-        <Badge>Adaptive Engine</Badge>
-      </BadgesRow>
-
       <Divider style={{ margin: "40px 0 0" }} />
 
       {/* ── 3. Social Proof Stats ────────────────────────────────────── */}
