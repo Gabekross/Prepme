@@ -50,6 +50,34 @@ export function extractHeadings(markdown: string): BlogHeading[] {
     .filter((heading): heading is BlogHeading => Boolean(heading));
 }
 
+function normalizeInlineText(text: string) {
+  return text
+    .replace(/\*\*(?![^*]+\*\*)/g, "")
+    .replace(/(?<!\*)\*(?![^*]+\*)/g, "");
+}
+
+function renderInlineFormatting(text: string, keyPrefix: string) {
+  const nodes: React.ReactNode[] = [];
+  const pattern = /(\*\*([^*]+)\*\*|`([^`]+)`|\*([^*]+)\*)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(text))) {
+    if (match.index > lastIndex) nodes.push(normalizeInlineText(text.slice(lastIndex, match.index)));
+    if (match[2]) {
+      nodes.push(<strong key={`${keyPrefix}-bold-${match.index}`}>{match[2]}</strong>);
+    } else if (match[3]) {
+      nodes.push(<code key={`${keyPrefix}-code-${match.index}`}>{match[3]}</code>);
+    } else if (match[4]) {
+      nodes.push(<em key={`${keyPrefix}-em-${match.index}`}>{match[4]}</em>);
+    }
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) nodes.push(normalizeInlineText(text.slice(lastIndex)));
+  return nodes;
+}
+
 function renderInline(text: string) {
   const nodes: React.ReactNode[] = [];
   const pattern = /\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/[^)\s]+)\)/g;
@@ -57,17 +85,21 @@ function renderInline(text: string) {
   let match: RegExpExecArray | null;
 
   while ((match = pattern.exec(text))) {
-    if (match.index > lastIndex) nodes.push(text.slice(lastIndex, match.index));
+    if (match.index > lastIndex) {
+      nodes.push(...renderInlineFormatting(text.slice(lastIndex, match.index), `text-${match.index}`));
+    }
     const href = match[2];
     nodes.push(
       <a key={`${href}-${match.index}`} href={href} rel="noopener noreferrer">
-        {match[1]}
+        {renderInlineFormatting(match[1], `link-${match.index}`)}
       </a>
     );
     lastIndex = match.index + match[0].length;
   }
 
-  if (lastIndex < text.length) nodes.push(text.slice(lastIndex));
+  if (lastIndex < text.length) {
+    nodes.push(...renderInlineFormatting(text.slice(lastIndex), `text-${lastIndex}`));
+  }
   return nodes;
 }
 
@@ -103,23 +135,53 @@ function BlogPracticeQuestion({
   correct: string;
   explanation: string;
 }) {
-  const [open, setOpen] = React.useState(false);
+  const [selected, setSelected] = React.useState<string | null>(null);
+  const [checked, setChecked] = React.useState(false);
+  const normalizedCorrect = correct.trim().slice(0, 1).toUpperCase();
+  const selectedLetter = selected?.slice(0, 1).toUpperCase() ?? null;
+  const isCorrect = checked && selectedLetter === normalizedCorrect;
 
   return (
     <div className="blog-practice">
       <div className="blog-practice-label">Practice Question</div>
       <p className="blog-practice-question">{renderInline(question)}</p>
-      <ol type="A">
-        {choices.map((choice) => (
-          <li key={choice}>{renderInline(choice)}</li>
-        ))}
-      </ol>
-      <button type="button" onClick={() => setOpen((value) => !value)}>
-        {open ? "Hide Answer" : "Show Answer"}
+      <div className="blog-practice-choices">
+        {choices.map((choice, index) => {
+          const letter = String.fromCharCode(65 + index);
+          const isSelected = selected === letter;
+          const isAnswer = checked && letter === normalizedCorrect;
+          return (
+            <button
+              className={[
+                "blog-choice",
+                isSelected ? "is-selected" : "",
+                isAnswer ? "is-answer" : "",
+                checked && isSelected && !isAnswer ? "is-wrong" : "",
+              ].filter(Boolean).join(" ")}
+              key={`${letter}-${choice}`}
+              type="button"
+              onClick={() => {
+                setSelected(letter);
+                setChecked(false);
+              }}
+            >
+              <span>{letter}</span>
+              <span>{renderInline(choice)}</span>
+            </button>
+          );
+        })}
+      </div>
+      <button
+        className="blog-practice-check"
+        type="button"
+        onClick={() => setChecked((value) => (selected ? !value : value))}
+        disabled={!selected}
+      >
+        {checked ? "Hide Explanation" : selected ? "Check Answer" : "Select an Answer"}
       </button>
-      {open && (
-        <div className="blog-practice-answer">
-          <strong>Correct answer: {correct}</strong>
+      {checked && (
+        <div className={`blog-practice-answer ${isCorrect ? "is-correct" : "is-incorrect"}`}>
+          <strong>{isCorrect ? "Correct." : "Not quite."} Correct answer: {correct}</strong>
           {explanation && <p>{renderInline(explanation)}</p>}
         </div>
       )}
@@ -177,6 +239,7 @@ export function MarkdownView({
   const lines = markdown.split(/\r?\n/);
   const blocks: React.ReactNode[] = [];
   let listItems: string[] = [];
+  let orderedListItems: string[] = [];
   let specialBlock: SpecialBlock | null = null;
   let headingIndex = 0;
   let h2Count = 0;
@@ -192,6 +255,18 @@ export function MarkdownView({
       </ul>
     );
     listItems = [];
+  }
+
+  function flushOrderedList(key: string) {
+    if (!orderedListItems.length) return;
+    blocks.push(
+      <ol key={key}>
+        {orderedListItems.map((item, index) => (
+          <li key={`${key}-${index}`}>{renderInline(item)}</li>
+        ))}
+      </ol>
+    );
+    orderedListItems = [];
   }
 
   function flushSpecialBlock(block: SpecialBlock | null) {
@@ -217,21 +292,32 @@ export function MarkdownView({
     const specialStart = line.match(/^:::(tip|question|cta)\s*$/i);
     if (specialStart) {
       flushList(`list-${index}`);
+      flushOrderedList(`olist-${index}`);
       specialBlock = { kind: specialStart[1].toLowerCase(), lines: [], start: index };
       return;
     }
 
     if (!line) {
       flushList(`list-${index}`);
+      flushOrderedList(`olist-${index}`);
       return;
     }
 
     if (line.startsWith("- ")) {
+      flushOrderedList(`olist-${index}`);
       listItems.push(line.slice(2));
       return;
     }
 
+    const orderedItem = line.match(/^\d+\.\s+(.+)$/);
+    if (orderedItem) {
+      flushList(`list-${index}`);
+      orderedListItems.push(orderedItem[1]);
+      return;
+    }
+
     flushList(`list-${index}`);
+    flushOrderedList(`olist-${index}`);
 
     if (line.startsWith("### ")) {
       const heading = headings[headingIndex++];
@@ -254,6 +340,7 @@ export function MarkdownView({
   flushSpecialBlock(specialBlock);
 
   flushList("list-final");
+  flushOrderedList("olist-final");
 
   return <>{blocks}</>;
 }

@@ -229,6 +229,23 @@ const Content = styled.div`
     font-weight: 800;
   }
 
+  strong {
+    font-weight: 900;
+  }
+
+  em {
+    font-style: italic;
+  }
+
+  code {
+    color: ${(p) => p.theme.text};
+    background: ${(p) => p.theme.cardBg2};
+    border: 1px solid ${(p) => p.theme.cardBorder};
+    border-radius: 6px;
+    padding: 2px 5px;
+    font-size: 0.92em;
+  }
+
   .pmp-tip,
   .blog-practice,
   .blog-mid-cta {
@@ -262,7 +279,69 @@ const Content = styled.div`
     font-weight: 850;
   }
 
-  .blog-practice button {
+  .blog-practice-choices {
+    display: grid;
+    gap: 10px;
+    margin: 14px 0 16px;
+  }
+
+  .blog-choice {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 10px;
+    align-items: start;
+    text-align: left;
+    border: 1px solid ${(p) => p.theme.cardBorder};
+    border-radius: 8px;
+    background: ${(p) => p.theme.inputBg};
+    color: ${(p) => p.theme.text};
+    padding: 11px 12px;
+    cursor: pointer;
+    font: inherit;
+    line-height: 1.5;
+  }
+
+  .blog-choice span:first-child {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: ${(p) => p.theme.cardBg};
+    border: 1px solid ${(p) => p.theme.cardBorder};
+    color: ${(p) => p.theme.mutedStrong};
+    font-size: 13px;
+    font-weight: 900;
+  }
+
+  .blog-choice:hover,
+  .blog-choice.is-selected {
+    border-color: ${(p) => p.theme.accent};
+    background: ${(p) => p.theme.accentSoft};
+  }
+
+  .blog-choice.is-answer {
+    border-color: ${(p) => p.theme.successBorder};
+    background: ${(p) => p.theme.successSoft};
+  }
+
+  .blog-choice.is-answer span:first-child {
+    color: ${(p) => p.theme.success};
+    border-color: ${(p) => p.theme.successBorder};
+  }
+
+  .blog-choice.is-wrong {
+    border-color: ${(p) => p.theme.errorBorder};
+    background: ${(p) => p.theme.errorSoft};
+  }
+
+  .blog-choice.is-wrong span:first-child {
+    color: ${(p) => p.theme.error};
+    border-color: ${(p) => p.theme.errorBorder};
+  }
+
+  .blog-practice-check {
     border: 0;
     border-radius: 8px;
     background: ${(p) => p.theme.accent};
@@ -272,10 +351,23 @@ const Content = styled.div`
     cursor: pointer;
   }
 
+  .blog-practice-check:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
   .blog-practice-answer {
     margin-top: 16px;
     padding-top: 14px;
     border-top: 1px solid ${(p) => p.theme.cardBorder};
+  }
+
+  .blog-practice-answer.is-correct strong {
+    color: ${(p) => p.theme.success};
+  }
+
+  .blog-practice-answer.is-incorrect strong {
+    color: ${(p) => p.theme.error};
   }
 
   .blog-mid-cta {
