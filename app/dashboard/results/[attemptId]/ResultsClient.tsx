@@ -1258,7 +1258,7 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
           {modeLabel}{setLabel(attempt.set_id)}
           {passed
             ? ` — Congratulations! You passed with ${scorePercent}%.`
-            : ` — You need ${passThreshold}% to pass.`}
+            : ` — Review your score breakdown to focus your next study session.`}
         </HeroSubtext>
         {!passed && (
           <EncouragementText>
@@ -1350,11 +1350,10 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
 
       {/* ── Pro upsell for free users ────────────────────────── */}
       {!isPro && attempt.mode === "exam" && (() => {
-        const gap = passThreshold - scorePercent;
         let title: string;
         let sub: string;
         if (!passed) {
-          title = `You're ${gap} point${gap === 1 ? "" : "s"} away from passing`;
+          title = "Review your readiness gaps";
           sub = `Topic-level breakdown shows exactly which topics are costing you marks. Unlock it, fix the gaps, and run Set B to confirm you're ready.`;
         } else if (scorePercent < 75) {
           title = "You passed Set A — but are you ready for the real thing?";

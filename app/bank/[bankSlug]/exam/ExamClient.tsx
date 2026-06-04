@@ -366,7 +366,7 @@ function BreakModeSelector({
           <HeroSep>·</HeroSep>
           <HeroChip>{durationStr}</HeroChip>
           <HeroSep>·</HeroSep>
-          <HeroChip>Pass {passThreshold}%</HeroChip>
+          <HeroChip>Domain scoring</HeroChip>
         </HeroMeta>
       </Hero>
 

@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     "PMP study platform",
     "PMI exam preparation",
     "Project Management Professional exam prep",
-    "PMBOK 7th edition",
+    "current PMP Exam Content Outline",
     "PMP certification prep",
     "PMP mock test",
   ],

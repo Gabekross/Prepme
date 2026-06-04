@@ -1124,7 +1124,7 @@ function ScoreTrendLine({ points }: { points: TrendPoint[] }) {
         />
       ))}
 
-      {/* 70% pass threshold */}
+      {/* Readiness guide */}
       <line
         x1={PL} y1={thY} x2={W - PR} y2={thY}
         stroke={successColor} strokeWidth="1.5"
@@ -1134,7 +1134,7 @@ function ScoreTrendLine({ points }: { points: TrendPoint[] }) {
         x={W - PR} y={thY - 4} fontSize="8.5"
         fill={successColor} opacity="0.6" textAnchor="end"
       >
-        70% pass
+        Readiness guide
       </text>
 
       {/* Practice polyline (dashed, muted) */}
@@ -1595,14 +1595,14 @@ export default function DashboardClient() {
       return {
         score,
         band: "Almost There",
-        desc: "You're at the passing threshold. One more solid session should confirm readiness.",
+        desc: "You're in a solid readiness range. One more strong session should confirm your momentum.",
         level: "warning" as const,
       };
     if (score >= 55)
       return {
         score,
         band: "Building Up",
-        desc: "Keep going. Target your weakest domain to close the gap to 70%.",
+        desc: "Keep going. Target your weakest domain to close the biggest readiness gap.",
         level: "warning" as const,
       };
     return {
@@ -1951,7 +1951,7 @@ export default function DashboardClient() {
                             {d.pct}% ({d.correct}/{d.total})
                             {d.pct < 70 && PMI_BLUEPRINT[d.key] >= 40 && (
                               <span
-                                title="Below pass threshold in a high-weight domain"
+                                title="Needs attention in a high-weight domain"
                                 style={{ color: theme.error, fontSize: 12 }}
                               >
                                 ⚠

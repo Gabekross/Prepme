@@ -2326,8 +2326,8 @@ export function EngineRunner(props: {
               <ResultsScore>{examPercent}%</ResultsScore>
               <ResultsSubtext>
                 {examPassed
-                  ? `You're ${examPercent - passThreshold}% above the passing threshold — great result!`
-                  : `You're ${passThreshold - examPercent}% away from passing. Review where you lost marks below.`}
+                  ? `Strong result at ${examPercent}%. Review the domain breakdown below to keep momentum.`
+                  : `You scored ${examPercent}%. Review where you lost marks below.`}
               </ResultsSubtext>
               {engine.attempt.submittedAt && (
                 <SubmittedAt>Submitted {formatSubmittedAt(engine.attempt.submittedAt)}</SubmittedAt>

@@ -819,7 +819,6 @@ export default function InstructionClient({ bankSlug, setSlug }: Props) {
   if (loading) return <Loading>Preparing exam details...</Loading>;
 
   const duration = bankConfig?.durationMinutes ?? 230;
-  const passThreshold = bankConfig?.passThreshold ?? 61;
   const hours = Math.floor(duration / 60);
   const mins = duration % 60;
   const durationStr = hours > 0 ? `${hours}h ${mins > 0 ? `${mins}m` : ""}` : `${mins}m`;
@@ -908,7 +907,7 @@ export default function InstructionClient({ bankSlug, setSlug }: Props) {
               Once submitted, your answers are final and cannot be changed. Results are calculated immediately.
             </RuleItem>
             <RuleItem>
-              A minimum score of <strong>{passThreshold}%</strong> is required to pass. Scores are broken down by domain.
+              Results are shown as an overall score with a domain breakdown to guide your next study steps.
             </RuleItem>
           </RuleList>
         </Panel>

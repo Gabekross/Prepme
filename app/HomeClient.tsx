@@ -766,7 +766,7 @@ const PRO_FEATURES = [
 const FAQ_DATA = [
   {
     q: "Is PMP Mastery Lab updated for 2026?",
-    a: "Yes. Our question bank is aligned with the PMBOK 7th Edition and the current PMP Examination Content Outline (ECO). Questions cover all three domains: People (42%), Process (50%), and Business Environment (8%) with the correct weighting.",
+    a: "Yes. Our question bank is aligned with the current PMP Exam Content Outline (ECO). Questions cover all three domains: People (42%), Process (50%), and Business Environment (8%) with the correct weighting.",
   },
   {
     q: "How does the adaptive difficulty engine work?",
@@ -790,7 +790,7 @@ const FAQ_DATA = [
   },
   {
     q: "How do I pass the PMP on my first attempt?",
-    a: "Focus on understanding concepts, not memorizing questions. Use our adaptive practice mode to identify and strengthen weak domains. Take at least 2-3 full timed simulations to build exam stamina. Review your analytics after each session and target the areas where you score below 70%.",
+    a: "Focus on understanding concepts, not memorizing questions. Use our adaptive practice mode to identify and strengthen weak domains. Take at least 2-3 full timed simulations to build exam stamina. Review your analytics after each session and target the areas that need more work.",
   },
 ];
 
@@ -871,7 +871,7 @@ export default function HomeClient() {
       {/* ── 2. Trust Badges ──────────────────────────────────────────── */}
       <BadgesRow>
         <Badge>PMP 2026 Updated</Badge>
-        <Badge>PMBOK 7th Edition</Badge>
+        <Badge>Current PMP ECO</Badge>
         <Badge>Adaptive Engine</Badge>
       </BadgesRow>
 
@@ -1027,7 +1027,7 @@ export default function HomeClient() {
       <Section $delay={360}>
         <CTABanner>
           <CTABannerH>
-            Most PMP candidates fail below 70%.
+            Most PMP candidates do not know their weak domains.
             <br />
             Find out where you stand.
           </CTABannerH>
