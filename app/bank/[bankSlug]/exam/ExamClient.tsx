@@ -178,12 +178,6 @@ const CardGlow = styled.div<{ $selected: boolean }>`
   transition: background 200ms ease;
 `;
 
-const CardIcon = styled.div`
-  font-size: 28px;
-  margin-bottom: 12px;
-  line-height: 1;
-`;
-
 const CardBadge = styled.div<{ $color: "accent" | "success" | "warning" }>`
   display: inline-flex;
   align-items: center;
@@ -376,7 +370,6 @@ function BreakModeSelector({
         <ModeCard $selected={modeId === "real_pmp"} onClick={() => onModeChange("real_pmp")}>
           <CardGlow $selected={modeId === "real_pmp"} />
           {modeId === "real_pmp" && <SelectedCheck>✓</SelectedCheck>}
-          <CardIcon>🎓</CardIcon>
           <CardBadge $color="accent">Official Format</CardBadge>
           <CardTitle>Real PMP Exam</CardTitle>
           <CardDesc>
@@ -394,7 +387,6 @@ function BreakModeSelector({
         <ModeCard $selected={modeId === "continuous"} onClick={() => onModeChange("continuous")}>
           <CardGlow $selected={modeId === "continuous"} />
           {modeId === "continuous" && <SelectedCheck>✓</SelectedCheck>}
-          <CardIcon>⚡</CardIcon>
           <CardBadge $color="warning">Focus Mode</CardBadge>
           <CardTitle>Continuous Mode</CardTitle>
           <CardDesc>
@@ -411,7 +403,6 @@ function BreakModeSelector({
         <ModeCard $selected={modeId === "adaptive"} onClick={() => onModeChange("adaptive")}>
           <CardGlow $selected={modeId === "adaptive"} />
           {modeId === "adaptive" && <SelectedCheck>✓</SelectedCheck>}
-          <CardIcon>🎯</CardIcon>
           <CardBadge $color="success">Training</CardBadge>
           <CardTitle>Adaptive Training</CardTitle>
           <CardDesc>
