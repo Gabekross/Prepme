@@ -196,6 +196,61 @@ function renderParagraphs(lines: string[], keyPrefix: string) {
     .map((line, index) => <p key={`${keyPrefix}-${index}`}>{renderInline(line)}</p>);
 }
 
+function isMarkdownTableRow(line: string) {
+  const trimmed = line.trim();
+  return trimmed.startsWith("|") && trimmed.endsWith("|") && trimmed.split("|").length >= 3;
+}
+
+function isMarkdownTableSeparator(line: string) {
+  return /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(line.trim());
+}
+
+function parseMarkdownTableRow(line: string) {
+  return line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((cell) => cell.trim());
+}
+
+function renderMarkdownTable(rows: string[], key: string) {
+  const tableRows = rows.filter(isMarkdownTableRow);
+  if (tableRows.length < 2) {
+    return renderParagraphs(tableRows, key);
+  }
+
+  const separatorIndex = tableRows.findIndex(isMarkdownTableSeparator);
+  const headerIndex = separatorIndex > 0 ? separatorIndex - 1 : 0;
+  const headerCells = parseMarkdownTableRow(tableRows[headerIndex]);
+  const bodyRows = tableRows
+    .filter((row, index) => index !== headerIndex && !isMarkdownTableSeparator(row))
+    .map(parseMarkdownTableRow);
+
+  return (
+    <div className="blog-table-wrap" key={key}>
+      <table className="blog-table">
+        <thead>
+          <tr>
+            {headerCells.map((cell, index) => (
+              <th key={`${key}-head-${index}`}>{renderInline(cell)}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {bodyRows.map((row, rowIndex) => (
+            <tr key={`${key}-row-${rowIndex}`}>
+              {headerCells.map((_, cellIndex) => (
+                <td key={`${key}-cell-${rowIndex}-${cellIndex}`}>{renderInline(row[cellIndex] ?? "")}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function renderSpecialBlock(kind: string, lines: string[], key: string) {
   if (kind === "tip") {
     return <PmpTip key={key}>{renderParagraphs(lines, key)}</PmpTip>;
@@ -240,6 +295,7 @@ export function MarkdownView({
   const blocks: React.ReactNode[] = [];
   let listItems: string[] = [];
   let orderedListItems: string[] = [];
+  let tableRows: string[] = [];
   let specialBlock: SpecialBlock | null = null;
   let headingIndex = 0;
   let h2Count = 0;
@@ -269,6 +325,12 @@ export function MarkdownView({
     orderedListItems = [];
   }
 
+  function flushTable(key: string) {
+    if (!tableRows.length) return;
+    blocks.push(renderMarkdownTable(tableRows, key));
+    tableRows = [];
+  }
+
   function flushSpecialBlock(block: SpecialBlock | null) {
     if (!block) return;
     const rendered = renderSpecialBlock(block.kind, block.lines, `special-${block.start}`);
@@ -293,6 +355,7 @@ export function MarkdownView({
     if (specialStart) {
       flushList(`list-${index}`);
       flushOrderedList(`olist-${index}`);
+      flushTable(`table-${index}`);
       specialBlock = { kind: specialStart[1].toLowerCase(), lines: [], start: index };
       return;
     }
@@ -300,10 +363,21 @@ export function MarkdownView({
     if (!line) {
       flushList(`list-${index}`);
       flushOrderedList(`olist-${index}`);
+      if (tableRows.length) {
+        return;
+      }
+      return;
+    }
+
+    if (isMarkdownTableRow(line)) {
+      flushList(`list-${index}`);
+      flushOrderedList(`olist-${index}`);
+      tableRows.push(line);
       return;
     }
 
     if (line.startsWith("- ")) {
+      flushTable(`table-${index}`);
       flushOrderedList(`olist-${index}`);
       listItems.push(line.slice(2));
       return;
@@ -311,6 +385,7 @@ export function MarkdownView({
 
     const orderedItem = line.match(/^\d+\.\s+(.+)$/);
     if (orderedItem) {
+      flushTable(`table-${index}`);
       flushList(`list-${index}`);
       orderedListItems.push(orderedItem[1]);
       return;
@@ -318,6 +393,7 @@ export function MarkdownView({
 
     flushList(`list-${index}`);
     flushOrderedList(`olist-${index}`);
+    flushTable(`table-${index}`);
 
     if (line.startsWith("### ")) {
       const heading = headings[headingIndex++];
@@ -341,6 +417,7 @@ export function MarkdownView({
 
   flushList("list-final");
   flushOrderedList("olist-final");
+  flushTable("table-final");
 
   return <>{blocks}</>;
 }

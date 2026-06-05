@@ -203,6 +203,7 @@ export async function generateMarketingContent(input: GenerateInput): Promise<{
             "Do not imply PMI endorsement, do not guarantee passing, and keep the blog as the source of truth.",
             "The blog.contentMarkdown field must be Markdown only, no HTML.",
             "Use a strong article structure with 5-7 H2 sections and optional H3 subsections.",
+            "If a comparison table is useful, use a valid GitHub-style Markdown pipe table with one header row, one separator row, and no blank lines between table rows.",
             "Include exactly one PMP tip callout using this syntax: :::tip, then useful tip text, then :::.",
             "Include exactly one practice question block using this syntax: :::question, then Question:, A-D choices, Correct:, Explanation:, then :::.",
             "Do not include a final sales CTA inside the article body; the article template adds conversion CTAs automatically.",

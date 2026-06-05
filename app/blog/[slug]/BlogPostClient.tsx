@@ -254,6 +254,45 @@ const Content = styled.div`
     font-size: 0.92em;
   }
 
+  .blog-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    margin: 28px 0 30px;
+    border: 1px solid ${(p) => p.theme.cardBorder};
+    border-radius: 8px;
+    background: ${(p) => p.theme.cardBg};
+  }
+
+  .blog-table {
+    width: 100%;
+    min-width: 560px;
+    border-collapse: collapse;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .blog-table th,
+  .blog-table td {
+    padding: 13px 15px;
+    border-bottom: 1px solid ${(p) => p.theme.cardBorder};
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .blog-table th {
+    background: ${(p) => p.theme.cardBg2};
+    color: ${(p) => p.theme.text};
+    font-weight: 900;
+  }
+
+  .blog-table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .blog-table tbody tr:nth-child(even) {
+    background: ${(p) => p.theme.inputBg};
+  }
+
   .pmp-tip,
   .blog-practice,
   .blog-mid-cta {
@@ -417,6 +456,21 @@ const Content = styled.div`
 
     h2 { font-size: 24px; }
     h3 { font-size: 20px; }
+
+    .blog-table-wrap {
+      margin-left: -2px;
+      margin-right: -2px;
+    }
+
+    .blog-table {
+      min-width: 520px;
+      font-size: 14px;
+    }
+
+    .blog-table th,
+    .blog-table td {
+      padding: 11px 12px;
+    }
 
     .blog-mid-cta {
       display: grid;
