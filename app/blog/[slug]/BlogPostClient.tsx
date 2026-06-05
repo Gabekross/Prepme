@@ -66,8 +66,8 @@ const Meta = styled.div`
 
 const Title = styled.h1`
   color: ${(p) => p.theme.text};
-  font-size: clamp(34px, 6vw, 64px);
-  line-height: 1.02;
+  font-size: clamp(32px, 4.8vw, 48px);
+  line-height: 1.08;
   letter-spacing: 0;
   margin: 0 0 16px;
   max-width: 860px;
