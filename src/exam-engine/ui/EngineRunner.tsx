@@ -149,6 +149,32 @@ const ExamStatusBadge = styled.div<{ $urgent: boolean }>`
   color: ${(p) => p.$urgent ? (p.theme.warning ?? "#f59e0b") : p.theme.muted};
 `;
 
+const PracticeProgress = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid ${(p) => p.theme.successBorder};
+  background: ${(p) => p.theme.successSoft};
+  color: ${(p) => p.theme.success};
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  flex-wrap: wrap;
+
+  span:last-child {
+    color: ${(p) => p.theme.muted};
+  }
+
+  @media (max-width: 480px) {
+    display: grid;
+    justify-items: start;
+  }
+`;
+
 
 /* ── stats ───────────────────────────────────────────────────────────────── */
 
@@ -1084,11 +1110,6 @@ const CompleteCard = styled.div`
   padding: 20px 20px 18px;
   text-align: center;
   animation: ${slideIn} 300ms ease both;
-`;
-
-const CompleteEmoji = styled.div`
-  font-size: 36px;
-  margin-bottom: 8px;
 `;
 
 const CompleteTitle = styled.div`
@@ -2589,7 +2610,6 @@ export function EngineRunner(props: {
         {/* PRACTICE COMPLETE banner */}
         {practiceSubmitted && result && (
           <CompleteCard>
-            <CompleteEmoji>{(result.totalScore / result.maxScore) >= 0.8 ? "Excellent" : (result.totalScore / result.maxScore) >= 0.6 ? "Good" : "Review"}</CompleteEmoji>
             <CompleteTitle>
               {(result.totalScore / result.maxScore) >= 0.8
                 ? "Excellent Work!"
@@ -2627,6 +2647,12 @@ export function EngineRunner(props: {
         {initialized && !(mode === "exam" && engine.attempt?.submittedAt) && (
           <>
             <Card>
+              {mode === "practice" && !engine.attempt?.submittedAt && engine.attempt && (
+                <PracticeProgress>
+                  <span>Question {x} of {total}</span>
+                  <span>Answered {answeredCount} of {total}</span>
+                </PracticeProgress>
+              )}
               {current ? (
                 <QuestionRenderer
                   question={current}
