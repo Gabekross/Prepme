@@ -12,6 +12,8 @@ type SpecialBlock = {
   start: number;
 };
 
+type BlogEventTracker = (eventName: string, properties?: Record<string, string | number | boolean | null>) => void;
+
 function slugify(text: string) {
   return text
     .toLowerCase()
@@ -112,14 +114,19 @@ function PmpTip({ children }: { children: React.ReactNode }) {
   );
 }
 
-function MidArticleCta() {
+function MidArticleCta({ onEvent }: { onEvent?: BlogEventTracker }) {
   return (
     <div className="blog-mid-cta">
       <div>
         <div className="blog-mid-cta-title">Ready to test your PMP knowledge?</div>
         <p>Try a realistic PMP-style practice session and see where you stand.</p>
       </div>
-      <a href="/bank/pmp">Start Free PMP Simulation</a>
+      <a
+        href="/bank/pmp"
+        onClick={() => onEvent?.("blog_cta_click", { target: "mid_article_simulation", href: "/bank/pmp" })}
+      >
+        Start Free PMP Simulation
+      </a>
     </div>
   );
 }
@@ -129,11 +136,13 @@ function BlogPracticeQuestion({
   choices,
   correct,
   explanation,
+  onEvent,
 }: {
   question: string;
   choices: string[];
   correct: string;
   explanation: string;
+  onEvent?: BlogEventTracker;
 }) {
   const [selected, setSelected] = React.useState<string | null>(null);
   const [checked, setChecked] = React.useState(false);
@@ -163,6 +172,7 @@ function BlogPracticeQuestion({
               onClick={() => {
                 setSelected(letter);
                 setChecked(false);
+                onEvent?.("blog_practice_answer", { selected: letter, question: question.slice(0, 120) });
               }}
             >
               <span>{letter}</span>
@@ -174,7 +184,18 @@ function BlogPracticeQuestion({
       <button
         className="blog-practice-check"
         type="button"
-        onClick={() => setChecked((value) => (selected ? !value : value))}
+        onClick={() => {
+          if (!selected) return;
+          const nextChecked = !checked;
+          setChecked(nextChecked);
+          if (nextChecked) {
+            onEvent?.("blog_practice_check", {
+              selected,
+              correct: normalizedCorrect,
+              isCorrect: selectedLetter === normalizedCorrect,
+            });
+          }
+        }}
         disabled={!selected}
       >
         {checked ? "Hide Explanation" : selected ? "Check Answer" : "Select an Answer"}
@@ -251,13 +272,13 @@ function renderMarkdownTable(rows: string[], key: string) {
   );
 }
 
-function renderSpecialBlock(kind: string, lines: string[], key: string) {
+function renderSpecialBlock(kind: string, lines: string[], key: string, onEvent?: BlogEventTracker) {
   if (kind === "tip") {
     return <PmpTip key={key}>{renderParagraphs(lines, key)}</PmpTip>;
   }
 
   if (kind === "cta") {
-    return <MidArticleCta key={key} />;
+    return <MidArticleCta key={key} onEvent={onEvent} />;
   }
 
   if (kind === "question") {
@@ -275,6 +296,7 @@ function renderSpecialBlock(kind: string, lines: string[], key: string) {
         choices={choices}
         correct={correct}
         explanation={explanation}
+        onEvent={onEvent}
       />
     );
   }
@@ -286,10 +308,12 @@ export function MarkdownView({
   markdown,
   headings = extractHeadings(markdown),
   insertMidCta = false,
+  onEvent,
 }: {
   markdown: string;
   headings?: BlogHeading[];
   insertMidCta?: boolean;
+  onEvent?: BlogEventTracker;
 }) {
   const lines = markdown.split(/\r?\n/);
   const blocks: React.ReactNode[] = [];
@@ -333,7 +357,7 @@ export function MarkdownView({
 
   function flushSpecialBlock(block: SpecialBlock | null) {
     if (!block) return;
-    const rendered = renderSpecialBlock(block.kind, block.lines, `special-${block.start}`);
+    const rendered = renderSpecialBlock(block.kind, block.lines, `special-${block.start}`, onEvent);
     if (rendered) blocks.push(rendered);
   }
 
@@ -342,7 +366,7 @@ export function MarkdownView({
 
     if (specialBlock) {
       if (line === ":::") {
-        const rendered = renderSpecialBlock(specialBlock.kind, specialBlock.lines, `special-${specialBlock.start}`);
+        const rendered = renderSpecialBlock(specialBlock.kind, specialBlock.lines, `special-${specialBlock.start}`, onEvent);
         if (rendered) blocks.push(rendered);
         specialBlock = null;
       } else {
@@ -403,7 +427,7 @@ export function MarkdownView({
       blocks.push(<h2 id={heading?.id} key={index}>{renderInline(line.slice(3))}</h2>);
       h2Count += 1;
       if (insertMidCta && h2Count === 3 && !insertedAutoCta) {
-        blocks.push(<MidArticleCta key={`auto-cta-${index}`} />);
+        blocks.push(<MidArticleCta key={`auto-cta-${index}`} onEvent={onEvent} />);
         insertedAutoCta = true;
       }
     } else if (line.startsWith("# ")) {

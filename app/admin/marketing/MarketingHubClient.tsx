@@ -11,6 +11,25 @@ type Overview = {
   posts: { total: number; byStatus: Record<string, number> };
   topics: { total: number; byStatus: Record<string, number> };
   assets: { total: number; byStatus: Record<string, number> };
+  blogAnalytics?: {
+    periodDays: number;
+    totals: {
+      views: number;
+      uniqueSessions: number;
+      ctaClicks: number;
+      practiceInteractions: number;
+      deepReads: number;
+    };
+    topPosts: Array<{
+      blogPostId: string;
+      title: string;
+      slug: string;
+      views: number;
+      ctaClicks: number;
+      practiceInteractions: number;
+      deepReads: number;
+    }>;
+  };
   categories: { id: string; name: string; slug: string }[];
 };
 
@@ -139,6 +158,46 @@ const StatLabel = styled.div`
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+`;
+
+const AnalyticsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+
+  @media (max-width: 760px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+`;
+
+const TopPostList = styled.div`
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+`;
+
+const TopPostRow = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  background: ${(p) => p.theme.cardBg2};
+  border-radius: 10px;
+  padding: 10px 12px;
+`;
+
+const TopPostTitle = styled.div`
+  color: ${(p) => p.theme.text};
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.35;
+`;
+
+const MetricLine = styled.div`
+  color: ${(p) => p.theme.muted};
+  font-size: 12px;
+  margin-top: 4px;
 `;
 
 const Form = styled.form`
@@ -425,6 +484,10 @@ export default function MarketingHubClient() {
   const [scheduleFor, setScheduleFor] = useState("");
 
   const postCounts = useMemo(() => overview?.posts.byStatus ?? {}, [overview]);
+  const analytics = overview?.blogAnalytics;
+  const analyticsByPost = useMemo(() => {
+    return new Map((analytics?.topPosts ?? []).map((post) => [post.blogPostId, post]));
+  }, [analytics?.topPosts]);
 
   useEffect(() => {
     requireAdminServer().then((result) => {
@@ -693,6 +756,50 @@ export default function MarketingHubClient() {
         </Stat>
       </StatGrid>
 
+      <Panel style={{ marginBottom: 16 }}>
+        <Row style={{ justifyContent: "space-between", marginBottom: 12 }}>
+          <SectionTitle style={{ margin: 0 }}>Blog Analytics</SectionTitle>
+          <Meta>Last {analytics?.periodDays ?? 30} days</Meta>
+        </Row>
+        <AnalyticsGrid>
+          <Stat>
+            <StatValue>{analytics?.totals.views ?? 0}</StatValue>
+            <StatLabel>Views</StatLabel>
+          </Stat>
+          <Stat>
+            <StatValue>{analytics?.totals.uniqueSessions ?? 0}</StatValue>
+            <StatLabel>Sessions</StatLabel>
+          </Stat>
+          <Stat>
+            <StatValue>{analytics?.totals.ctaClicks ?? 0}</StatValue>
+            <StatLabel>CTA Clicks</StatLabel>
+          </Stat>
+          <Stat>
+            <StatValue>{analytics?.totals.deepReads ?? 0}</StatValue>
+            <StatLabel>Deep Reads</StatLabel>
+          </Stat>
+          <Stat>
+            <StatValue>{analytics?.totals.practiceInteractions ?? 0}</StatValue>
+            <StatLabel>Practice Actions</StatLabel>
+          </Stat>
+        </AnalyticsGrid>
+        <TopPostList>
+          {analytics?.topPosts.length ? analytics.topPosts.map((post) => (
+            <TopPostRow key={post.blogPostId}>
+              <div>
+                <TopPostTitle>{post.title}</TopPostTitle>
+                <MetricLine>
+                  {post.views} views &bull; {post.ctaClicks} CTA clicks &bull; {post.deepReads} deep reads
+                </MetricLine>
+              </div>
+              {post.slug && <Button as="a" href={`/blog/${post.slug}`} target="_blank" rel="noreferrer">Open</Button>}
+            </TopPostRow>
+          )) : (
+            <Message>No blog analytics yet. New events will appear here after readers visit published posts.</Message>
+          )}
+        </TopPostList>
+      </Panel>
+
       <Grid>
         <div style={{ display: "grid", gap: 16 }}>
           <Panel>
@@ -748,6 +855,9 @@ export default function MarketingHubClient() {
                   <Meta>
                     <Badge>{post.status}</Badge>{" "}
                     {post.blog_categories?.name ?? "Uncategorized"}
+                    {analyticsByPost.has(post.id) && (
+                      <> &bull; {analyticsByPost.get(post.id)?.views ?? 0} views</>
+                    )}
                   </Meta>
                 </PostButton>
               ))}

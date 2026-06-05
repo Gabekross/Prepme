@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import styled, { createGlobalStyle, keyframes } from "styled-components";
 import type { BlogPost } from "@/src/marketing/types";
@@ -660,6 +661,73 @@ export default function BlogPostClient({
   const category = post.blog_categories?.name ?? "PMP Exam Prep";
   const headings = extractHeadings(post.content_markdown);
   const readingTime = estimateReadingTime(post.content_markdown);
+  const sentScrollDepths = useRef(new Set<number>());
+
+  const trackBlogEvent = useCallback((eventName: string, properties: Record<string, string | number | boolean | null> = {}) => {
+    let sessionId: string | null = null;
+    try {
+      sessionId = window.sessionStorage.getItem("pmp_blog_session_id");
+      if (!sessionId) {
+        sessionId = crypto.randomUUID();
+        window.sessionStorage.setItem("pmp_blog_session_id", sessionId);
+      }
+    } catch {
+      sessionId = null;
+    }
+
+    const payload = {
+      eventName,
+      blogPostId: post.id,
+      properties: {
+        slug: post.slug,
+        title: post.title,
+        category,
+        sessionId,
+        path: typeof window !== "undefined" ? window.location.pathname : `/blog/${post.slug}`,
+        referrer: typeof document !== "undefined" ? document.referrer || null : null,
+        ...properties,
+      },
+    };
+
+    const body = JSON.stringify(payload);
+    if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+      navigator.sendBeacon("/api/marketing/events", new Blob([body], { type: "application/json" }));
+      return;
+    }
+
+    void fetch("/api/marketing/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      keepalive: true,
+    }).catch(() => {});
+  }, [category, post.id, post.slug, post.title]);
+
+  useEffect(() => {
+    trackBlogEvent("blog_view", {
+      readingTime,
+      hasFeaturedImage: Boolean(post.featured_image_url),
+    });
+  }, [post.featured_image_url, readingTime, trackBlogEvent]);
+
+  useEffect(() => {
+    const thresholds = [25, 50, 75, 100];
+
+    function onScroll() {
+      const doc = document.documentElement;
+      const scrollable = doc.scrollHeight - window.innerHeight;
+      if (scrollable <= 0) return;
+      const depth = Math.min(100, Math.round((window.scrollY / scrollable) * 100));
+      const threshold = thresholds.find((value) => depth >= value && !sentScrollDepths.current.has(value));
+      if (!threshold) return;
+      sentScrollDepths.current.add(threshold);
+      trackBlogEvent("blog_scroll_depth", { depth: threshold });
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [trackBlogEvent]);
 
   return (
     <Page>
@@ -691,7 +759,7 @@ export default function BlogPostClient({
         <ArticleToc headings={headings} />
         <ArticleColumn $wide={!headings.length}>
           <Content>
-            <MarkdownView markdown={post.content_markdown} headings={headings} insertMidCta />
+            <MarkdownView markdown={post.content_markdown} headings={headings} insertMidCta onEvent={trackBlogEvent} />
           </Content>
 
           <AuthorBox>
@@ -714,8 +782,19 @@ export default function BlogPostClient({
               <li>Domain-based recommendations</li>
             </BenefitGrid>
             <ButtonRow>
-              <CtaButton href="/bank/pmp" $primary>Start Free</CtaButton>
-              <CtaButton href="/#pricing">View Premium</CtaButton>
+              <CtaButton
+                href="/bank/pmp"
+                $primary
+                onClick={() => trackBlogEvent("blog_cta_click", { target: "end_cta_start_free", href: "/bank/pmp" })}
+              >
+                Start Free
+              </CtaButton>
+              <CtaButton
+                href="/#pricing"
+                onClick={() => trackBlogEvent("blog_cta_click", { target: "end_cta_pricing", href: "/#pricing" })}
+              >
+                View Premium
+              </CtaButton>
             </ButtonRow>
           </EndCta>
 
@@ -724,7 +803,15 @@ export default function BlogPostClient({
               <RelatedTitle>Related Articles</RelatedTitle>
               <RelatedGrid>
                 {relatedPosts.map((related) => (
-                  <RelatedCard key={related.id} href={`/blog/${related.slug}`}>
+                  <RelatedCard
+                    key={related.id}
+                    href={`/blog/${related.slug}`}
+                    onClick={() => trackBlogEvent("blog_cta_click", {
+                      target: "related_article",
+                      href: `/blog/${related.slug}`,
+                      relatedPostId: related.id,
+                    })}
+                  >
                     <RelatedMeta>
                       {related.blog_categories?.name ?? "PMP Exam Prep"} &bull; {formatDate(related.published_at)}
                     </RelatedMeta>
