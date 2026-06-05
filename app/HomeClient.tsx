@@ -888,6 +888,18 @@ export default function HomeClient() {
       <Divider />
 
       {/* ── 4. Why This Is Different ─────────────────────────────────── */}
+      <Section $delay={140}>
+        <SectionHeading>PMP Exam Tips & Study Guides</SectionHeading>
+        <SectionSub>
+          Read practical PMP tips, scenario breakdowns, and study strategies from the PMP Mastery Lab blog.
+        </SectionSub>
+        <HeroCTAs>
+          <PrimaryCTA href="/blog">Read the Blog</PrimaryCTA>
+        </HeroCTAs>
+      </Section>
+
+      <Divider />
+
       <Section $delay={160}>
         <SectionHeading>Why This Is Different</SectionHeading>
         <SectionSub>
