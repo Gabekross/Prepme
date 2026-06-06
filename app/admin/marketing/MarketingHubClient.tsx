@@ -259,6 +259,35 @@ const PostList = styled.div`
   overflow: auto;
 `;
 
+const QueueTools = styled.div`
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+`;
+
+const StatusTabs = styled.div`
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+`;
+
+const StatusTab = styled.button<{ $active?: boolean }>`
+  border: 1px solid ${(p) => (p.$active ? p.theme.accent : p.theme.cardBorder)};
+  background: ${(p) => (p.$active ? p.theme.accentSoft : p.theme.cardBg2)};
+  color: ${(p) => (p.$active ? p.theme.accent : p.theme.mutedStrong)};
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+  text-transform: uppercase;
+
+  &:hover {
+    border-color: ${(p) => p.theme.accent};
+    color: ${(p) => p.theme.accent};
+  }
+`;
+
 const PostButton = styled.button<{ $active?: boolean }>`
   text-align: left;
   border: 1px solid ${(p) => (p.$active ? p.theme.accent : p.theme.cardBorder)};
@@ -466,6 +495,16 @@ const blogImageOptions = [
   { label: "Project decision-making", url: "/images/blog/project-decision-making.png" },
 ];
 
+const queueStatuses: Array<{ value: "all" | BlogPost["status"]; label: string }> = [
+  { value: "all", label: "All" },
+  { value: "draft", label: "Draft" },
+  { value: "review", label: "Review" },
+  { value: "approved", label: "Approved" },
+  { value: "scheduled", label: "Scheduled" },
+  { value: "published", label: "Published" },
+  { value: "archived", label: "Archived" },
+];
+
 export default function MarketingHubClient() {
   const [checked, setChecked] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -482,12 +521,26 @@ export default function MarketingHubClient() {
   const [theme, setTheme] = useState("PMP Exam Prep");
   const [categoryId, setCategoryId] = useState("");
   const [scheduleFor, setScheduleFor] = useState("");
+  const [queueStatus, setQueueStatus] = useState<"all" | BlogPost["status"]>("all");
+  const [queueSearch, setQueueSearch] = useState("");
 
   const postCounts = useMemo(() => overview?.posts.byStatus ?? {}, [overview]);
   const analytics = overview?.blogAnalytics;
   const analyticsByPost = useMemo(() => {
     return new Map((analytics?.topPosts ?? []).map((post) => [post.blogPostId, post]));
   }, [analytics?.topPosts]);
+  const filteredPosts = useMemo(() => {
+    const search = queueSearch.trim().toLowerCase();
+    return posts.filter((post) => {
+      const matchesStatus = queueStatus === "all" || post.status === queueStatus;
+      const matchesSearch =
+        !search ||
+        post.title.toLowerCase().includes(search) ||
+        post.slug.toLowerCase().includes(search) ||
+        (post.blog_categories?.name ?? "").toLowerCase().includes(search);
+      return matchesStatus && matchesSearch;
+    });
+  }, [posts, queueSearch, queueStatus]);
 
   useEffect(() => {
     requireAdminServer().then((result) => {
@@ -843,9 +896,37 @@ export default function MarketingHubClient() {
 
           <Panel>
             <SectionTitle>Blog Queue</SectionTitle>
+            <QueueTools>
+              <Input
+                value={queueSearch}
+                onChange={(e) => setQueueSearch(e.target.value)}
+                placeholder="Search title, slug, or category"
+              />
+              <StatusTabs>
+                {queueStatuses.map((status) => (
+                  <StatusTab
+                    key={status.value}
+                    type="button"
+                    $active={queueStatus === status.value}
+                    onClick={() => setQueueStatus(status.value)}
+                  >
+                    {status.label}
+                    {status.value !== "all" && typeof postCounts[status.value] === "number"
+                      ? ` ${postCounts[status.value]}`
+                      : ""}
+                  </StatusTab>
+                ))}
+              </StatusTabs>
+              <Meta>
+                Showing {filteredPosts.length} of {posts.length} posts
+              </Meta>
+            </QueueTools>
             <PostList>
               {posts.length === 0 && <Message>No marketing content yet.</Message>}
-              {posts.map((post) => (
+              {posts.length > 0 && filteredPosts.length === 0 && (
+                <Message>No posts match this queue filter.</Message>
+              )}
+              {filteredPosts.map((post) => (
                 <PostButton
                   key={post.id}
                   $active={activePost?.id === post.id}

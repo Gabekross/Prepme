@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
       .from("blog_posts")
       .select("*, blog_categories(id,name,slug)")
       .order("updated_at", { ascending: false })
-      .limit(100);
+      .limit(500);
 
     if (status && status !== "all") query = query.eq("status", status);
 
