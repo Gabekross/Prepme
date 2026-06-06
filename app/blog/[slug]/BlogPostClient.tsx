@@ -266,10 +266,11 @@ const Content = styled.div`
 
   .blog-table {
     width: 100%;
-    min-width: 560px;
+    min-width: 760px;
     border-collapse: collapse;
     font-size: 15px;
     line-height: 1.55;
+    table-layout: auto;
   }
 
   .blog-table th,
@@ -278,12 +279,16 @@ const Content = styled.div`
     border-bottom: 1px solid ${(p) => p.theme.cardBorder};
     text-align: left;
     vertical-align: top;
+    word-break: normal;
+    overflow-wrap: normal;
+    hyphens: none;
   }
 
   .blog-table th {
     background: ${(p) => p.theme.cardBg2};
     color: ${(p) => p.theme.text};
     font-weight: 900;
+    white-space: nowrap;
   }
 
   .blog-table tr:last-child td {
@@ -464,7 +469,7 @@ const Content = styled.div`
     }
 
     .blog-table {
-      min-width: 520px;
+      min-width: 720px;
       font-size: 14px;
     }
 
