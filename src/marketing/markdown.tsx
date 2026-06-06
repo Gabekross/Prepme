@@ -148,7 +148,7 @@ function BlogPracticeQuestion({
 }) {
   const [selected, setSelected] = React.useState<string | null>(null);
   const [checked, setChecked] = React.useState(false);
-  const normalizedCorrect = correct.trim().slice(0, 1).toUpperCase();
+  const normalizedCorrect = correct.trim().match(/[A-D]/i)?.[0].toUpperCase() ?? "";
   const selectedLetter = selected?.slice(0, 1).toUpperCase() ?? null;
   const isCorrect = checked && selectedLetter === normalizedCorrect;
 
@@ -274,6 +274,60 @@ function renderMarkdownTable(rows: string[], key: string) {
   );
 }
 
+function extractQuestionLine(lines: string[]) {
+  const explicit = lines.find((line) => /^q(uestion)?\s*:/i.test(line.trim()));
+  if (explicit) return explicit.replace(/^q(uestion)?\s*:\s*/i, "").trim();
+
+  return lines.find((line) => {
+    const trimmed = line.trim();
+    return (
+      trimmed.length > 0 &&
+      !/^label\s*:/i.test(trimmed) &&
+      !/^correct(\s+answer)?\s*:/i.test(trimmed) &&
+      !/^answer\s*:/i.test(trimmed) &&
+      !/^explanation\s*:/i.test(trimmed) &&
+      !/^[A-D][).:-]\s+/i.test(trimmed) &&
+      !/^-\s*[A-D][).:-]\s+/i.test(trimmed) &&
+      !/^-\s+/.test(trimmed)
+    );
+  })?.trim() ?? "";
+}
+
+function parseChoiceLine(line: string) {
+  const trimmed = line.trim();
+  const lettered = trimmed.match(/^-?\s*([A-D])[).:-]\s+(.+)$/i);
+  if (lettered) {
+    return { letter: lettered[1].toUpperCase(), text: lettered[2].trim() };
+  }
+
+  const bullet = trimmed.match(/^-\s+(.+)$/);
+  if (bullet) return { letter: null, text: bullet[1].trim() };
+
+  return null;
+}
+
+function extractCorrectLetter(lines: string[], choices: Array<{ letter: string | null; text: string }>) {
+  const correctLine = lines.find((line) => /^correct(\s+answer)?\s*:/i.test(line.trim()) || /^answer\s*:/i.test(line.trim()));
+  const raw = correctLine
+    ?.replace(/^correct(\s+answer)?\s*:\s*/i, "")
+    .replace(/^answer\s*:\s*/i, "")
+    .trim() ?? "";
+
+  const direct = raw.match(/^[A-D]\b|^[A-D][).:-]/i)?.[0]?.slice(0, 1).toUpperCase();
+  if (direct) return direct;
+
+  const embedded = raw.match(/\b([A-D])\b/i)?.[1]?.toUpperCase();
+  if (embedded) return embedded;
+
+  const normalizedRaw = raw.toLowerCase();
+  const matchedIndex = choices.findIndex((choice) => normalizedRaw && choice.text.toLowerCase() === normalizedRaw);
+  if (matchedIndex >= 0) {
+    return choices[matchedIndex].letter ?? String.fromCharCode(65 + matchedIndex);
+  }
+
+  return "";
+}
+
 function renderSpecialBlock(kind: string, lines: string[], key: string, onEvent?: BlogEventTracker) {
   if (kind === "tip") {
     const labelLine = lines.find((line) => /^label:/i.test(line.trim()));
@@ -287,13 +341,13 @@ function renderSpecialBlock(kind: string, lines: string[], key: string, onEvent?
   }
 
   if (kind === "question") {
-    const label = lines.find((line) => /^label:/i.test(line))?.replace(/^label:\s*/i, "") ?? "Practice Question";
-    const question = lines.find((line) => /^q(uestion)?:/i.test(line))?.replace(/^q(uestion)?:\s*/i, "") ?? lines[0] ?? "";
-    const correct = lines.find((line) => /^correct:/i.test(line))?.replace(/^correct:\s*/i, "") ?? "";
-    const explanation = lines.find((line) => /^explanation:/i.test(line))?.replace(/^explanation:\s*/i, "") ?? "";
-    const choices = lines
-      .filter((line) => /^[A-D][).]\s+/i.test(line) || /^-\s+/.test(line))
-      .map((line) => line.replace(/^[A-D][).]\s+/i, "").replace(/^-\s+/, ""));
+    const trimmedLines = lines.map((line) => line.trim()).filter(Boolean);
+    const label = trimmedLines.find((line) => /^label\s*:/i.test(line))?.replace(/^label\s*:\s*/i, "") ?? "Practice Question";
+    const question = extractQuestionLine(trimmedLines);
+    const explanation = trimmedLines.find((line) => /^explanation\s*:/i.test(line))?.replace(/^explanation\s*:\s*/i, "") ?? "";
+    const parsedChoices = trimmedLines.map(parseChoiceLine).filter((choice): choice is { letter: string | null; text: string } => Boolean(choice));
+    const correct = extractCorrectLetter(trimmedLines, parsedChoices);
+    const choices = parsedChoices.map((choice) => choice.text);
 
     return (
       <BlogPracticeQuestion
