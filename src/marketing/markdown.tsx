@@ -132,12 +132,14 @@ function MidArticleCta({ onEvent }: { onEvent?: BlogEventTracker }) {
 }
 
 function BlogPracticeQuestion({
+  label = "Practice Question",
   question,
   choices,
   correct,
   explanation,
   onEvent,
 }: {
+  label?: string;
   question: string;
   choices: string[];
   correct: string;
@@ -152,7 +154,7 @@ function BlogPracticeQuestion({
 
   return (
     <div className="blog-practice">
-      <div className="blog-practice-label">Practice Question</div>
+      <div className="blog-practice-label">{label}</div>
       <p className="blog-practice-question">{renderInline(question)}</p>
       <div className="blog-practice-choices">
         {choices.map((choice, index) => {
@@ -285,6 +287,7 @@ function renderSpecialBlock(kind: string, lines: string[], key: string, onEvent?
   }
 
   if (kind === "question") {
+    const label = lines.find((line) => /^label:/i.test(line))?.replace(/^label:\s*/i, "") ?? "Practice Question";
     const question = lines.find((line) => /^q(uestion)?:/i.test(line))?.replace(/^q(uestion)?:\s*/i, "") ?? lines[0] ?? "";
     const correct = lines.find((line) => /^correct:/i.test(line))?.replace(/^correct:\s*/i, "") ?? "";
     const explanation = lines.find((line) => /^explanation:/i.test(line))?.replace(/^explanation:\s*/i, "") ?? "";
@@ -295,6 +298,7 @@ function renderSpecialBlock(kind: string, lines: string[], key: string, onEvent?
     return (
       <BlogPracticeQuestion
         key={key}
+        label={label}
         question={question}
         choices={choices}
         correct={correct}

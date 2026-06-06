@@ -51,6 +51,17 @@ function fallbackContent(input: GenerateInput): GeneratedMarketingContent {
       "## PMP Exam Connection",
       `For PMP candidates, ${topic.toLowerCase()} can still appear in scenario questions. The exam connection is usually about choosing a collaborative, value-focused, and context-aware response rather than memorizing a definition.`,
       "",
+      ":::question",
+      "Label: Apply This Concept",
+      `Question: A project team is dealing with ${topic.toLowerCase()} during delivery. What should the project manager do first?`,
+      "A. Choose a response alone to avoid slowing the team down",
+      "B. Clarify what is happening and involve the people affected",
+      "C. Escalate immediately before discussing the issue with the team",
+      "D. Document the issue and wait for the next formal review",
+      "Correct: B",
+      "Explanation: In real project work, the stronger first move is to understand the situation, involve the right people, and make a value-focused decision before jumping to escalation or paperwork.",
+      ":::",
+      "",
       "## Reflection Prompt",
       `Think of a recent project where ${topic.toLowerCase()} affected delivery. What signal did you notice first, who needed to be involved, and what would you do differently next time?`,
     ].join("\n");
@@ -116,6 +127,24 @@ function fallbackContent(input: GenerateInput): GeneratedMarketingContent {
           channel: "facebook",
           variant: 1,
           body: `Whether you are leading projects now or preparing for the PMP exam, ${topic.toLowerCase()} is easier to apply when you connect it to real team and stakeholder decisions. Read the guide: ${blogUrl}`,
+        },
+        {
+          channel: "instagram",
+          variant: 1,
+          title: `${topic}: Practical PM Moves`,
+          body: [
+            `${topic} is easier to apply when you treat it as a project decision, not just a definition.`,
+            "",
+            "Try this:",
+            "- Clarify the situation",
+            "- Identify who is affected",
+            "- Make trade-offs visible",
+            "- Choose the next action that protects value",
+            "",
+            `Full guide: ${blogUrl}`,
+            "",
+            "#ProjectManagement #PMP #Leadership #Delivery",
+          ].join("\n"),
         },
         {
           channel: "newsletter",
@@ -231,6 +260,24 @@ function fallbackContent(input: GenerateInput): GeneratedMarketingContent {
         body: `Studying ${topic} for the PMP exam? Focus on the decision pattern: understand the issue, support the team, engage stakeholders, and protect value. Read the guide: ${blogUrl}`,
       },
       {
+        channel: "instagram",
+        variant: 1,
+        title: `${topic}: PMP Decision Pattern`,
+        body: [
+          `${topic} questions often test judgment, not memorization.`,
+          "",
+          "Look for the answer that:",
+          "- Clarifies the problem",
+          "- Supports the team",
+          "- Engages stakeholders",
+          "- Protects project value",
+          "",
+          `Full guide: ${blogUrl}`,
+          "",
+          "#PMP #PMPExamPrep #ProjectManagement #PMPMindset",
+        ].join("\n"),
+      },
+      {
         channel: "newsletter",
         variant: 1,
         title: `${topic} for PMP Candidates`,
@@ -300,7 +347,7 @@ export async function generateMarketingContent(input: GenerateInput): Promise<{
           additionalProperties: false,
           required: ["channel", "variant", "title", "body"],
           properties: {
-            channel: { type: "string", enum: ["master_article", "blog", "threads", "linkedin", "x", "facebook", "newsletter"] },
+            channel: { type: "string", enum: ["master_article", "blog", "threads", "linkedin", "x", "facebook", "instagram", "newsletter"] },
             variant: { type: "number" },
             title: { type: ["string", "null"] },
             body: { type: "string" },
@@ -335,21 +382,23 @@ export async function generateMarketingContent(input: GenerateInput): Promise<{
               : "Use concrete PMP scenario framing and exam-oriented decision patterns.",
             "Do not imply PMI endorsement, do not guarantee passing, and keep the blog as the source of truth.",
             "The blog.contentMarkdown field must be Markdown only, no HTML.",
+            "Use varied article titles. Avoid repeatedly starting titles with Mastering, Ultimate Guide, Complete Guide, or The Complete Guide. Prefer natural title patterns such as How to Use [Topic] in Real Projects, [Topic] for Project Managers, What Project Leaders Should Know About [Topic], Using [Topic] to Improve Team Decisions, or A Practical Guide to [Topic].",
             "Use a strong article structure with 5-7 H2 sections and optional H3 subsections.",
             "If a comparison table is useful, use a valid GitHub-style Markdown pipe table with one header row, one separator row, and no blank lines between table rows.",
             contentMode === "pm_professional"
               ? "Include exactly one project management tip callout using this syntax: :::tip, then Label: Project Management Tip, then useful tip text, then :::."
               : "Include exactly one PMP tip callout using this syntax: :::tip, then useful tip text, then :::.",
             contentMode === "pm_professional"
-              ? "Do not include a practice question block unless the topic strongly benefits from a short application scenario. If included, keep it workplace-focused with only a brief PMP exam connection."
+              ? "Include exactly one workplace scenario block using this syntax: :::question, then Label: Apply This Concept, then Question:, A-D choices, Correct:, Explanation:, then :::. Keep it workplace-focused and useful for project professionals, not exam-heavy."
               : "Include exactly one practice question block using this syntax: :::question, then Question:, A-D choices, Correct:, Explanation:, then :::.",
             "Do not include a final sales CTA inside the article body; the article template adds conversion CTAs automatically.",
             "For LinkedIn assets, write a richer professional post than the short social assets: start with a practical hook, add brief context, include 2-4 useful bullets or a decision pattern, and end with a soft link to the article. LinkedIn should feel educational and professional, not like a short ad.",
+            "For Instagram assets, include a short visual-friendly title and a caption-style body with short lines, a practical hook, 3-5 concise bullets, a soft article link, and relevant hashtags. Instagram should feel skimmable and useful, not like a long blog excerpt.",
             "In every channel asset, use absolute public URLs beginning with the site domain; never use relative /blog/... paths.",
           ].join(" "),
         input:
           contentMode === "pm_professional"
-            ? `Create a content pyramid for topic "${input.topic}". Primary keyword: "${input.primaryKeyword ?? ""}". Theme: "${input.theme ?? ""}". Site URL: "${input.baseUrl ?? "https://www.pmpmasterylab.com"}". Return only structured JSON. The article should teach practical project management decision-making for working professionals, include real-world workplace examples, and add only a brief PMP exam takeaway where useful. Keep the article easy to scan with headings, lists, one tip callout, and practical application guidance.`
+            ? `Create a content pyramid for topic "${input.topic}". Primary keyword: "${input.primaryKeyword ?? ""}". Theme: "${input.theme ?? ""}". Site URL: "${input.baseUrl ?? "https://www.pmpmasterylab.com"}". Return only structured JSON. The article should teach practical project management decision-making for working professionals, include real-world workplace examples, and add only a brief PMP exam takeaway where useful. Keep the article easy to scan with headings, lists, one tip callout, one Apply This Concept scenario block, and practical application guidance.`
             : `Create a content pyramid for topic "${input.topic}". Primary keyword: "${input.primaryKeyword ?? ""}". Theme: "${input.theme ?? ""}". Site URL: "${input.baseUrl ?? "https://www.pmpmasterylab.com"}". Return only structured JSON. The article should teach exam decision-making, include concrete PMP scenario framing, and be easy to scan with headings, lists, one tip callout, and one practice question block.`,
         text: {
           format: {

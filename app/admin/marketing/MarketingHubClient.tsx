@@ -480,6 +480,7 @@ const platformUrls: Record<string, (text: string) => string> = {
   linkedin: () => "https://www.linkedin.com/feed/",
   x: (text) => `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
   facebook: () => "https://www.facebook.com/",
+  instagram: () => "https://www.instagram.com/",
 };
 
 const blogImageOptions = [

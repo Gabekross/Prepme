@@ -56,6 +56,7 @@ supabase/.cache
 *.sql
 !supabase/migrations/20260529_create_marketing_hub.sql
 !supabase/migrations/20260603_fix_marketing_asset_blog_urls.sql
+!supabase/migrations/20260606_add_instagram_content_assets.sql
 *.sqlite
 *.db
 

@@ -7,6 +7,7 @@ export type ContentAssetChannel =
   | "linkedin"
   | "x"
   | "facebook"
+  | "instagram"
   | "newsletter";
 
 export type ContentAssetStatus =
