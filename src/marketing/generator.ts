@@ -93,7 +93,19 @@ function fallbackContent(input: GenerateInput): GeneratedMarketingContent {
         {
           channel: "linkedin",
           variant: 1,
-          body: `Working project professionals can use ${topic} to make better decisions, align stakeholders, and support healthier delivery. PMP candidates get the exam connection too, but the real value is practical application. Full guide: ${blogUrl}`,
+          body: [
+            `Project professionals often run into ${topic.toLowerCase()} before it shows up in a status report.`,
+            "",
+            "The challenge is not just knowing the concept. It is recognizing the signal early, involving the right people, and choosing a response that protects delivery without creating unnecessary friction.",
+            "",
+            "A useful pattern:",
+            "- Clarify what is actually happening",
+            "- Identify who is affected",
+            "- Make risks and trade-offs visible",
+            "- Choose the next action that protects value",
+            "",
+            `I broke this down with practical examples here: ${blogUrl}`,
+          ].join("\n"),
         },
         {
           channel: "x",
@@ -194,7 +206,19 @@ function fallbackContent(input: GenerateInput): GeneratedMarketingContent {
       {
         channel: "linkedin",
         variant: 1,
-        body: `PMP candidates often miss ${topic} questions because they jump straight to the tool. The stronger exam move is to clarify the situation, engage the right people, and protect business value. Full guide: ${blogUrl}`,
+        body: [
+          `PMP candidates often miss ${topic.toLowerCase()} questions because they jump straight to the tool or the escalation path.`,
+          "",
+          "The stronger exam move is usually more deliberate: understand the situation, engage the right people, and connect the next action to project value.",
+          "",
+          "A simple decision pattern:",
+          "- Clarify the problem before selecting a process",
+          "- Consider the team and stakeholder impact",
+          "- Make risks or assumptions visible",
+          "- Escalate only when the situation truly calls for it",
+          "",
+          `I broke this down further here: ${blogUrl}`,
+        ].join("\n"),
       },
       {
         channel: "x",
@@ -320,6 +344,7 @@ export async function generateMarketingContent(input: GenerateInput): Promise<{
               ? "Do not include a practice question block unless the topic strongly benefits from a short application scenario. If included, keep it workplace-focused with only a brief PMP exam connection."
               : "Include exactly one practice question block using this syntax: :::question, then Question:, A-D choices, Correct:, Explanation:, then :::.",
             "Do not include a final sales CTA inside the article body; the article template adds conversion CTAs automatically.",
+            "For LinkedIn assets, write a richer professional post than the short social assets: start with a practical hook, add brief context, include 2-4 useful bullets or a decision pattern, and end with a soft link to the article. LinkedIn should feel educational and professional, not like a short ad.",
             "In every channel asset, use absolute public URLs beginning with the site domain; never use relative /blog/... paths.",
           ].join(" "),
         input:
