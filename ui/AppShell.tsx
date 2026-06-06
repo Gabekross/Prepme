@@ -58,15 +58,11 @@ const BrandLink = styled(Link)`
   flex-shrink: 0;
 `;
 
-const BrandIcon = styled.div`
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent} 0%, #7c3aed 100%);
-  display: grid;
-  place-items: center;
-  font-size: 16px;
-  box-shadow: 0 2px 8px ${(p) => p.theme.accentSoft};
+const BrandLogo = styled.img`
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  display: block;
   flex-shrink: 0;
 `;
 
@@ -485,7 +481,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Topbar>
         <TopbarInner>
           <BrandLink href={signedIn ? "/bank/pmp" : "/"}>
-            <BrandIcon aria-hidden="true">🎓</BrandIcon>
+            <BrandLogo src="/images/brand/pmp-logo-192.png" alt="" aria-hidden="true" />
             <BrandName>PMP Mastery Lab</BrandName>
           </BrandLink>
 

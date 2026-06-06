@@ -29,6 +29,13 @@ export const metadata: Metadata = {
     "PMP mock test",
   ],
   authors: [{ name: "PMP Mastery Lab" }],
+  icons: {
+    icon: [
+      { url: "/images/brand/pmp-logo-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/images/brand/pmp-logo-512.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/images/brand/pmp-logo-180.png", sizes: "180x180", type: "image/png" }],
+  },
   openGraph: {
     title: "PMP Practice Exam Simulator | PMP Mock Tests & Practice Questions",
     description:
