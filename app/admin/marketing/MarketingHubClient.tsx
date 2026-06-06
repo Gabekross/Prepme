@@ -519,6 +519,7 @@ export default function MarketingHubClient() {
   const [topic, setTopic] = useState("");
   const [primaryKeyword, setPrimaryKeyword] = useState("");
   const [theme, setTheme] = useState("PMP Exam Prep");
+  const [contentMode, setContentMode] = useState<"exam_prep" | "pm_professional">("exam_prep");
   const [categoryId, setCategoryId] = useState("");
   const [scheduleFor, setScheduleFor] = useState("");
   const [queueStatus, setQueueStatus] = useState<"all" | BlogPost["status"]>("all");
@@ -622,7 +623,7 @@ export default function MarketingHubClient() {
     try {
       const json = await api("/api/admin/marketing/generate", {
         method: "POST",
-        body: JSON.stringify({ topic, primaryKeyword, theme, categoryId }),
+        body: JSON.stringify({ topic, primaryKeyword, theme, categoryId, contentMode }),
       });
       setTopic("");
       setPrimaryKeyword("");
@@ -858,6 +859,13 @@ export default function MarketingHubClient() {
           <Panel>
             <SectionTitle>Generate Content</SectionTitle>
             <Form onSubmit={generate}>
+              <Label>
+                Content Style
+                <Select value={contentMode} onChange={(e) => setContentMode(e.target.value as "exam_prep" | "pm_professional")}>
+                  <option value="exam_prep">PMP Exam Prep</option>
+                  <option value="pm_professional">PM Professional</option>
+                </Select>
+              </Label>
               <Label>
                 Topic
                 <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Servant Leadership for PMP" />

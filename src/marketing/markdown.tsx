@@ -105,10 +105,10 @@ function renderInline(text: string) {
   return nodes;
 }
 
-function PmpTip({ children }: { children: React.ReactNode }) {
+function PmpTip({ children, label = "PMP Exam Tip" }: { children: React.ReactNode; label?: string }) {
   return (
     <div className="pmp-tip">
-      <div className="pmp-tip-label">PMP Exam Tip</div>
+      <div className="pmp-tip-label">{label}</div>
       <div>{children}</div>
     </div>
   );
@@ -274,7 +274,10 @@ function renderMarkdownTable(rows: string[], key: string) {
 
 function renderSpecialBlock(kind: string, lines: string[], key: string, onEvent?: BlogEventTracker) {
   if (kind === "tip") {
-    return <PmpTip key={key}>{renderParagraphs(lines, key)}</PmpTip>;
+    const labelLine = lines.find((line) => /^label:/i.test(line.trim()));
+    const label = labelLine?.replace(/^label:\s*/i, "").trim() || "PMP Exam Tip";
+    const tipLines = lines.filter((line) => !/^label:/i.test(line.trim()));
+    return <PmpTip key={key} label={label}>{renderParagraphs(tipLines, key)}</PmpTip>;
   }
 
   if (kind === "cta") {

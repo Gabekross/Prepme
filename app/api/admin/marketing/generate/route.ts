@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminRequest } from "@/src/admin/verifyAdminRequest";
-import { generateMarketingContent } from "@/src/marketing/generator";
+import { generateMarketingContent, type MarketingContentMode } from "@/src/marketing/generator";
 import { siteUrl } from "@/src/marketing/publicBlog";
 import { withFallbackSlug } from "@/src/marketing/slug";
 
@@ -84,12 +84,15 @@ export async function POST(req: NextRequest) {
     const primaryKeyword = typeof body.primaryKeyword === "string" ? body.primaryKeyword.trim() : "";
     const theme = typeof body.theme === "string" ? body.theme.trim() : "";
     const categoryId = typeof body.categoryId === "string" && body.categoryId ? body.categoryId : null;
+    const contentMode: MarketingContentMode =
+      body.contentMode === "pm_professional" ? "pm_professional" : "exam_prep";
 
     const { content, model, promptVersion, usedFallback } = await generateMarketingContent({
       topic: topicInput,
       primaryKeyword,
       theme,
       baseUrl: siteUrl(),
+      contentMode,
     });
 
     const admin = verified.admin;
@@ -152,6 +155,7 @@ export async function POST(req: NextRequest) {
         model,
         promptVersion,
         usedFallback,
+        contentMode,
         source: "content_pyramid",
       },
       created_by: verified.userId,
@@ -189,6 +193,7 @@ export async function POST(req: NextRequest) {
           model,
           promptVersion,
           usedFallback,
+          contentMode,
           assetCount: insertedAssets?.length ?? 0,
         },
       }),
@@ -198,7 +203,7 @@ export async function POST(req: NextRequest) {
       topic,
       post,
       assets: insertedAssets ?? [],
-      generation: { model, promptVersion, usedFallback },
+      generation: { model, promptVersion, usedFallback, contentMode },
     });
   } catch (err: any) {
     console.error("[marketing/generate] Error:", err?.message ?? err);
