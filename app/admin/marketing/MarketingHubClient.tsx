@@ -564,6 +564,12 @@ export default function MarketingHubClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checked, authError]);
 
+  useEffect(() => {
+    if (!checked || authError || loading) return;
+    void loadQueue(queueStatus);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queueStatus]);
+
   async function getToken() {
     const sb = supabaseBrowser();
     const { data } = await sb.auth.getSession();
@@ -592,7 +598,7 @@ export default function MarketingHubClient() {
     try {
       const [overviewJson, postsJson] = await Promise.all([
         api("/api/admin/marketing/overview"),
-        api("/api/admin/marketing/posts"),
+        api(`/api/admin/marketing/posts?status=${queueStatus}`),
       ]);
       setOverview(overviewJson);
       setPosts(postsJson.posts);
@@ -601,6 +607,16 @@ export default function MarketingHubClient() {
       setError(err.message ?? "Could not load Marketing Hub.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadQueue(status = queueStatus) {
+    setError(null);
+    try {
+      const postsJson = await api(`/api/admin/marketing/posts?status=${status}`);
+      setPosts(postsJson.posts);
+    } catch (err: any) {
+      setError(err.message ?? "Could not load blog queue.");
     }
   }
 
