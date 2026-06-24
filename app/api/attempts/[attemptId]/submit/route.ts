@@ -61,6 +61,20 @@ export async function POST(
 
     // Load questions server-side using admin client (bypasses RLS)
     const admin = supabaseAdmin();
+    const { data: roleRows } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .in("role", ["pro", "admin"]);
+    const isPro = (roleRows ?? []).length > 0;
+
+    const { data: existingAttempt } = await admin
+      .from("attempts")
+      .select("free_practice_counted_at")
+      .eq("id", attempt.id)
+      .eq("user_id", userId)
+      .maybeSingle();
+
     const { data: bankData } = await admin
       .from("question_banks")
       .select("id")
@@ -132,6 +146,11 @@ export async function POST(
         ? Math.round((questionsCorrect / questionsTotal) * 10000) / 100
         : 0;
     const passed = scorePercent >= passThreshold;
+    const shouldCountFreePractice =
+      !isPro &&
+      attempt.mode === "practice" &&
+      !existingAttempt?.free_practice_counted_at &&
+      result.answeredCount > 0;
 
     // Persist to attempts table
     const now = new Date().toISOString();
@@ -152,6 +171,7 @@ export async function POST(
           score_percent: scorePercent,
           passed,
           submitted_at: now,
+          ...(shouldCountFreePractice ? { free_practice_counted_at: now } : {}),
         },
         { onConflict: "id" }
       );
@@ -159,6 +179,17 @@ export async function POST(
     if (upsertError) {
       console.error("[submit] Failed to persist result:", upsertError.message);
       // Still return the result even if persistence fails
+    }
+
+    if (shouldCountFreePractice && !upsertError) {
+      const { error: usageError } = await admin.rpc("increment_free_practice_usage", {
+        p_user_id: userId,
+        p_count: result.answeredCount,
+      });
+
+      if (usageError) {
+        console.error("[submit] Failed to update free practice usage:", usageError.message);
+      }
     }
 
     return NextResponse.json({

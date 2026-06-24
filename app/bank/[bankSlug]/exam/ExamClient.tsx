@@ -9,6 +9,8 @@ import { EngineRunner } from "@/src/exam-engine/ui/EngineRunner";
 import { loadBankBySlug, loadQuestionsForExam, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
 import { balanceSimulationBlueprint } from "@/src/exam-engine/core/simulationBalance";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { supabaseBrowser } from "@/lib/supabase/browser";
+import { isFreeExamSet } from "@/src/access/freeLimits";
 import { useRouter } from "next/navigation";
 import { pmpBank } from "@/src/exam-engine/data/seed.pmp";
 import { setABank } from "@/src/exam-engine/data/seed.set-a";
@@ -334,13 +336,16 @@ interface SelectorProps {
   adaptiveInterval: 45 | 60;
   onModeChange: (m: BreakModeId) => void;
   onAdaptiveChange: (n: 45 | 60) => void;
-  onBegin: () => void;
+  onBegin: () => void | Promise<void>;
+  checkingAccess?: boolean;
+  accessMessage?: string;
 }
 
 function BreakModeSelector({
   bankSlug, setLabel, durationStr, passThreshold,
   modeId, adaptiveInterval,
   onModeChange, onAdaptiveChange, onBegin,
+  checkingAccess = false, accessMessage = "",
 }: SelectorProps) {
   return (
     <Page>
@@ -432,10 +437,10 @@ function BreakModeSelector({
       </ModeGrid>
 
       <CtaWrap>
-        <BeginBtn onClick={onBegin}>
-          Begin Simulation
+        <BeginBtn onClick={onBegin} disabled={checkingAccess}>
+          {checkingAccess ? "Checking access..." : "Begin Simulation"}
         </BeginBtn>
-        <CtaNote>Timer starts immediately when the exam loads.</CtaNote>
+        <CtaNote>{accessMessage || "Timer starts immediately when the exam loads."}</CtaNote>
       </CtaWrap>
     </Page>
   );
@@ -448,7 +453,7 @@ interface ExamClientProps {
   setId?: string;
 }
 
-const PAID_SETS = ["set-a", "set-b", "set-c", "set_a", "set_b", "set_c"];
+const PREMIUM_ONLY_SETS = ["set-b", "set-c", "set_b", "set_c"];
 
 export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProps) {
   const { user, isPro, phase } = useAuth();
@@ -458,6 +463,8 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
   const [bankConfig, setBankConfig] = useState<BankConfig | null>(null);
   const [msg, setMsg] = useState("Loading exam\u2026");
   const [loadError, setLoadError] = useState(false);
+  const [checkingAccess, setCheckingAccess] = useState(false);
+  const [accessMessage, setAccessMessage] = useState("");
 
   // Break mode selection
   const [modeId, setModeId] = useState<BreakModeId>("real_pmp");
@@ -465,7 +472,7 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
   const [modeConfirmed, setModeConfirmed] = useState(false);
 
   useEffect(() => {
-    if (phase === "ready" && !isPro && rawSetId && PAID_SETS.includes(rawSetId)) {
+    if (phase === "ready" && !isPro && rawSetId && PREMIUM_ONLY_SETS.includes(rawSetId)) {
       router.replace(`/bank/${bankSlug}`);
     }
   }, [phase, isPro, rawSetId, bankSlug, router]);
@@ -543,6 +550,57 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
     : modeId === "adaptive" ? (adaptiveInterval === 45 ? "adaptive_45" : "adaptive_60")
     : "real_pmp";
 
+  async function beginSimulation() {
+    if (phase !== "ready") return;
+    setAccessMessage("");
+
+    if (isPro || !resolvedSetId) {
+      setModeConfirmed(true);
+      return;
+    }
+
+    if (!isFreeExamSet(resolvedSetId)) {
+      router.replace(`/bank/${bankSlug}`);
+      return;
+    }
+
+    setCheckingAccess(true);
+    try {
+      const { data } = await supabaseBrowser().auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        setAccessMessage("Please sign in again to begin this simulation.");
+        return;
+      }
+
+      const res = await fetch("/api/access/check", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          mode: "exam",
+          bankSlug,
+          setId: resolvedSetId,
+          consume: true,
+        }),
+      });
+      const result = await res.json();
+
+      if (!res.ok || !result.allowed) {
+        setAccessMessage(result.message || "Upgrade to unlock this simulation.");
+        return;
+      }
+
+      setModeConfirmed(true);
+    } catch {
+      setAccessMessage("We could not check your exam access. Please try again.");
+    } finally {
+      setCheckingAccess(false);
+    }
+  }
+
   if (!modeConfirmed) {
     return (
       <BreakModeSelector
@@ -554,7 +612,9 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
         adaptiveInterval={adaptiveInterval}
         onModeChange={setModeId}
         onAdaptiveChange={setAdaptiveInterval}
-        onBegin={() => setModeConfirmed(true)}
+        onBegin={beginSimulation}
+        checkingAccess={checkingAccess}
+        accessMessage={accessMessage}
       />
     );
   }

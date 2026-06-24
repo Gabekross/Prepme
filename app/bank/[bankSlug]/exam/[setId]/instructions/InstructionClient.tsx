@@ -778,7 +778,7 @@ function MiniQuiz({ onClose }: { onClose: () => void }) {
 
 type Tab = "overview" | "rules" | "navigation" | "tips";
 
-const PAID_SETS = ["set-a", "set-b", "set-c", "set_a", "set_b", "set_c"];
+const PREMIUM_ONLY_SETS = ["set-b", "set-c", "set_b", "set_c"];
 
 interface Props {
   bankSlug: string;
@@ -798,7 +798,7 @@ export default function InstructionClient({ bankSlug, setSlug }: Props) {
   const setLabel = SET_LABELS[setSlug] ?? setSlug.replace(/-/g, " ").toUpperCase();
 
   useEffect(() => {
-    if (phase === "ready" && !isPro && PAID_SETS.includes(setSlug)) {
+    if (phase === "ready" && !isPro && PREMIUM_ONLY_SETS.includes(setSlug)) {
       router.replace(`/bank/${bankSlug}`);
     }
   }, [phase, isPro, setSlug, bankSlug, router]);

@@ -9,6 +9,11 @@ import { EngineRunner } from "@/src/exam-engine/ui/EngineRunner";
 import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useUpgrade } from "@/lib/useUpgrade";
+import { supabaseBrowser } from "@/lib/supabase/browser";
+import {
+  FREE_PRACTICE_LIFETIME_LIMIT,
+  FREE_PRACTICE_SESSION_LIMIT,
+} from "@/src/access/freeLimits";
 import { pmpBank } from "@/src/exam-engine/data/seed.pmp";
 
 /** Practice mode seed pool — only the 90-question practice bank.
@@ -179,6 +184,18 @@ const PoolInfo = styled.div`
   margin-top: 12px;
 `;
 
+const AccessNotice = styled.div`
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid ${(p) => p.theme.warningBorder ?? p.theme.cardBorder};
+  background: ${(p) => p.theme.warningSoft ?? p.theme.accentSoft};
+  color: ${(p) => p.theme.text};
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+`;
+
 /* ── upgrade modal ─────────────────────────────────────────────────────── */
 
 const UpgradeOverlay = styled.div`
@@ -308,6 +325,10 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [msg, setMsg] = useState("Loading questions\u2026");
+  const [accessMessage, setAccessMessage] = useState("");
+  const [remainingFreeQuestions, setRemainingFreeQuestions] = useState<number | null>(null);
+  const [checkingAccess, setCheckingAccess] = useState(false);
+  const autoStartRef = React.useRef(false);
 
   // Read ?count from URL (set by PracticeIntroClient); fall back to 20
   const countParam = searchParams.get("count");
@@ -322,13 +343,12 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
     ? (domainParam as typeof validDomains[number])
     : null;
 
-  // If a count was passed via URL, skip the setup screen
-  const [started, setStarted] = useState<boolean>(!!countParam);
+  const [started, setStarted] = useState<boolean>(false);
 
   useEffect(() => {
     if (phase !== "ready") return;
     if (PRO_PRESETS.includes(questionCount) && !isPro) {
-      setQuestionCount(20);
+      setQuestionCount(FREE_PRACTICE_SESSION_LIMIT);
       setStarted(false);
       setShowUpgrade(true);
     }
@@ -351,9 +371,7 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
     })();
   }, [bankSlug]);
 
-  if (!questions) return <P>{msg}</P>;
-
-  const maxQuestions = questions.length;
+  const maxQuestions = questions?.length ?? practiceSeedBank.length;
   const clampedCount = Math.max(1, Math.min(questionCount, maxQuestions));
 
   // Build blueprint with proportional domain distribution
@@ -367,6 +385,69 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
     },
   };
 
+  async function checkPracticeAccess(count: number) {
+    if (phase !== "ready") return false;
+    if (isPro) return true;
+
+    setCheckingAccess(true);
+    setAccessMessage("");
+
+    try {
+      const { data } = await supabaseBrowser().auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        setAccessMessage("Please sign in again to start practice.");
+        return false;
+      }
+
+      const res = await fetch("/api/access/check", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          mode: "practice",
+          bankSlug,
+          requestedQuestionCount: count,
+        }),
+      });
+      const result = await res.json();
+      setRemainingFreeQuestions(
+        typeof result.remainingPracticeQuestions === "number"
+          ? result.remainingPracticeQuestions
+          : null
+      );
+
+      if (!res.ok || !result.allowed) {
+        setAccessMessage(result.message || "Upgrade to keep practicing.");
+        setShowUpgrade(true);
+        return false;
+      }
+
+      return true;
+    } catch {
+      setAccessMessage("We could not check your free practice limit. Please try again.");
+      return false;
+    } finally {
+      setCheckingAccess(false);
+    }
+  }
+
+  async function handleStartPractice() {
+    const allowed = await checkPracticeAccess(clampedCount);
+    if (allowed) setStarted(true);
+  }
+
+  React.useEffect(() => {
+    if (!countParam || autoStartRef.current || !questions || phase !== "ready") return;
+    autoStartRef.current = true;
+    handleStartPractice();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countParam, questions, phase]);
+
+  if (!questions) return <P>{msg}</P>;
+
   if (!started) {
     return (
       <SetupWrap>
@@ -379,6 +460,14 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
           </SetupSubtitle>
 
           <Label>Number of Questions</Label>
+          {!isPro && (
+            <AccessNotice>
+              Free plan: up to {FREE_PRACTICE_SESSION_LIMIT} questions per session and{" "}
+              {FREE_PRACTICE_LIFETIME_LIMIT} total free practice questions
+              {remainingFreeQuestions !== null ? ` (${remainingFreeQuestions} left).` : "."}
+            </AccessNotice>
+          )}
+          {accessMessage && <AccessNotice>{accessMessage}</AccessNotice>}
           <PresetsRow>
             {QUESTION_PRESETS.filter((n) => n <= maxQuestions).map((n) => {
               const isProPreset = PRO_PRESETS.includes(n);
@@ -407,10 +496,10 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
           </PresetsRow>
 
           <StartBtn
-            onClick={() => setStarted(true)}
-            disabled={clampedCount < 1}
+            onClick={handleStartPractice}
+            disabled={clampedCount < 1 || checkingAccess}
           >
-            Start Practice ({clampedCount} questions)
+            {checkingAccess ? "Checking access..." : `Start Practice (${clampedCount} questions)`}
           </StartBtn>
 
           {/* <PoolInfo>

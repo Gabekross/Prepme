@@ -462,7 +462,7 @@ const P = styled.p`
 
 export default function BankClient({ bankSlug }: { bankSlug: string }) {
   const sb = useMemo(() => supabaseBrowser(), []);
-  const { isPro } = useAuth();
+  const { isPro, phase } = useAuth();
   const { startCheckout, loading: checkoutLoading } = useUpgrade();
   const searchParams = useSearchParams();
   const justUpgraded = searchParams.get("upgraded") === "true";
@@ -470,6 +470,8 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
   const [msg, setMsg] = useState("Loading…");
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [setAAvailable, setSetAAvailable] = useState(false);
+  const [setAAccessMessage, setSetAAccessMessage] = useState("Set A is free once. Upgrade to retake it and unlock Sets B and C.");
 
   // After Stripe redirect, verify payment and grant pro role
   useEffect(() => {
@@ -550,6 +552,44 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
     })();
   }, [sb, bankSlug]);
 
+  useEffect(() => {
+    if (phase !== "ready" || isPro) {
+      setSetAAvailable(isPro);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      const { data } = await sb.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token || cancelled) return;
+
+      try {
+        const res = await fetch("/api/access/check", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            mode: "exam",
+            bankSlug,
+            setId: "set_a",
+          }),
+        });
+        const result = await res.json();
+        if (cancelled) return;
+        setSetAAvailable(!!result.allowed);
+        if (result.message) setSetAAccessMessage(result.message);
+      } catch {
+        if (!cancelled) setSetAAvailable(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [phase, isPro, sb, bankSlug]);
+
   if (msg) return <P>{msg}</P>;
   if (!bank) return null;
 
@@ -616,12 +656,16 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
 
       <Grid>
         {/* Set A — Premium only */}
-        {isPro ? (
+        {isPro || setAAvailable ? (
           <ModeCard href={`/bank/${bank.slug}/exam/set-a/instructions`} $variant="exam">
             <ModeHeader>
               <ModeTitleGroup>
                 <ModeTitle>Simulation — Set A</ModeTitle>
-                <ModeSubtitle>Full 180-question timed simulation, real exam conditions</ModeSubtitle>
+                <ModeSubtitle>
+                  {isPro
+                    ? "Full 180-question timed simulation, real exam conditions"
+                    : "Your free one-time full 180-question timed simulation"}
+                </ModeSubtitle>
               </ModeTitleGroup>
             </ModeHeader>
             <FeatureList>
@@ -634,15 +678,15 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
                 Score breakdown by domain
               </FeatureItem>
             </FeatureList>
-            <CardCta $variant="exam">Start Set A</CardCta>
+            <CardCta $variant="exam">{isPro ? "Start Set A" : "Start Free Set A"}</CardCta>
           </ModeCard>
         ) : (
           <LockedCard onClick={() => setShowUpgrade(true)}>
-            <LockBadge>&#x1f512; Locked</LockBadge>
+            <LockBadge>&#x1f512; Used</LockBadge>
             <ModeHeader>
               <ModeTitleGroup>
                 <ModeTitle>Simulation — Set A</ModeTitle>
-                <ModeSubtitle>Full 180-question timed simulation, real exam conditions</ModeSubtitle>
+                <ModeSubtitle>{setAAccessMessage}</ModeSubtitle>
               </ModeTitleGroup>
             </ModeHeader>
             <FeatureList>
@@ -655,7 +699,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
                 Score breakdown by domain
               </FeatureItem>
             </FeatureList>
-            <CardCta $variant="exam">Unlock Set A</CardCta>
+            <CardCta $variant="exam">Upgrade to Retake</CardCta>
           </LockedCard>
         )}
 
