@@ -182,8 +182,6 @@ function hasScoringAnswerKey(q: Question) {
       return Array.isArray(q.answerKey?.orderedIds) && q.answerKey.orderedIds.length > 0;
     case "hotspot":
       return !!q.answerKey?.correctRegionId;
-    case "fill_blank":
-      return !!q.answerKey?.values && Object.keys(q.answerKey.values).length > 0;
   }
 }
 

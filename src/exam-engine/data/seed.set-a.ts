@@ -389,34 +389,6 @@ const pplDndOrder: Question[] = [
   },
 ];
 
-// ─── PEOPLE · FILL_BLANK (pma-ppl-075 → 076) · 2 questions ──────────────────
-const pplFillBlank: Question[] = [
-  {
-    id: "pma-ppl-075", type: "fill_blank", domain: "people", difficulty: 2,
-    setId: "set_a", accessTier: "free", version: 1,
-    tags: ["communication","formula"],
-    prompt: "The number of potential communication channels in a project with N stakeholders is calculated as: N × (N – 1) ÷ ___. For a project with 10 stakeholders, the total number of channels is ___.",
-    payload: { blanks: [
-      { id: "b1", placeholder: "divisor" },
-      { id: "b2", placeholder: "number of channels" },
-    ], inputMode: "numeric" },
-    answerKey: { values: { b1: ["2"], b2: ["45"] }, numericTolerance: 0, caseInsensitive: false },
-    explanation: "Formula: N(N-1)/2. With 10 stakeholders: 10×9÷2 = 45 channels.",
-  },
-  {
-    id: "pma-ppl-076", type: "fill_blank", domain: "people", difficulty: 3,
-    setId: "set_a", accessTier: "free", version: 1,
-    tags: ["leadership","situational"],
-    prompt: "In situational leadership, a team member with HIGH competence but LOW commitment for a task should be managed with the ___ style (also called Supporting or S___).",
-    payload: { blanks: [
-      { id: "b1", placeholder: "style name" },
-      { id: "b2", placeholder: "style number" },
-    ], inputMode: "text" },
-    answerKey: { values: { b1: ["supporting","delegating"], b2: ["3"] }, caseInsensitive: true },
-    explanation: "High competence + low commitment = S3 (Supporting). The leader provides emotional support and recognition while reducing task direction.",
-  },
-];
-
 // ─── BUSINESS ENVIRONMENT · MCQ_SINGLE (pma-env-001 → 009) · 9 questions ────
 const envMcqSingle: Question[] = [
   {
@@ -623,22 +595,6 @@ const envDndOrder: Question[] = [
     ]},
     answerKey: { orderedIds: ["i2","i4","i3","i5","i1"] },
     explanation: "Benefits realization: Define benefits → Execute project → Transition to operations → Measure benefits → Sustain in BAU.",
-  },
-];
-
-// ─── BUSINESS ENVIRONMENT · FILL_BLANK (pma-env-014) · 1 question ────────────
-const envFillBlank: Question[] = [
-  {
-    id: "pma-env-014", type: "fill_blank", domain: "business_environment", difficulty: 2,
-    setId: "set_a", accessTier: "free", version: 1,
-    tags: ["PMO","types"],
-    prompt: "The three standard PMO types recognized by PMI, ordered from LEAST to MOST control, are: ___, Controlling, and ___.",
-    payload: { blanks: [
-      { id: "b1", placeholder: "least control PMO type" },
-      { id: "b2", placeholder: "most control PMO type" },
-    ], inputMode: "text" },
-    answerKey: { values: { b1: ["supportive"], b2: ["directive"] }, caseInsensitive: true },
-    explanation: "PMO types from least to most control: Supportive (guidance only) → Controlling (compliance required) → Directive (PMO directly manages projects).",
   },
 ];
 
@@ -1099,43 +1055,6 @@ const prcDndOrder: Question[] = [
     ]},
     answerKey: { orderedIds: ["i2","i4","i3","i1"] },
     explanation: "Procurement: Plan → Conduct (bid/select vendor) → Control (manage contract) → Close.",
-  },
-];
-
-// ─── PROCESS · FILL_BLANK (pma-prc-088 → 090) · 3 questions ─────────────────
-const prcFillBlank: Question[] = [
-  {
-    id: "pma-prc-088", type: "fill_blank", domain: "process", difficulty: 3,
-    setId: "set_a", accessTier: "free", version: 1,
-    tags: ["earned-value","cpi"],
-    prompt: "A project has EV = $320,000 and AC = $400,000. The CPI is ___ (rounded to two decimal places) and this indicates the project is ___ budget.",
-    payload: { blanks: [
-      { id: "b1", placeholder: "CPI value" },
-      { id: "b2", placeholder: "over or under" },
-    ], inputMode: "text" },
-    answerKey: { values: { b1: ["0.80","0.8"], b2: ["over"] }, caseInsensitive: true },
-    explanation: "CPI = EV/AC = 320,000/400,000 = 0.80. CPI < 1 means over budget (getting $0.80 of value for every $1 spent).",
-  },
-  {
-    id: "pma-prc-089", type: "fill_blank", domain: "process", difficulty: 2,
-    setId: "set_a", accessTier: "free", version: 1,
-    tags: ["pert","estimating"],
-    prompt: "Using the PERT formula with Optimistic = 4, Most Likely = 7, and Pessimistic = 16, the expected duration is ___.",
-    payload: { blanks: [{ id: "b1", placeholder: "days" }], inputMode: "numeric" },
-    answerKey: { values: { b1: ["8"] }, numericTolerance: 0 },
-    explanation: "PERT = (O + 4M + P) / 6 = (4 + 28 + 16) / 6 = 48 / 6 = 8.",
-  },
-  {
-    id: "pma-prc-090", type: "fill_blank", domain: "process", difficulty: 3,
-    setId: "set_a", accessTier: "free", version: 1,
-    tags: ["schedule","float"],
-    prompt: "An activity has Early Start = Day 3, Late Start = Day 8. The total float is ___ days. If the float is zero, the activity is on the ___ path.",
-    payload: { blanks: [
-      { id: "b1", placeholder: "float days" },
-      { id: "b2", placeholder: "path type" },
-    ], inputMode: "text" },
-    answerKey: { values: { b1: ["5"], b2: ["critical"] }, caseInsensitive: true },
-    explanation: "Float = LS – ES = 8 – 3 = 5 days. Zero float means the activity is on the critical path — any delay will delay the project end date.",
   },
 ];
 
@@ -2707,24 +2626,21 @@ export const setABank: Question[] = [
   ...pplMcqMulti,
   ...pplDndMatch,
   ...pplDndOrder,
-  ...pplFillBlank,
   ...pplMcqSingle,
   // Process (90)
   ...prcMcqMulti,
   ...prcDndMatch,
   ...prcDndOrder,
-  ...prcFillBlank,
   ...prcMcqSingle,
   // Business Environment (14)
   ...envMcqSingle,
   ...envMcqMulti,
   ...envDndMatch,
   ...envDndOrder,
-  ...envFillBlank,
 ];
 
 export const setABankStats = {
-  total: 180,
-  byDomain: { people: 76, process: 90, business_environment: 14 },
-  byType: { mcq_single: 120, mcq_multi: 30, dnd_match: 12, dnd_order: 12, fill_blank: 6 },
+  total: 174,
+  byDomain: { people: 74, process: 87, business_environment: 13 },
+  byType: { mcq_single: 120, mcq_multi: 30, dnd_match: 12, dnd_order: 12 },
 };

@@ -210,32 +210,5 @@ export const seedBank: Question[] = [
       {id:"r2",shape:"rect",x:33,y:0,w:34,h:100},
       {id:"r3",shape:"rect",x:67,y:0,w:33,h:100}]},
     answerKey:{ correctRegionId:"r2" }
-  },
-
-  // FILL BLANK (5)
-  { id:"q-fill-001", type:"fill_blank", domain:"process", prompt:"If EV = 120 and AC = 100, what is CPI? (2 decimals)",
-    tags:["evm"], difficulty:2, version:1, accessTier:"free", setId:"free",
-    payload:{ inputMode:"numeric", blanks:[{id:"b1",placeholder:"CPI"}] },
-    answerKey:{ values:{ b1:["1.2","1.20"] }, numericTolerance:0.01 }
-  },
-  { id:"q-fill-002", type:"fill_blank", domain:"process", prompt:"If PV = 200 and EV = 150, what is SPI? (2 decimals)",
-    tags:["evm"], difficulty:2, version:1, accessTier:"free", setId:"free",
-    payload:{ inputMode:"numeric", blanks:[{id:"b1",placeholder:"SPI"}] },
-    answerKey:{ values:{ b1:["0.75"] }, numericTolerance:0.01 }
-  },
-  { id:"q-fill-003", type:"fill_blank", domain:"people", prompt:"The conflict technique focused on a win-win solution is called ________.",
-    tags:["conflict"], difficulty:2, version:1, accessTier:"free", setId:"free",
-    payload:{ inputMode:"text", blanks:[{id:"b1",placeholder:"Technique"}] },
-    answerKey:{ values:{ b1:["collaboration","collaborate","problem solving","problem-solving"] }, caseInsensitive:true }
-  },
-  { id:"q-fill-004", type:"fill_blank", domain:"business_environment", prompt:"A mandatory requirement from a government agency is a ________ constraint.",
-    tags:["constraints"], difficulty:2, version:1, accessTier:"free", setId:"free",
-    payload:{ inputMode:"text", blanks:[{id:"b1",placeholder:"Type"}] },
-    answerKey:{ values:{ b1:["regulatory"] }, caseInsensitive:true }
-  },
-  { id:"q-fill-005", type:"fill_blank", domain:"process", prompt:"Typical formula: EAC = BAC / ________",
-    tags:["evm"], difficulty:2, version:1, accessTier:"free", setId:"free",
-    payload:{ inputMode:"text", blanks:[{id:"b1",placeholder:"Metric"}] },
-    answerKey:{ values:{ b1:["cpi"] }, caseInsensitive:true }
   }
 ];

@@ -12,7 +12,6 @@ import McqSingleForm from "@/src/admin/forms/McqSingleForm";
 import McqMultiForm from "@/src/admin/forms/McqMultiForm";
 import DndMatchForm from "@/src/admin/forms/DndMatchForm";
 import DndOrderForm from "@/src/admin/forms/DndOrderForm";
-import FillBlankForm from "@/src/admin/forms/FillBlankForm";
 import HotspotForm from "@/src/admin/forms/HotspotForm";
 
 type Bank = { id: string; slug: string; name: string };
@@ -676,12 +675,6 @@ function validateQuestion(q: Question): string[] {
     if (!(q as any).media?.imageUrl) errs.push("hotspot requires media.imageUrl.");
     if (!(q as any).answerKey?.correctRegionId) errs.push("hotspot requires answerKey.correctRegionId.");
   }
-  if (q.type === "fill_blank") {
-    const blanks = (q as any).payload?.blanks;
-    const values = (q as any).answerKey?.values;
-    if (!Array.isArray(blanks) || blanks.length < 1) errs.push("fill_blank requires payload.blanks.");
-    if (!values || typeof values !== "object") errs.push("fill_blank requires answerKey.values.");
-  }
   return errs;
 }
 
@@ -940,11 +933,6 @@ export default function AdminQuestionsClient() {
     if (t === "hotspot") {
       setPayloadJson(JSON.stringify({ coordinateSpace: "percent", regions: [{ id: "r1", shape: "rect", x: 10, y: 10, w: 20, h: 20 }] }, null, 2));
       setAnswerKeyJson(JSON.stringify({ correctRegionId: "r1" }, null, 2));
-      return;
-    }
-    if (t === "fill_blank") {
-      setPayloadJson(JSON.stringify({ inputMode: "text", blanks: [{ id: "b1", placeholder: "Answer" }] }, null, 2));
-      setAnswerKeyJson(JSON.stringify({ values: { b1: ["example"] }, caseInsensitive: true }, null, 2));
       return;
     }
   }
@@ -1256,7 +1244,6 @@ export default function AdminQuestionsClient() {
                 <option value="dnd_match">dnd_match</option>
                 <option value="dnd_order">dnd_order</option>
                 <option value="hotspot">hotspot</option>
-                <option value="fill_blank">fill_blank</option>
               </Select>
               <Select value={domainFilter} onChange={(e) => { setDomainFilter(e.target.value); setPage(0); }}>
                 <option value="all">All domains</option>
@@ -1346,8 +1333,7 @@ export default function AdminQuestionsClient() {
                   <option value="dnd_match">dnd_match</option>
                   <option value="dnd_order">dnd_order</option>
                   <option value="hotspot">hotspot</option>
-                  <option value="fill_blank">fill_blank</option>
-                </Select>
+                  </Select>
               </Label>
               <Label>
                 Domain
@@ -1467,7 +1453,6 @@ export default function AdminQuestionsClient() {
               {type === "mcq_multi" && <McqMultiForm payloadJson={payloadJson} answerKeyJson={answerKeyJson} onChange={setPayloadAndAnswerKey} />}
               {type === "dnd_match" && <DndMatchForm payloadJson={payloadJson} answerKeyJson={answerKeyJson} onChange={setPayloadAndAnswerKey} />}
               {type === "dnd_order" && <DndOrderForm payloadJson={payloadJson} answerKeyJson={answerKeyJson} onChange={setPayloadAndAnswerKey} />}
-              {type === "fill_blank" && <FillBlankForm payloadJson={payloadJson} answerKeyJson={answerKeyJson} onChange={setPayloadAndAnswerKey} />}
               {type === "hotspot" && <HotspotForm payloadJson={payloadJson} answerKeyJson={answerKeyJson} onChange={setPayloadAndAnswerKey} imageUrl={imageUrl} />}
             </>
           ) : (
@@ -1580,9 +1565,7 @@ export default function AdminQuestionsClient() {
                   ? { type: "dnd_match", mapping: Object.fromEntries(((preview.payload as any).prompts ?? []).map((p: any) => [p.id, null])) }
                   : preview.type === "dnd_order"
                   ? { type: "dnd_order", orderedIds: ((preview.payload as any).items ?? []).map((i: any) => i.id) }
-                  : preview.type === "hotspot"
-                  ? { type: "hotspot", selectedRegionId: null }
-                  : { type: "fill_blank", values: Object.fromEntries(((preview.payload as any).blanks ?? []).map((b: any) => [b.id, ""])) }
+                  : { type: "hotspot", selectedRegionId: null }
               }
               optionOrder={[]}
               onChange={() => {}}

@@ -38,13 +38,6 @@ function defaultResponseFor(q: Question): Response {
       };
     case "hotspot":
       return { type: "hotspot", selectedRegionId: null };
-    case "fill_blank":
-      return {
-        type: "fill_blank",
-        values: Object.fromEntries(
-          payloadArray<{ id: string }>((q as any).payload?.blanks).map((b) => [b.id, ""])
-        ),
-      };
   }
 }
 

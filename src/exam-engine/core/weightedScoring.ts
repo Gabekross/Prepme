@@ -125,7 +125,6 @@ export function weightedScoreAttempt(attempt: Attempt, questions: Question[]): W
     dnd_match: emptyDomainStats(),
     dnd_order: emptyDomainStats(),
     hotspot: emptyDomainStats(),
-    fill_blank: emptyDomainStats(),
   };
 
   const incorrectQuestionIds: string[] = [];

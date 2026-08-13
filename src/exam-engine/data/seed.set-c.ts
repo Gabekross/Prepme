@@ -1174,42 +1174,6 @@ const pplDndOrder: Question[] = [
 ];
 
 
-// ─── PEOPLE · FILL_BLANK (pmc-ppl-075 → 076) · 2 questions ─────────────────
-const pplFillBlank: Question[] = [
-  {
-    id: "pmc-ppl-075", type: "fill_blank", domain: "people", difficulty: 2,
-    setId: "set_c", accessTier: "free", version: 1,
-    tags: ["lencioni", "team-dysfunctions"],
-    prompt: "In Lencioni's Five Dysfunctions of a Team, the foundational dysfunction at the base of the pyramid is 'Absence of _____'.",
-    payload: {
-      blanks: [{ id: "b1", placeholder: "Enter one word" }],
-      inputMode: "text",
-    },
-    answerKey: {
-      values: { b1: ["trust", "Trust"] },
-      caseInsensitive: true,
-    },
-    explanation: "Absence of trust is the foundational dysfunction in Lencioni's hierarchical model. Without vulnerability-based trust — the willingness to admit weaknesses, mistakes, and fears — all higher-level team functions (conflict, commitment, accountability, results) are compromised. The PMP exam emphasizes trust as a prerequisite for high-performing teams, aligned with PMBOK 7's Team Performance Domain.",
-  },
-  {
-    id: "pmc-ppl-076", type: "fill_blank", domain: "people", difficulty: 3,
-    setId: "set_c", accessTier: "free", version: 1,
-    tags: ["appreciative-inquiry", "4d-cycle"],
-    prompt: "The four phases of Appreciative Inquiry's 4D cycle are Discover, Dream, Design, and _____.",
-    payload: {
-      blanks: [{ id: "b1", placeholder: "Enter the fourth D phase" }],
-      inputMode: "text",
-    },
-    answerKey: {
-      values: { b1: ["destiny", "Destiny", "deliver", "Deliver"] },
-      caseInsensitive: true,
-    },
-    explanation: "The fourth phase of Appreciative Inquiry is Destiny (sometimes called Deliver or Deploy). It involves implementing and sustaining the changes designed in the previous phase. The Destiny phase emphasizes ongoing learning, improvisation, and organic adaptation rather than rigid plan-execution. This strengths-based approach to organizational change is relevant to project team development and continuous improvement — core themes in PMBOK 7.",
-  },
-];
-
-
-
 // ─── PROCESS · MCQ_SINGLE (pmc-prc-001 → 060) · 60 questions ───────────────
 const prcMcqSingle: Question[] = [
   {
@@ -2585,57 +2549,7 @@ const prcDndOrder: Question[] = [
 ];
 
 
-// ─── FILL_BLANK (pmc-prc-088 → 090) · 3 questions ─────────────────────────
-const prcFillBlank: Question[] = [
-  {
-    id: "pmc-prc-088", type: "fill_blank", domain: "process", difficulty: 4,
-    setId: "set_c", accessTier: "free", version: 1,
-    tags: ["earned-schedule"],
-    prompt: "A project has a Planned Duration (PD) of 20 months. At month 14, the Earned Schedule (ES) is 10 months. Calculate SPI(t) to two decimal places.",
-    payload: {
-      blanks: [{ id: "b1", placeholder: "SPI(t) = ?" }],
-      inputMode: "numeric",
-    },
-    answerKey: {
-      values: { b1: ["0.71"] },
-      numericTolerance: 0.01,
-    },
-    explanation: "SPI(t) = ES / AT = 10 / 14 = 0.7143, rounded to 0.71. This means the project is earning schedule progress at only 71% of the rate needed to stay on schedule. Using this, IEAC(t) = PD / SPI(t) = 20 / 0.714 = 28.0 months — the project is forecast to take 28 months instead of 20, an 8-month overrun. SPI(t) is more reliable than traditional SPI (= EV/PV) for schedule forecasting, especially in the later half of the project, because it uses time units rather than cost units and does not suffer from the convergence-to-1.0 problem at project completion.",
-  },
-  {
-    id: "pmc-prc-089", type: "fill_blank", domain: "process", difficulty: 3,
-    setId: "set_c", accessTier: "free", version: 1,
-    tags: ["flow-efficiency"],
-    prompt: "A work item has a total lead time of 25 days. Active work time (touch time) is 5 days; the remaining 20 days are spent waiting in queues. What is the flow efficiency percentage?",
-    payload: {
-      blanks: [{ id: "b1", placeholder: "Flow efficiency = ?%" }],
-      inputMode: "numeric",
-    },
-    answerKey: {
-      values: { b1: ["20"] },
-      numericTolerance: 0,
-    },
-    explanation: "Flow Efficiency = (Active Work Time / Total Lead Time) × 100 = (5 / 25) × 100 = 20%. This means that only 20% of the elapsed time was spent on value-adding work — 80% was wait/queue time. This is actually typical for knowledge work, where industry benchmarks show 15–40% flow efficiency. Improving flow efficiency focuses on reducing handoffs, wait states, and queue times rather than making individuals work harder. Value stream mapping is a complementary technique that visualizes these wait states. Per Lean principles, wait time is one of the eight forms of waste (muda), and flow efficiency is the key metric for identifying and reducing it.",
-  },
-  {
-    id: "pmc-prc-090", type: "fill_blank", domain: "process", difficulty: 5,
-    setId: "set_c", accessTier: "free", version: 1,
-    tags: ["cost-of-delay", "WSJF"],
-    prompt: "Feature X has a Cost of Delay of $12,000 per week and a job duration of 3 weeks. Feature Y has a Cost of Delay of $8,000 per week and a job duration of 1 week. Calculate the WSJF score for Feature Y.",
-    payload: {
-      blanks: [{ id: "b1", placeholder: "WSJF for Feature Y = ?" }],
-      inputMode: "numeric",
-    },
-    answerKey: {
-      values: { b1: ["8000"] },
-      numericTolerance: 0,
-    },
-    explanation: "WSJF = Cost of Delay / Job Duration. For Feature Y: WSJF = $8,000/week ÷ 1 week = 8,000. For comparison, Feature X: WSJF = $12,000/week ÷ 3 weeks = 4,000. Despite Feature X having a higher absolute CoD, Feature Y's higher WSJF (8,000 vs. 4,000) means it should be prioritized first. By completing Feature Y first (1 week), the team starts earning $8K/week of value sooner, and then completes Feature X. This sequencing maximizes total economic value delivery, demonstrating Don Reinertsen's principle that job size matters as much as urgency. WSJF is the core prioritization algorithm in SAFe and is endorsed by the PMI Agile Practice Guide for economic decision-making.",
-  },
-];
-
-
-export { prcMcqSingle, prcMcqMulti, prcDndMatch, prcDndOrder, prcFillBlank };
+export { prcMcqSingle, prcMcqMulti, prcDndMatch, prcDndOrder };
 
 
 const envMcqSingle: Question[] = [
@@ -3124,45 +3038,11 @@ const envDndOrder: Question[] = [
   },
 ];
 
-const envFillBlank: Question[] = [
-  {
-    id: "pmc-env-014",
-    type: "fill_blank",
-    domain: "business_environment",
-    difficulty: 2,
-    setId: "set_c",
-    accessTier: "free",
-    version: 1,
-    tags: ["organizational-learning", "Argyris", "double-loop"],
-    prompt:
-      "In Chris Argyris's organizational learning theory, when a team not only corrects errors in their actions but also questions and revises the underlying assumptions, beliefs, and policies that caused the errors, this is called ________ learning.",
-    payload: {
-      blanks: [{ id: "b1", placeholder: "type of learning" }],
-      inputMode: "text",
-    },
-    answerKey: {
-      values: {
-        b1: [
-          "double-loop",
-          "double loop",
-          "doubleloop",
-          "double-loop learning",
-          "double loop learning",
-        ],
-      },
-      caseInsensitive: true,
-    },
-    explanation:
-      "Chris Argyris and Donald Schon introduced the concepts of single-loop and double-loop learning as models for organizational learning. Single-loop learning occurs when an organization detects and corrects errors by adjusting its actions within existing frameworks, policies, and assumptions, analogous to a thermostat adjusting temperature without questioning the set point. Double-loop learning goes further: the organization questions and modifies the governing variables, underlying assumptions, mental models, and policies themselves, analogous to asking whether the thermostat's set point is appropriate. Double-loop learning is essential for transformative organizational change and is directly relevant to the PMBOK 7th Edition's emphasis on continuous improvement and adaptive governance. For project managers, double-loop learning means not just improving estimation techniques after a schedule overrun (single-loop) but questioning whether the scheduling philosophy, stakeholder expectations, or organizational culture that led to the overrun needs to change. The ECO Business Environment domain (Task 3) calls for supporting organizational change, and double-loop learning is a foundational mechanism for meaningful, lasting organizational improvement rather than superficial fixes.",
-  },
-];
-
 export const setCBusinessEnvironmentQuestions: Question[] = [
   ...envMcqSingle,
   ...envMcqMulti,
   ...envDndMatch,
   ...envDndOrder,
-  ...envFillBlank,
 ];
 
 
@@ -3173,23 +3053,20 @@ export const setCBank: Question[] = [
   ...pplMcqMulti,
   ...pplDndMatch,
   ...pplDndOrder,
-  ...pplFillBlank,
   // Process (90)
   ...prcMcqSingle,
   ...prcMcqMulti,
   ...prcDndMatch,
   ...prcDndOrder,
-  ...prcFillBlank,
   // Business Environment (14)
   ...envMcqSingle,
   ...envMcqMulti,
   ...envDndMatch,
   ...envDndOrder,
-  ...envFillBlank,
 ];
 
 export const setCBankStats = {
-  total: 180,
-  byDomain: { people: 76, process: 90, business_environment: 14 },
-  byType: { mcq_single: 120, mcq_multi: 30, dnd_match: 12, dnd_order: 12, fill_blank: 6 },
+  total: 174,
+  byDomain: { people: 74, process: 87, business_environment: 13 },
+  byType: { mcq_single: 120, mcq_multi: 30, dnd_match: 12, dnd_order: 12 },
 };

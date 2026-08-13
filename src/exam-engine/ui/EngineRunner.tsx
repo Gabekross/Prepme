@@ -1272,12 +1272,6 @@ function isAnswered(question: Question | null, response: Response): boolean {
     }
     case "hotspot":
       return response?.type === "hotspot" && !!response.selectedRegionId;
-    case "fill_blank":
-      return (
-        response?.type === "fill_blank" &&
-        response.values &&
-        Object.values(response.values).some((v) => String(v ?? "").trim().length > 0)
-      );
     default:
       return false;
   }
@@ -2284,7 +2278,6 @@ export function EngineRunner(props: {
                   if (resp.type === "dnd_match") return Object.values(resp.mapping).some(Boolean);
                   if (resp.type === "dnd_order") return resp.orderedIds.length > 0;
                   if (resp.type === "hotspot") return !!resp.selectedRegionId;
-                  if (resp.type === "fill_blank") return Object.values(resp.values).some(v => String(v ?? "").trim().length > 0);
                   return false;
                 })() : false;
                 const isSubmitted = !!engine.attempt!.submittedAt;

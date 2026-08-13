@@ -7,8 +7,7 @@ export type QuestionType =
   | "mcq_multi"
   | "dnd_match"
   | "dnd_order"
-  | "hotspot"
-  | "fill_blank";
+  | "hotspot";
 
 export type Difficulty = 1 | 2 | 3 | 4 | 5;
 
@@ -28,8 +27,6 @@ export type DndMatchPayload = {
 };
 
 export type DndOrderPayload = { items: { id: string; text: string }[] };
-
-export type FillBlankPayload = { blanks: { id: string; placeholder?: string }[]; inputMode?: "text" | "numeric" };
 
 export type BaseQuestion = {
   id: string;
@@ -55,20 +52,14 @@ export type Question =
     })
   | (BaseQuestion & { type: "dnd_match"; payload: DndMatchPayload; answerKey: { mapping: Record<string, string> } })
   | (BaseQuestion & { type: "dnd_order"; payload: DndOrderPayload; answerKey: { orderedIds: string[] } })
-  | (BaseQuestion & { type: "hotspot"; payload: HotspotPayload; answerKey: { correctRegionId: string } })
-  | (BaseQuestion & {
-      type: "fill_blank";
-      payload: FillBlankPayload;
-      answerKey: { values: Record<string, string[]>; numericTolerance?: number; caseInsensitive?: boolean };
-    });
+  | (BaseQuestion & { type: "hotspot"; payload: HotspotPayload; answerKey: { correctRegionId: string } });
 
 export type Response =
   | { type: "mcq_single"; choiceId: string | null }
   | { type: "mcq_multi"; choiceIds: string[] }
   | { type: "dnd_match"; mapping: Record<string, string | null> }
   | { type: "dnd_order"; orderedIds: string[] }
-  | { type: "hotspot"; selectedRegionId: string | null; click?: { x: number; y: number } }
-  | { type: "fill_blank"; values: Record<string, string> };
+  | { type: "hotspot"; selectedRegionId: string | null; click?: { x: number; y: number } };
 
 export type Mode = "practice" | "exam";
 

@@ -8,7 +8,6 @@ import { MCQMulti } from "../components/MCQMulti";
 import { DndMatch } from "../components/DndMatch";
 import { DndOrder } from "../components/DndOrder";
 import { Hotspot } from "../components/Hotspot";
-import { FillBlank } from "../components/FillBlank";
 
 const Wrap = styled.div`
   display: grid;
@@ -83,7 +82,6 @@ const TYPE_LABELS: Record<string, string> = {
   dnd_match: "Matching",
   dnd_order: "Ordering",
   hotspot: "Hotspot",
-  fill_blank: "Fill in Blank",
 };
 
 export function QuestionRenderer(props: {
@@ -160,14 +158,6 @@ export function QuestionRenderer(props: {
         />
       )}
 
-      {question.type === "fill_blank" && (
-        <FillBlank
-          question={question}
-          response={response}
-          onChange={onChange}
-          showCorrect={!!showCorrect}
-        />
-      )}
     </Wrap>
   );
 }

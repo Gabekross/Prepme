@@ -1109,29 +1109,7 @@ const pplDndOrder: Question[] = [
   },
 ];
 
-// ─── PEOPLE · FILL_BLANK (pmb-ppl-075 → 076) · 2 questions ──────────────────
-const pplFillBlank: Question[] = [
-  {
-    id: "pmb-ppl-075", type: "fill_blank", domain: "people", difficulty: 3,
-    setId: "set_b", accessTier: "free", version: 1,
-    tags: ["self-determination","motivation"],
-    prompt: "According to Deci and Ryan's self-determination theory, the three innate psychological needs are autonomy, competence, and ________.",
-    payload: { blanks: [{ id: "b1", placeholder: "Third psychological need" }], inputMode: "text" },
-    answerKey: { values: { b1: ["relatedness","Relatedness","connection","belonging"] }, caseInsensitive: true },
-    explanation: "Self-determination theory identifies autonomy, competence, and relatedness as the three basic psychological needs. Relatedness refers to the need for meaningful connections and a sense of belonging.",
-  },
-  {
-    id: "pmb-ppl-076", type: "fill_blank", domain: "people", difficulty: 4,
-    setId: "set_b", accessTier: "free", version: 1,
-    tags: ["stakeholder-salience"],
-    prompt: "In the Mitchell, Agle & Wood stakeholder salience model, a stakeholder who possesses all three attributes — power, legitimacy, and urgency — is classified as a ________ stakeholder.",
-    payload: { blanks: [{ id: "b1", placeholder: "Stakeholder classification" }], inputMode: "text" },
-    answerKey: { values: { b1: ["definitive","Definitive"] }, caseInsensitive: true },
-    explanation: "A definitive stakeholder possesses all three salience attributes: power, legitimacy, and urgency. They command the highest priority from management and require immediate attention.",
-  },
-];
-
-export { pplMcqSingle, pplMcqMulti, pplDndMatch, pplDndOrder, pplFillBlank };
+export { pplMcqSingle, pplMcqMulti, pplDndMatch, pplDndOrder };
 
 
 // ─── PROCESS · MCQ_SINGLE (pmb-prc-001 → 060) · 60 questions ──────────────────
@@ -2434,38 +2412,7 @@ const prcDndOrder: Question[] = [
   },
 ];
 
-// ─── PROCESS · FILL_BLANK (pmb-prc-088 → 090) · 3 questions ──────────────────
-const prcFillBlank: Question[] = [
-  {
-    id: "pmb-prc-088", type: "fill_blank", domain: "process", difficulty: 3,
-    setId: "set_b", accessTier: "free", version: 1,
-    tags: ["earned-value", "TCPI"],
-    prompt: "A project has BAC = $200,000, EV = $80,000, and AC = $100,000. The TCPI based on BAC is ___.",
-    payload: { blanks: [{ id: "b1", placeholder: "Enter the TCPI value" }], inputMode: "numeric" },
-    answerKey: { values: { b1: ["1.2", "1.20"] }, numericTolerance: 0.01 },
-    explanation: "TCPI(BAC) = (BAC - EV) / (BAC - AC) = (200,000 - 80,000) / (200,000 - 100,000) = 120,000 / 100,000 = 1.20.",
-  },
-  {
-    id: "pmb-prc-089", type: "fill_blank", domain: "process", difficulty: 4,
-    setId: "set_b", accessTier: "free", version: 1,
-    tags: ["integration", "payback-period"],
-    prompt: "A project requires an initial investment of $360,000 and generates $90,000 per year in net cash flow. The payback period is ___ years.",
-    payload: { blanks: [{ id: "b1", placeholder: "Enter number of years" }], inputMode: "numeric" },
-    answerKey: { values: { b1: ["4", "4.0"] }, numericTolerance: 0 },
-    explanation: "Payback period = Initial investment / Annual cash flow = $360,000 / $90,000 = 4 years.",
-  },
-  {
-    id: "pmb-prc-090", type: "fill_blank", domain: "process", difficulty: 3,
-    setId: "set_b", accessTier: "free", version: 1,
-    tags: ["agile", "WSJF"],
-    prompt: "A feature has a Cost of Delay of 21 (User-Business Value: 8, Time Criticality: 5, Risk Reduction: 8) and a Job Duration of 3. Its WSJF score is ___.",
-    payload: { blanks: [{ id: "b1", placeholder: "Enter the WSJF score" }], inputMode: "numeric" },
-    answerKey: { values: { b1: ["7", "7.0"] }, numericTolerance: 0 },
-    explanation: "WSJF = Cost of Delay / Job Duration = 21 / 3 = 7. Higher WSJF scores indicate higher priority for scheduling.",
-  },
-];
-
-export { prcMcqSingle, prcMcqMulti, prcDndMatch, prcDndOrder, prcFillBlank };
+export { prcMcqSingle, prcMcqMulti, prcDndMatch, prcDndOrder };
 
 
 // ─── BUSINESS ENVIRONMENT · MCQ_SINGLE (pmb-env-001 → 009) · 9 questions ─────
@@ -2682,26 +2629,6 @@ const envDndOrder: Question[] = [
   },
 ];
 
-// ─── BUSINESS ENVIRONMENT · FILL_BLANK (pmb-env-014) · 1 question ────────────
-const envFillBlank: Question[] = [
-  {
-    id: "pmb-env-014", type: "fill_blank", domain: "business_environment", difficulty: 2,
-    setId: "set_b", accessTier: "free", version: 1,
-    tags: ["strategic-alignment", "okr"],
-    prompt: "In the OKR (Objectives and Key Results) framework, the 'O' stands for a qualitative goal, while the 'KR' stands for ________ — the measurable outcomes that indicate whether the objective has been achieved.",
-    payload: {
-      blanks: [{ id: "b1", placeholder: "Enter the term..." }],
-      inputMode: "text",
-    },
-    answerKey: {
-      values: { b1: ["Key Results", "key results", "Key Result", "key result"] },
-      caseInsensitive: true,
-    },
-    explanation: "OKR stands for Objectives and Key Results. The Objective is a qualitative, inspirational goal, while Key Results are specific, measurable outcomes that track progress toward achieving the objective. This framework helps organizations align project work with strategic goals.",
-  },
-];
-
-
 // ─── EXPORTS ──────────────────────────────────────────────────────────────────
 export const setBBank: Question[] = [
   // People (76)
@@ -2709,23 +2636,20 @@ export const setBBank: Question[] = [
   ...pplMcqMulti,
   ...pplDndMatch,
   ...pplDndOrder,
-  ...pplFillBlank,
   // Process (90)
   ...prcMcqSingle,
   ...prcMcqMulti,
   ...prcDndMatch,
   ...prcDndOrder,
-  ...prcFillBlank,
   // Business Environment (14)
   ...envMcqSingle,
   ...envMcqMulti,
   ...envDndMatch,
   ...envDndOrder,
-  ...envFillBlank,
 ];
 
 export const setBBankStats = {
-  total: 180,
-  byDomain: { people: 76, process: 90, business_environment: 14 },
-  byType: { mcq_single: 120, mcq_multi: 30, dnd_match: 12, dnd_order: 12, fill_blank: 6 },
+  total: 174,
+  byDomain: { people: 74, process: 87, business_environment: 13 },
+  byType: { mcq_single: 120, mcq_multi: 30, dnd_match: 12, dnd_order: 12 },
 };

@@ -97,30 +97,6 @@ describe("scoreQuestion answer validation", () => {
     expect(scoreQuestion(q, { type: "hotspot", selectedRegionId: "r1" }).isCorrect).toBe(true);
   });
 
-  it("normalizes numeric fill-in-the-blank formatting", () => {
-    const q = {
-      ...base,
-      id: "blank",
-      type: "fill_blank",
-      payload: { inputMode: "numeric", blanks: [{ id: "b1" }] },
-      answerKey: { values: { b1: ["1000"] } },
-    } as Question;
-
-    expect(scoreQuestion(q, { type: "fill_blank", values: { b1: "1,000" } }).isCorrect).toBe(true);
-    expect(scoreQuestion(q, { type: "fill_blank", values: { b1: "$1000" } }).isCorrect).toBe(true);
-  });
-
-  it("scores text fill-in-the-blank with trim and configured case-insensitivity", () => {
-    const q = {
-      ...base,
-      id: "blank-text",
-      type: "fill_blank",
-      payload: { inputMode: "text", blanks: [{ id: "b1" }] },
-      answerKey: { values: { b1: ["servant leadership"] }, caseInsensitive: true },
-    } as Question;
-
-    expect(scoreQuestion(q, { type: "fill_blank", values: { b1: " Servant Leadership " } }).isCorrect).toBe(true);
-  });
 });
 
 describe("scoreAttempt", () => {

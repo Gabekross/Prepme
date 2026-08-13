@@ -35,8 +35,6 @@ function defaultResponseFor(question: Question): Response {
       return { type: "dnd_order", orderedIds: [] };
     case "hotspot":
       return { type: "hotspot", selectedRegionId: null };
-    case "fill_blank":
-      return { type: "fill_blank", values: {} };
     default:
       return { type: "mcq_single", choiceId: null };
   }

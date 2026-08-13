@@ -1,19 +1,5 @@
 import type { Attempt, AttemptResult, Domain, Question, QuestionType, ScoreResult } from "./types";
 
-function norm(s: string) {
-  return s.trim();
-}
-
-function normNumeric(value: string) {
-  return value.trim().replace(/[$,\s]/g, "");
-}
-
-function eqText(a: string, b: string, caseInsensitive?: boolean) {
-  const aa = norm(a);
-  const bb = norm(b);
-  return caseInsensitive ? aa.toLowerCase() === bb.toLowerCase() : aa === bb;
-}
-
 /* ── Centralized "was this question actually attempted?" check ───────────── */
 
 /**
@@ -59,11 +45,6 @@ export function isQuestionAttempted(q: Question, response: any): boolean {
 
     case "hotspot":
       return "selectedRegionId" in response && !!response.selectedRegionId;
-
-    case "fill_blank": {
-      const vals = response.values ?? {};
-      return Object.values(vals).some((v: any) => `${v ?? ""}`.trim() !== "");
-    }
 
     default:
       return false;
@@ -141,37 +122,6 @@ export function scoreQuestion(q: Question, response: any): ScoreResult {
       const ok = response.selectedRegionId === q.answerKey?.correctRegionId;
       return { questionId: q.id, isCorrect: ok, score: ok ? 1 : 0, maxScore: 1 };
     }
-
-    case "fill_blank": {
-      const vals: Record<string, string> = response.values ?? {};
-      const key = q.answerKey?.values ?? {};
-      const tol = q.answerKey?.numericTolerance ?? 0;
-      const ci = q.answerKey?.caseInsensitive;
-
-      let correct = 0;
-      let total = 0;
-
-      for (const blankId of Object.keys(key)) {
-        total++;
-        const given = `${vals[blankId] ?? ""}`.trim();
-        const accepted = key[blankId];
-
-        if (q.payload.inputMode === "numeric") {
-          const g = Number(normNumeric(given));
-          const ok = accepted.some((v) => {
-            const t = Number(normNumeric(`${v}`));
-            if (Number.isNaN(g) || Number.isNaN(t)) return false;
-            return Math.abs(g - t) <= tol;
-          });
-          if (ok) correct++;
-        } else {
-          const ok = accepted.some((a) => eqText(given, a, ci));
-          if (ok) correct++;
-        }
-      }
-
-      return { questionId: q.id, isCorrect: correct === total, score: correct, maxScore: total };
-    }
   }
 }
 
@@ -220,7 +170,6 @@ export function scoreAttempt(attempt: Attempt, questions: Question[]): AttemptRe
     dnd_match: { score: 0, maxScore: 0, correct: 0, total: 0 },
     dnd_order: { score: 0, maxScore: 0, correct: 0, total: 0 },
     hotspot: { score: 0, maxScore: 0, correct: 0, total: 0 },
-    fill_blank: { score: 0, maxScore: 0, correct: 0, total: 0 },
   };
 
   const incorrectQuestionIds: string[] = [];
