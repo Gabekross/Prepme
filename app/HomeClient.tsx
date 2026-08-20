@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import Link from "next/link";
-import { useUpgrade } from "@/lib/useUpgrade";
 
 /* ── animations ─────────────────────────────────────────────────────────── */
 
@@ -115,58 +114,12 @@ const PrimaryCTA = styled(Link)`
 `;
 
 
-const TrustLine = styled.div`
-  margin-top: 16px;
-  font-size: 13px;
-  color: ${(p) => p.theme.muted};
-`;
-
 const DisclaimerLine = styled.div`
   margin-top: 10px;
   font-size: 11px;
   color: ${(p) => p.theme.muted};
   opacity: 0.6;
 `;
-
-const ConsentNote = styled.div`
-  margin-top: 10px;
-  font-size: 11px;
-  color: ${(p) => p.theme.muted};
-  text-align: center;
-  line-height: 1.5;
-  opacity: 0.7;
-`;
-
-const ConsentLink = styled(Link)`
-  color: ${(p) => p.theme.muted};
-  text-decoration: underline;
-  &:hover { color: ${(p) => p.theme.text}; }
-`;
-
-/* ── trust badges ───────────────────────────────────────────────────────── */
-
-const BadgesRow = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  animation: ${fadeUp} 500ms 100ms ease both;
-`;
-
-const Badge = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: 12px;
-  background: ${(p) => p.theme.cardBg};
-  border: 1px solid ${(p) => p.theme.cardBorder};
-  font-size: 12px;
-  font-weight: 700;
-  color: ${(p) => p.theme.text};
-  white-space: nowrap;
-`;
-
 
 /* ── social proof stats ─────────────────────────────────────────────────── */
 
@@ -363,199 +316,6 @@ const FeatureDesc = styled.p`
 `;
 
 
-/* ── testimonials ───────────────────────────────────────────────────────── */
-
-const TestimonialGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const TestimonialCard = styled.div`
-  background: ${(p) => p.theme.cardBg};
-  border: 1px solid ${(p) => p.theme.cardBorder};
-  border-radius: 18px;
-  padding: 22px 20px;
-  position: relative;
-`;
-
-const TestimonialQuote = styled.p`
-  margin: 0 0 16px;
-  font-size: 14px;
-  line-height: 1.6;
-  color: ${(p) => p.theme.text};
-  font-style: italic;
-`;
-
-const TestimonialAuthor = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-`;
-
-const TestimonialAvatar = styled.div<{ $color: string }>`
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: ${(p) => p.$color};
-  display: grid;
-  place-items: center;
-  font-size: 16px;
-  font-weight: 800;
-  color: white;
-`;
-
-const TestimonialName = styled.div`
-  font-size: 13px;
-  font-weight: 700;
-  color: ${(p) => p.theme.text};
-`;
-
-const TestimonialRole = styled.div`
-  font-size: 11px;
-  color: ${(p) => p.theme.muted};
-`;
-
-/* ── pricing ────────────────────────────────────────────────────────────── */
-
-const PricingGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  max-width: 700px;
-  margin: 0 auto;
-
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const PricingCard = styled.div<{ $featured?: boolean }>`
-  background: ${(p) => p.theme.cardBg};
-  border: 2px solid ${(p) => (p.$featured ? p.theme.accent : p.theme.cardBorder)};
-  border-radius: 22px;
-  padding: 28px 24px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: ${(p) => (p.$featured ? p.theme.shadowLg : p.theme.shadow)};
-`;
-
-const PricingBadge = styled.div`
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  padding: 4px 10px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, ${(p) => p.theme.accent}, #7c3aed);
-  color: white;
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-`;
-
-const PricingTier = styled.div`
-  font-size: 18px;
-  font-weight: 900;
-  color: ${(p) => p.theme.text};
-  letter-spacing: -0.2px;
-  margin-bottom: 2px;
-`;
-
-const PricingTagline = styled.div`
-  font-size: 13px;
-  font-weight: 600;
-  color: ${(p) => p.theme.muted};
-  margin-bottom: 10px;
-`;
-
-const PricingPrice = styled.div`
-  font-size: 36px;
-  font-weight: 900;
-  color: ${(p) => p.theme.text};
-  letter-spacing: -1px;
-  margin-bottom: 4px;
-`;
-
-const PricingPeriod = styled.span`
-  font-size: 14px;
-  font-weight: 600;
-  color: ${(p) => p.theme.muted};
-`;
-
-const PricingDesc = styled.p`
-  margin: 8px 0 20px;
-  font-size: 13px;
-  line-height: 1.5;
-  color: ${(p) => p.theme.muted};
-`;
-
-const PricingList = styled.ul`
-  list-style: none;
-  margin: 0 0 24px;
-  padding: 0;
-`;
-
-const PricingItem = styled.li<{ $included?: boolean }>`
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 13px;
-  color: ${(p) => (p.$included !== false ? p.theme.text : p.theme.muted)};
-  line-height: 1.5;
-  padding: 5px 0;
-  text-decoration: ${(p) => (p.$included === false ? "line-through" : "none")};
-  opacity: ${(p) => (p.$included === false ? 0.5 : 1)};
-`;
-
-const PricingCheck = styled.span<{ $included?: boolean }>`
-  font-size: 14px;
-  color: ${(p) => (p.$included !== false ? p.theme.success : p.theme.muted)};
-  flex-shrink: 0;
-  margin-top: 1px;
-`;
-
-const PricingCTA = styled(Link)<{ $featured?: boolean }>`
-  display: block;
-  text-align: center;
-  padding: 12px 20px;
-  border-radius: 12px;
-  background: ${(p) => (p.$featured ? p.theme.accent : p.theme.buttonBg)};
-  border: 1px solid ${(p) => (p.$featured ? "transparent" : p.theme.buttonBorder)};
-  color: ${(p) => (p.$featured ? "white" : p.theme.text)};
-  font-size: 14px;
-  font-weight: 800;
-  text-decoration: none;
-  transition: opacity 150ms ease, transform 100ms ease;
-
-  &:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-  }
-`;
-
-const PricingCTABtn = styled.button<{ $featured?: boolean }>`
-  display: block;
-  width: 100%;
-  text-align: center;
-  padding: 12px 20px;
-  border-radius: 12px;
-  background: ${(p) => (p.$featured ? p.theme.accent : p.theme.buttonBg)};
-  border: 1px solid ${(p) => (p.$featured ? "transparent" : p.theme.buttonBorder)};
-  color: ${(p) => (p.$featured ? "white" : p.theme.text)};
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: opacity 150ms ease, transform 100ms ease;
-
-  &:hover { opacity: 0.9; transform: translateY(-1px); }
-  &:disabled { opacity: 0.5; cursor: wait; }
-`;
-
 /* ── growth hook CTA ────────────────────────────────────────────────────── */
 
 const CTABanner = styled.div`
@@ -723,46 +483,6 @@ const Skeleton = styled.div`
 type PlatformStats = { totalAttempts: number; totalPractice: number; totalExams: number };
 
 
-const TESTIMONIALS = [
-  {
-    quote: "The adaptive engine kept pushing me on my weak areas in Process domain. By exam day, I felt genuinely prepared.",
-    name: "Sarah M.",
-    role: "Passed PMP, March 2026",
-    color: "#3b82f6",
-    initial: "S",
-  },
-  {
-    quote: "The timed simulations were a game-changer. The real exam felt familiar because I had already trained in the exact same format.",
-    name: "David K.",
-    role: "Passed PMP, First Attempt",
-    color: "#8b5cf6",
-    initial: "D",
-  },
-  {
-    quote: "I scored 42% on my first practice run. The weakness targeting feature helped me focus. Passed with Above Target in all 3 domains.",
-    name: "Priya R.",
-    role: "PMP Certified, 2026",
-    color: "#06b6d4",
-    initial: "P",
-  },
-];
-
-const FREE_FEATURES = [
-  { text: "Real PMP questions across all question types", included: true },
-  { text: "Detailed explanation for every answer in real time", included: true },
-  { text: "Instant pass/fail verdict with score by domain", included: true },
-  { text: "See your domain score breakdown after each session", included: true },
-];
-
-const PRO_FEATURES = [
-  { text: "3 full 180-question simulations", included: true },
-  { text: "Adapts to your level — harder questions as you improve", included: true },
-  { text: "Auto-targets your weakest domains each session", included: true },
-  { text: "Know exactly which topics to study before exam day", included: true },
-  { text: "Harder questions score higher — just like the real PMP", included: true },
-  { text: "Personalized study recommendations based on your gaps", included: true },
-];
-
 const FAQ_DATA = [
   {
     q: "Is PMP Mastery Lab updated for 2026?",
@@ -773,8 +493,8 @@ const FAQ_DATA = [
     a: "The engine tracks your consecutive correct and incorrect answers. After 3 correct answers in a row, it increases difficulty. After 2 wrong answers, it decreases. It also identifies your weakest domains and topics, then prioritizes those in your next practice session. Harder questions are weighted up to 2.5x in your score.",
   },
   {
-    q: "Is there a free PMP mock exam I can take?",
-    a: "Yes. The Free tier includes unlimited practice sessions with immediate feedback drawn from 90 practice questions. No credit card required. Upgrade to unlock full exam simulations.",
+    q: "Can I try PMP-style questions before choosing a plan?",
+    a: "Yes. You can begin with practice sessions that include immediate feedback and realistic question formats. Full access is introduced after you have experienced the simulator.",
   },
   {
     q: "How many questions are in the question bank?",
@@ -824,7 +544,6 @@ const FEATURES = [
 ];
 
 export default function HomeClient() {
-  const { startCheckout, loading: checkoutLoading } = useUpgrade();
   const [stats, setStats] = useState<PlatformStats | null>(null);
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
 
@@ -858,10 +577,9 @@ export default function HomeClient() {
         </HeroSub>
         <HeroCTAs>
           <PrimaryCTA href="/bank/pmp">
-            Start Free Practice
+            Start Practice
           </PrimaryCTA>
         </HeroCTAs>
-        <TrustLine>No credit card required &middot; Free tier available</TrustLine>
         <DisclaimerLine>
           PMP&reg; is a registered trademark of the Project Management Institute, Inc.
           PMP Mastery Lab is not affiliated with or endorsed by PMI&reg;.
@@ -936,101 +654,8 @@ export default function HomeClient() {
 
       <Divider />
 
-      {/* ── 6. Testimonials ──────────────────────────────────────────── */}
-      <Section $delay={280}>
-        <SectionHeading>What Candidates Say</SectionHeading>
-        <SectionSub>
-          Join PMP candidates who trained with real exam simulations.
-        </SectionSub>
-
-        <TestimonialGrid>
-          {TESTIMONIALS.map((t) => (
-            <TestimonialCard key={t.name}>
-              <TestimonialQuote>&ldquo;{t.quote}&rdquo;</TestimonialQuote>
-              <TestimonialAuthor>
-                <TestimonialAvatar $color={t.color}>
-                  {t.initial}
-                </TestimonialAvatar>
-                <div>
-                  <TestimonialName>{t.name}</TestimonialName>
-                  <TestimonialRole>{t.role}</TestimonialRole>
-                </div>
-              </TestimonialAuthor>
-            </TestimonialCard>
-          ))}
-        </TestimonialGrid>
-      </Section>
-
-      <Divider />
-
-      {/* ── 8. Pricing ───────────────────────────────────────────────── */}
-      <Section id="pricing" $delay={320}>
-        <SectionHeading>Simple Pricing</SectionHeading>
-        <SectionSub>
-          Start free. Upgrade when you are ready for full exam prep.
-        </SectionSub>
-
-        <PricingGrid>
-          <PricingCard>
-            <PricingTier>Starter Plan</PricingTier>
-            <PricingTagline>Get your first score in 5 minutes</PricingTagline>
-            <PricingPrice>
-              $0 <PricingPeriod>free</PricingPeriod>
-            </PricingPrice>
-            <PricingDesc>
-              Try real PMP questions with detailed explanations after every answer. No credit card, no setup.
-            </PricingDesc>
-            <PricingList>
-              {FREE_FEATURES.map((f) => (
-                <PricingItem key={f.text} $included={f.included}>
-                  <PricingCheck $included={f.included}>
-                    {f.included ? "\u2713" : "\u2717"}
-                  </PricingCheck>
-                  {f.text}
-                </PricingItem>
-              ))}
-            </PricingList>
-            <PricingCTA href="/bank/pmp">Try It Free — No Card Needed</PricingCTA>
-          </PricingCard>
-
-          <PricingCard $featured>
-            <PricingBadge>Most Popular</PricingBadge>
-            <PricingTier>Premium</PricingTier>
-            <PricingTagline>Everything you need to pass first time</PricingTagline>
-            <PricingPrice>
-              $59.99 <PricingPeriod>/ year</PricingPeriod>
-            </PricingPrice>
-            <PricingDesc>
-              3 full 180-question simulations plus an adaptive engine that learns your weak spots and targets them every session.
-            </PricingDesc>
-            <PricingList>
-              {PRO_FEATURES.map((f) => (
-                <PricingItem key={f.text} $included={f.included}>
-                  <PricingCheck $included={f.included}>
-                    {f.included ? "\u2713" : "\u2717"}
-                  </PricingCheck>
-                  {f.text}
-                </PricingItem>
-              ))}
-            </PricingList>
-            <PricingCTABtn $featured onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Unlock Premium — $59.99/year"}
-            </PricingCTABtn>
-            <ConsentNote>
-              By purchasing you agree to our{" "}
-              <ConsentLink href="/terms">Terms</ConsentLink>
-              {" "}&amp;{" "}
-              <ConsentLink href="/privacy">Privacy Policy</ConsentLink>.
-              Individual results vary — passing the PMP depends on personal preparation.
-            </ConsentNote>
-          </PricingCard>
-        </PricingGrid>
-      </Section>
-
-      <Divider />
-
       {/* ── 9. Growth Hook CTA ───────────────────────────────────────── */}
-      <Section $delay={360}>
+      <Section $delay={280}>
         <CTABanner>
           <CTABannerH>
             Most PMP candidates do not know their weak domains.
@@ -1038,17 +663,17 @@ export default function HomeClient() {
             Find out where you stand.
           </CTABannerH>
           <CTABannerSub>
-            Take a free practice assessment and get instant feedback on your
+            Take a practice assessment and get instant feedback on your
             strengths and weaknesses across all three PMP domains.
           </CTABannerSub>
-          <PrimaryCTA href="/bank/pmp">Take the Free Assessment</PrimaryCTA>
+          <PrimaryCTA href="/bank/pmp">Take the Assessment</PrimaryCTA>
         </CTABanner>
       </Section>
 
       <Divider />
 
       {/* ── 10. FAQ ──────────────────────────────────────────────────── */}
-      <Section $delay={400}>
+      <Section $delay={320}>
         <SectionHeading>Frequently Asked Questions</SectionHeading>
         <SectionSub>
           Everything you need to know about PMP exam preparation.
@@ -1082,14 +707,6 @@ export default function HomeClient() {
 
         <SocialsRow>
           <SocialLink
-            href="https://twitter.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Twitter"
-          >
-            &#x1D54F;
-          </SocialLink>
-          <SocialLink
             href="https://linkedin.com"
             target="_blank"
             rel="noopener noreferrer"
@@ -1098,12 +715,12 @@ export default function HomeClient() {
             in
           </SocialLink>
           <SocialLink
-            href="https://youtube.com"
+            href="https://www.instagram.com/pmpmasterylab"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="YouTube"
+            aria-label="Instagram @pmpmasterylab"
           >
-            &#x25B6;
+            @
           </SocialLink>
         </SocialsRow>
 
