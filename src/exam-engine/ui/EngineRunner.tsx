@@ -13,8 +13,6 @@ import { supabaseBrowser } from "@/lib/supabase/browser";
 import { computeAdaptiveSummary, type AdaptiveSummary } from "../core/analytics";
 import { AdaptiveResults } from "./AdaptiveResults";
 import { ProcessingOverlay } from "./ProcessingOverlay";
-import { useAuth } from "@/lib/auth/AuthProvider";
-import { useUpgrade } from "@/lib/useUpgrade";
 import { loadBankBySlug, loadQuestions } from "../data/loadFromSupabase";
 
 /* ── animations ─────────────────────────────────────────────────────────── */
@@ -1556,8 +1554,6 @@ export function EngineRunner(props: {
           initialDomainFilter } = props;
   const engine = useExamSession();
   const router = useRouter();
-  const { isPro } = useAuth();
-  const { startCheckout, loading: checkoutLoading } = useUpgrade();
 
   const [initialized, setInitialized] = useState(false);
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
@@ -2398,59 +2394,17 @@ export function EngineRunner(props: {
               </>
             )}
 
-            {/* Topic breakdown gate (free users) / link (pro users) */}
+            {/* Topic breakdown link */}
             {result && (
               <>
                 <Divider />
-                {!isPro ? (
-                  <TopicGateWrap>
-                    <TopicGateBlur>
-                      <SectionToggleBtn>
-                        Performance by Topic
-                        <SectionArrow $open={false}>▼</SectionArrow>
-                      </SectionToggleBtn>
-                      <DomainTable>
-                        {["Planning & Scheduling", "Risk Management", "Stakeholder Engagement", "Team Leadership"].map((t) => (
-                          <React.Fragment key={t}>
-                            <DomainRow>
-                              <DomainName>{t}</DomainName>
-                              <DomainScore>??/??</DomainScore>
-                              <DomainPct $pass={false}>??%</DomainPct>
-                            </DomainRow>
-                            <DomainTrack>
-                              <DomainFill $pct={48} $pass={false} />
-                            </DomainTrack>
-                          </React.Fragment>
-                        ))}
-                      </DomainTable>
-                    </TopicGateBlur>
-                    <TopicGateOverlay>
-                      <TopicGateBadge>&#x1f512; Locked</TopicGateBadge>
-                      <TopicGateLabel>Unlock per-topic breakdown</TopicGateLabel>
-                      <TopicGateSub>
-                        See exactly which topics cost you marks — and which to fix first.
-                      </TopicGateSub>
-                      <TopicGateBtn onClick={startCheckout} disabled={checkoutLoading}>
-                        {checkoutLoading ? "Redirecting…" : "Unlock Premium — $59.99/year"}
-                      </TopicGateBtn>
-                      <TopicGateConsentNote>
-                        By purchasing you agree to our{" "}
-                        <TopicGateConsentLink href="/terms">Terms</TopicGateConsentLink>
-                        {" "}&amp;{" "}
-                        <TopicGateConsentLink href="/privacy">Privacy Policy</TopicGateConsentLink>.
-                        Individual results vary.
-                      </TopicGateConsentNote>
-                    </TopicGateOverlay>
-                  </TopicGateWrap>
-                ) : (
-                  engine.attempt?.id && (
-                    <RetakeBtn
-                      style={{ width: "100%", marginTop: 8, textAlign: "center" }}
-                      onClick={() => router.push(`/dashboard/results/${engine.attempt!.id}`)}
-                    >
-                      View Full Topic Breakdown
-                    </RetakeBtn>
-                  )
+                {engine.attempt?.id && (
+                  <RetakeBtn
+                    style={{ width: "100%", marginTop: 8, textAlign: "center" }}
+                    onClick={() => router.push(`/dashboard/results/${engine.attempt!.id}`)}
+                  >
+                    View Full Topic Breakdown
+                  </RetakeBtn>
                 )}
               </>
             )}

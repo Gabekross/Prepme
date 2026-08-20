@@ -4,7 +4,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import styled, { css, keyframes } from "styled-components";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { useUpgrade } from "@/lib/useUpgrade";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import type { AttemptResult, Domain } from "@/src/exam-engine/core/types";
 import { loadBankBySlug, loadQuestions } from "@/src/exam-engine/data/loadFromSupabase";
@@ -902,8 +901,7 @@ function formatMs(ms: number): string {
 /* ── component ──────────────────────────────────────────────────────────── */
 
 export default function ResultsClient({ attemptId }: { attemptId: string }) {
-  const { user, loading: authLoading, isPro } = useAuth();
-  const { startCheckout, loading: checkoutLoading } = useUpgrade();
+  const { user, loading: authLoading } = useAuth();
   const sb = useMemo(() => supabaseBrowser(), []);
   const [attempt, setAttempt] = useState<AttemptFullRow | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1348,33 +1346,6 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
         </SectionCard>
       )}
 
-      {/* ── Pro upsell for free users ────────────────────────── */}
-      {!isPro && attempt.mode === "exam" && (() => {
-        let title: string;
-        let sub: string;
-        if (!passed) {
-          title = "Review your readiness gaps";
-          sub = `Topic-level breakdown shows exactly which topics are costing you marks. Unlock it, fix the gaps, and run Set B to confirm you're ready.`;
-        } else if (scorePercent < 75) {
-          title = "You passed Set A — but are you ready for the real thing?";
-          sub = `Sets B & C use different question patterns. See your topic-level weak spots now so they don't surprise you on exam day.`;
-        } else {
-          title = "Strong result. Make sure it wasn't luck.";
-          sub = `Verify your readiness across 2 more full simulations and get a topic-level mastery report before you book your exam date.`;
-        }
-        return (
-          <UpsellBanner>
-            <UpsellText>
-              <UpsellTitle>{title}</UpsellTitle>
-              <UpsellSub>{sub}</UpsellSub>
-            </UpsellText>
-            <UpsellBtn onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Unlock Premium — $59.99/year"}
-            </UpsellBtn>
-          </UpsellBanner>
-        );
-      })()}
-
       {/* ── What To Do Next ──────────────────────────────────── */}
       {result && (() => {
         const domainScores = (Object.entries(result.byDomain) as [string, { correct: number; total: number }][])
@@ -1411,83 +1382,58 @@ export default function ResultsClient({ attemptId }: { attemptId: string }) {
 
       {/* ── Topic Breakdown ─────────────────────────────────── */}
       {result && (
-        isPro ? (
-          <SectionCard $delay={220}>
-            <SectionToggleBtn onClick={() => setShowTopics((v) => !v)}>
-              Performance by Topic
-              <SectionArrow $open={showTopics}>▼</SectionArrow>
-            </SectionToggleBtn>
-            {showTopics && (
-              <BreakdownGrid>
-                {questionMeta.size === 0 ? (
-                  <BreakdownItem>
-                    <BreakdownHeader>
-                      <BreakdownName>Loading topic data…</BreakdownName>
-                    </BreakdownHeader>
-                  </BreakdownItem>
-                ) : topicEntries.length === 0 ? (
-                  <BreakdownItem>
-                    <BreakdownHeader>
-                      <BreakdownName>No topic data available for this attempt.</BreakdownName>
-                    </BreakdownHeader>
-                  </BreakdownItem>
-                ) : (
-                  topicEntries.map((t) => {
-                    if (t.isOther) {
-                      return (
-                        <BreakdownItem key={t.key}>
-                          <BreakdownHeader>
-                            <BreakdownName>
-                              Practice more of the {t.domainLabel} domain
-                            </BreakdownName>
-                          </BreakdownHeader>
-                        </BreakdownItem>
-                      );
-                    }
-                    const pass = t.pct >= passThreshold;
+        <SectionCard $delay={220}>
+          <SectionToggleBtn onClick={() => setShowTopics((v) => !v)}>
+            Performance by Topic
+            <SectionArrow $open={showTopics}>▼</SectionArrow>
+          </SectionToggleBtn>
+          {showTopics && (
+            <BreakdownGrid>
+              {questionMeta.size === 0 ? (
+                <BreakdownItem>
+                  <BreakdownHeader>
+                    <BreakdownName>Loading topic data…</BreakdownName>
+                  </BreakdownHeader>
+                </BreakdownItem>
+              ) : topicEntries.length === 0 ? (
+                <BreakdownItem>
+                  <BreakdownHeader>
+                    <BreakdownName>No topic data available for this attempt.</BreakdownName>
+                  </BreakdownHeader>
+                </BreakdownItem>
+              ) : (
+                topicEntries.map((t) => {
+                  if (t.isOther) {
                     return (
                       <BreakdownItem key={t.key}>
                         <BreakdownHeader>
-                          <BreakdownName>{t.label}</BreakdownName>
-                          <BreakdownValues>
-                            <BreakdownScore>{t.correct}/{t.total}</BreakdownScore>
-                            <BreakdownPct $pass={pass}>{t.pct}%</BreakdownPct>
-                          </BreakdownValues>
+                          <BreakdownName>
+                            Practice more of the {t.domainLabel} domain
+                          </BreakdownName>
                         </BreakdownHeader>
-                        <BarTrack>
-                          <BarFill $pct={t.pct} $pass={pass} />
-                        </BarTrack>
                       </BreakdownItem>
                     );
-                  })
-                )}
-              </BreakdownGrid>
-            )}
-          </SectionCard>
-        ) : (
-          <ProGateWrap>
-            <ProGateOverlay>
-              <ProGateBadge>&#x1f512; Locked</ProGateBadge>
-              <ProGateLabel>Unlock per-topic breakdown</ProGateLabel>
-              <UpsellBtn onClick={startCheckout} style={{ marginTop: 4 }}>Unlock Access</UpsellBtn>
-            </ProGateOverlay>
-            <ProGateBlur>
-              <SectionCard $delay={220}>
-                <SectionTitle>Performance by Topic</SectionTitle>
-                <BreakdownGrid>
-                  {topicEntries.slice(0, 6).map((t) => (
+                  }
+                  const pass = t.pct >= passThreshold;
+                  return (
                     <BreakdownItem key={t.key}>
                       <BreakdownHeader>
                         <BreakdownName>{t.label}</BreakdownName>
+                        <BreakdownValues>
+                          <BreakdownScore>{t.correct}/{t.total}</BreakdownScore>
+                          <BreakdownPct $pass={pass}>{t.pct}%</BreakdownPct>
+                        </BreakdownValues>
                       </BreakdownHeader>
-                      <BarTrack><BarFill $pct={t.pct} $pass={false} /></BarTrack>
+                      <BarTrack>
+                        <BarFill $pct={t.pct} $pass={pass} />
+                      </BarTrack>
                     </BreakdownItem>
-                  ))}
-                </BreakdownGrid>
-              </SectionCard>
-            </ProGateBlur>
-          </ProGateWrap>
-        )
+                  );
+                })
+              )}
+            </BreakdownGrid>
+          )}
+        </SectionCard>
       )}
 
       {/* ── Time Analysis (enhanced with pacing) ─────────────── */}

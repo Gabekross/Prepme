@@ -5,7 +5,6 @@ import styled, { keyframes, useTheme } from "styled-components";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { useUpgrade } from "@/lib/useUpgrade";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { loadBankBySlug, loadQuestions } from "@/src/exam-engine/data/loadFromSupabase";
 import { TOPICS_BY_DOMAIN, buildTopicIndex } from "@/src/exam-engine/core/topicLabels";
@@ -1233,9 +1232,7 @@ function ScoreTrendLine({ points }: { points: TrendPoint[] }) {
 /* ── component ──────────────────────────────────────────────────────────── */
 
 export default function DashboardClient() {
-  const { user, loading: authLoading, isPro } = useAuth();
-  const { startCheckout, loading: checkoutLoading } = useUpgrade();
-  const [showUpgrade, setShowUpgrade] = useState(false);
+  const { user, loading: authLoading } = useAuth();
   const [showAllAttempts, setShowAllAttempts] = useState(false);
   const [examDate, setExamDate] = useState<string>("");
 
@@ -1487,7 +1484,7 @@ export default function DashboardClient() {
     const modeAttempts = analyticsTab === "practice" ? practiceAttempts : examAttempts;
     if (modeAttempts.length < 2) return [];
 
-    if (isPro && topicEntriesFlat.length > 0) {
+    if (topicEntriesFlat.length > 0) {
       const candidates = topicEntriesFlat.filter((t) => t.total >= 2);
       const pool = candidates.length > 0 ? candidates : topicEntriesFlat;
       return [...pool]
@@ -1513,7 +1510,6 @@ export default function DashboardClient() {
         isOther: false,
       }));
   }, [
-    isPro,
     topicEntriesFlat,
     domainEntries,
     practiceAttempts,
@@ -1669,18 +1665,17 @@ export default function DashboardClient() {
       .filter((d) => (allAgg.byDomain[d.domain]?.total ?? 0) > 0);
     if (scored.length === 0) return null;
     const weakest = [...scored].sort((a, b) => a.pct - b.pct)[0];
-    const count = isPro ? 25 : 20;
+    const count = 20;
     return {
       weakDomain: weakest.label,
       weakPct: weakest.pct,
       count,
       href: `/bank/pmp/practice?count=${count}&domain=${weakest.domain}`,
     };
-  }, [submitted, allResults, isPro]);
+  }, [submitted, allResults]);
 
-  /** Questions answered incorrectly in 2+ separate sessions (Pro only) */
+  /** Questions answered incorrectly in 2+ separate sessions */
   const persistentWrongIds = useMemo(() => {
-    if (!isPro) return [];
     const wrongCounts: Record<string, number> = {};
     for (const r of allResults) {
       if (!r.result?.scoreResults) continue;
@@ -1693,7 +1688,7 @@ export default function DashboardClient() {
     return Object.entries(wrongCounts)
       .filter(([, count]) => count >= 2)
       .sort((a, b) => b[1] - a[1]);
-  }, [allResults, isPro]);
+  }, [allResults]);
 
   /* ── deleteAttempt ─────────────────────────────────────────────────── */
 
@@ -1931,7 +1926,7 @@ export default function DashboardClient() {
                 </AnalyticsCard>
               )}
 
-              <AnalyticsGrid $stack={!isPro}>
+              <AnalyticsGrid $stack={false}>
                 {domainEntries.length > 0 && (
                   <AnalyticsCard>
                     <AnalyticsCardTitle>
@@ -1967,105 +1962,67 @@ export default function DashboardClient() {
                   </AnalyticsCard>
                 )}
                 {domainEntries.length > 0 && (
-                  isPro ? (
-                    <AnalyticsCard>
-                      <AnalyticsCardTitle>Topic Performance</AnalyticsCardTitle>
-                      {!topicsReady ? (
-                        <TopicEmpty>Loading topic data…</TopicEmpty>
-                      ) : topicEntriesFlat.length === 0 ? (
-                        <TopicEmpty>No topic data available yet.</TopicEmpty>
-                      ) : (
-                        topicEntriesFlat.map((t) => (
-                          <BarRow key={t.key}>
-                            <BarLabel>
-                              <span>
-                                {t.label}{" "}
-                                <SetBadge>{t.domainLabel}</SetBadge>
-                              </span>
-                              <BarLabelRight>
-                                {t.pct}% ({t.correct}/{t.total})
-                              </BarLabelRight>
-                            </BarLabel>
-                            <BarTrack>
-                              <BarFill $pct={t.pct} $color={pctColor(t.pct, theme)} />
-                            </BarTrack>
-                          </BarRow>
-                        ))
-                      )}
-                    </AnalyticsCard>
-                  ) : (
-                    <ProGateCard>
-                      <ProGateOverlay>
-                        <ProGateLabel>&#x1f512; Locked</ProGateLabel>
-                        <ProGateText>Unlock per-topic performance breakdown</ProGateText>
-                        <ProGateBtn onClick={() => setShowUpgrade(true)}>Unlock Access</ProGateBtn>
-                      </ProGateOverlay>
-                      <ProGateBlur>
-                        {(topicsReady ? topicEntriesFlat.slice(0, 6) : []).map((t) => (
-                          <BarRow key={t.key}>
-                            <BarLabel><span>{t.label}</span></BarLabel>
-                            <BarTrack><BarFill $pct={t.pct} $color="#666" /></BarTrack>
-                          </BarRow>
-                        ))}
-                      </ProGateBlur>
-                    </ProGateCard>
-                  )
+                  <AnalyticsCard>
+                    <AnalyticsCardTitle>Topic Performance</AnalyticsCardTitle>
+                    {!topicsReady ? (
+                      <TopicEmpty>Loading topic data…</TopicEmpty>
+                    ) : topicEntriesFlat.length === 0 ? (
+                      <TopicEmpty>No topic data available yet.</TopicEmpty>
+                    ) : (
+                      topicEntriesFlat.map((t) => (
+                        <BarRow key={t.key}>
+                          <BarLabel>
+                            <span>
+                              {t.label}{" "}
+                              <SetBadge>{t.domainLabel}</SetBadge>
+                            </span>
+                            <BarLabelRight>
+                              {t.pct}% ({t.correct}/{t.total})
+                            </BarLabelRight>
+                          </BarLabel>
+                          <BarTrack>
+                            <BarFill $pct={t.pct} $color={pctColor(t.pct, theme)} />
+                          </BarTrack>
+                        </BarRow>
+                      ))
+                    )}
+                  </AnalyticsCard>
                 )}
               </AnalyticsGrid>
 
               {weakAreas.length > 0 && (
-                isPro ? (
-                  <FocusCard>
-                    <AnalyticsCardTitle>
-                      Focus Areas
-                      <SetBadge>{analyticsTab === "practice" ? "Practice" : "Exam"}</SetBadge>
-                    </AnalyticsCardTitle>
-                    {weakAreas.map((w) => (
-                      <FocusItem key={`${w.kind}:${w.domainLabel ?? ""}:${w.label}`}>
-                        <FocusIcon>{w.pct < 50 ? "⚠" : "○"}</FocusIcon>
-                        <FocusText>
-                          {w.isOther && w.domainLabel ? (
-                            <>Practice more of the {w.domainLabel} domain</>
-                          ) : (
-                            <>
-                              <FocusPercent $color={pctColor(w.pct, theme)}>
-                                {w.pct}%
-                              </FocusPercent>{" "}
-                              accuracy in {w.label}
-                              {w.kind === "topic" && w.domainLabel ? ` (${w.domainLabel})` : ""}
-                              {" "}&mdash; Practice more{" "}
-                              {w.kind === "domain"
-                                ? `${w.label} domain questions`
-                                : `${w.label} questions`}
-                            </>
-                          )}
-                        </FocusText>
-                      </FocusItem>
-                    ))}
-                  </FocusCard>
-                ) : (
-                  <ProGateCard>
-                    <ProGateOverlay>
-                      <ProGateLabel>&#x1f512; Locked</ProGateLabel>
-                      <ProGateText>Unlock personalized focus areas & study recommendations</ProGateText>
-                      <ProGateBtn onClick={() => setShowUpgrade(true)}>Unlock Access</ProGateBtn>
-                    </ProGateOverlay>
-                    <ProGateBlur>
-                      <FocusItem>
-                        <FocusIcon>&#x26A0;</FocusIcon>
-                        <FocusText>Focus area insights appear here</FocusText>
-                      </FocusItem>
-                      <FocusItem>
-                        <FocusIcon>&#x25CB;</FocusIcon>
-                        <FocusText>Personalized recommendations appear here</FocusText>
-                      </FocusItem>
-                    </ProGateBlur>
-                  </ProGateCard>
-                )
+                <FocusCard>
+                  <AnalyticsCardTitle>
+                    Focus Areas
+                    <SetBadge>{analyticsTab === "practice" ? "Practice" : "Exam"}</SetBadge>
+                  </AnalyticsCardTitle>
+                  {weakAreas.map((w) => (
+                    <FocusItem key={`${w.kind}:${w.domainLabel ?? ""}:${w.label}`}>
+                      <FocusIcon>{w.pct < 50 ? "⚠" : "○"}</FocusIcon>
+                      <FocusText>
+                        {w.isOther && w.domainLabel ? (
+                          <>Practice more of the {w.domainLabel} domain</>
+                        ) : (
+                          <>
+                            <FocusPercent $color={pctColor(w.pct, theme)}>
+                              {w.pct}%
+                            </FocusPercent>{" "}
+                            accuracy in {w.label}
+                            {w.kind === "topic" && w.domainLabel ? ` (${w.domainLabel})` : ""}
+                            {" "}&mdash; Practice more{" "}
+                            {w.kind === "domain"
+                              ? `${w.label} domain questions`
+                              : `${w.label} questions`}
+                          </>
+                        )}
+                      </FocusText>
+                    </FocusItem>
+                  ))}
+                </FocusCard>
               )}
 
-              {/* Persistent Wrong-Answer Memory (Pro) */}
-              {isPro && persistentWrongIds.length > 0 && (
+              {/* Persistent Wrong-Answer Memory */}
+              {persistentWrongIds.length > 0 && (
                 <WrongMemoryCard>
                   <WrongMemoryIcon>⚠</WrongMemoryIcon>
                   <WrongMemoryInfo>
@@ -2098,10 +2055,7 @@ export default function DashboardClient() {
         <>
           <SectionTitle>Recent Attempts</SectionTitle>
           <AttemptList>
-            {(isPro
-              ? (showAllAttempts ? submitted : submitted.slice(0, 3))
-              : submitted.slice(0, 3)
-            ).map((a) => (
+            {(showAllAttempts ? submitted : submitted.slice(0, 3)).map((a) => (
               <AttemptCard
                 key={a.id}
                 role="link"
@@ -2137,72 +2091,12 @@ export default function DashboardClient() {
               </AttemptCard>
             ))}
           </AttemptList>
-          {isPro && submitted.length > 3 && (
+          {submitted.length > 3 && (
             <ViewAllBtn onClick={() => setShowAllAttempts((v) => !v)}>
               {showAllAttempts ? "Show less" : `View all ${submitted.length} attempts`}
             </ViewAllBtn>
           )}
-          {!isPro && submitted.length > 3 && (
-            <HistoryGate>
-              <HistoryGateText>
-                {submitted.length - 3} older attempt{submitted.length - 3 === 1 ? "" : "s"} hidden.{" "}
-                <span>Premium unlocks your full attempt history.</span>
-              </HistoryGateText>
-              <HistoryGateBtn onClick={() => setShowUpgrade(true)}>
-                Unlock History
-              </HistoryGateBtn>
-            </HistoryGate>
-          )}
         </>
-      )}
-
-      {/* ── Upgrade Modal ──────────────────────────────────────── */}
-      {showUpgrade && (
-        <UpgradeOverlay onClick={() => setShowUpgrade(false)}>
-          <UpgradeModalCard onClick={(e) => e.stopPropagation()}>
-            <UpgradeTitle>Unlock Access</UpgradeTitle>
-            <UpgradeText>
-              Most PMP candidates fail because they don&apos;t know where they&apos;re losing marks. Premium shows you exactly that.
-            </UpgradeText>
-            <UpgradeFeature>
-              <UpgradeFeatureItem>
-                <UpgradeCheckmark>✓</UpgradeCheckmark>
-                Topic-level breakdown — see exactly where you&apos;re losing marks
-              </UpgradeFeatureItem>
-              <UpgradeFeatureItem>
-                <UpgradeCheckmark>✓</UpgradeCheckmark>
-                3 full exam simulations — Sets A, B &amp; C
-              </UpgradeFeatureItem>
-              <UpgradeFeatureItem>
-                <UpgradeCheckmark>✓</UpgradeCheckmark>
-                Personalized focus areas — top 3 weak spots to fix first
-              </UpgradeFeatureItem>
-              <UpgradeFeatureItem>
-                <UpgradeCheckmark>✓</UpgradeCheckmark>
-                Full attempt history — track improvement over time
-              </UpgradeFeatureItem>
-              <UpgradeFeatureItem>
-                <UpgradeCheckmark>✓</UpgradeCheckmark>
-                Extended practice sessions (50 &amp; 90 questions)
-              </UpgradeFeatureItem>
-            </UpgradeFeature>
-            <UpgradePrice>$59.99</UpgradePrice>
-            <UpgradePriceNote>Billed yearly · Cancel anytime · Less than a practice exam book</UpgradePriceNote>
-            <UpgradeModalBtn onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Redirecting…" : "Unlock Premium"}
-            </UpgradeModalBtn>
-            <UpgradeConsentNote>
-              By purchasing you agree to our{" "}
-              <UpgradeConsentLink href="/terms">Terms</UpgradeConsentLink>
-              {" "}&amp;{" "}
-              <UpgradeConsentLink href="/privacy">Privacy Policy</UpgradeConsentLink>.
-              Individual results vary.
-            </UpgradeConsentNote>
-            <UpgradeCloseBtn onClick={() => setShowUpgrade(false)}>
-              Maybe later
-            </UpgradeCloseBtn>
-          </UpgradeModalCard>
-        </UpgradeOverlay>
       )}
     </Wrap>
   );
