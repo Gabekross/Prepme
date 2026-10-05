@@ -49,22 +49,6 @@ const Header = styled.div`
   animation: ${fadeUp} 400ms 50ms ease both;
 `;
 
-const BankIcon = styled.div`
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 16px;
-  overflow: hidden;
-`;
-
-const BankImg = styled.img`
-  width: 56px;
-  height: 56px;
-  object-fit: contain;
-`;
-
 const H1 = styled.h1`
   margin: 0 0 10px;
   font-size: clamp(20px, 5vw, 30px);
@@ -611,7 +595,6 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
       </Breadcrumb>
 
       <Header>
-        <BankIcon><BankImg src="/images/ui/bank/bank-header.svg" alt="Question bank" /></BankIcon>
         <H1>{bank.name}</H1>
         <Desc>
           {bank.description ?? "Choose a mode to begin. Practice builds knowledge with instant feedback; Exam Simulation tests your readiness under real exam conditions."}
