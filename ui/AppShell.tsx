@@ -14,7 +14,7 @@ const Shell = styled.div`
   background: ${(p) => p.theme.pageBg};
   background-image: ${(p) => p.theme.pageBg2};
   color: ${(p) => p.theme.text};
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: ${(p) => p.theme.fontBody};
   overflow-x: hidden;
 `;
 
@@ -22,12 +22,10 @@ const Topbar = styled.header`
   position: sticky;
   top: 0;
   z-index: 100;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
   background: ${(p) =>
     p.theme.name === "dark"
-      ? "rgba(6,9,15,0.75)"
-      : "rgba(255,255,255,0.80)"};
+      ? "rgba(16,27,31,0.94)"
+      : "#ffffff"};
   border-bottom: 1px solid ${(p) => p.theme.divider};
   transition: background 200ms ease;
 `;
@@ -36,7 +34,7 @@ const TopbarInner = styled.div`
   max-width: 1180px;
   margin: 0 auto;
   padding: 0 16px;
-  height: 54px;
+  height: 66px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -45,7 +43,7 @@ const TopbarInner = styled.div`
 
   @media (min-width: 480px) {
     padding: 0 20px;
-    height: 58px;
+    height: 72px;
     gap: 12px;
   }
 `;
@@ -67,9 +65,11 @@ const BrandLogo = styled.img`
 `;
 
 const BrandName = styled.span`
-  font-weight: 800;
+  font-family: ${(p) => p.theme.fontDisplay};
+  font-weight: 600;
   font-size: 14px;
-  letter-spacing: -0.2px;
+  letter-spacing: 1.7px;
+  text-transform: uppercase;
   color: ${(p) => p.theme.text};
   white-space: nowrap;
   display: none;
@@ -95,9 +95,9 @@ const NavLink = styled(Link)`
   color: ${(p) => p.theme.mutedStrong};
   text-decoration: none;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   padding: 6px 6px;
-  border-radius: 10px;
+  border-radius: 7px;
   white-space: nowrap;
   transition: color 150ms ease, background 150ms ease;
 
@@ -107,7 +107,7 @@ const NavLink = styled(Link)`
   }
 
   @media (min-width: 480px) {
-    font-size: 13.5px;
+    font-size: 14px;
     padding: 7px 14px;
   }
 `;
@@ -124,12 +124,12 @@ const NavDivider = styled.div`
 `;
 
 const NavButton = styled.button`
-  border-radius: 10px;
+  border-radius: 7px;
   border: 1px solid ${(p) => p.theme.buttonBorder};
   background: ${(p) => p.theme.buttonBg};
   color: ${(p) => p.theme.mutedStrong};
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   padding: 6px 8px;
   cursor: pointer;
   white-space: nowrap;
@@ -141,13 +141,13 @@ const NavButton = styled.button`
   }
 
   @media (min-width: 480px) {
-    font-size: 13.5px;
+    font-size: 14px;
     padding: 7px 14px;
   }
 `;
 
 const ThemePill = styled.button`
-  border-radius: 999px;
+  border-radius: 7px;
   border: 1px solid ${(p) => p.theme.buttonBorder};
   background: ${(p) => p.theme.buttonBg};
   color: ${(p) => p.theme.text};
@@ -211,9 +211,9 @@ const CookieTextLink = styled(Link)`
 const CookieBtn = styled.button`
   border: none;
   background: ${(p) => p.theme.accent};
-  color: white;
+  color: ${(p) => p.theme.accentText};
   padding: 8px 20px;
-  border-radius: 10px;
+  border-radius: 7px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -226,15 +226,15 @@ const CookieBtn = styled.button`
 const Main = styled.main`
   max-width: 1180px;
   margin: 0 auto;
-  padding: 16px 14px 64px;
+  padding: 18px 20px 72px;
   overflow-x: hidden;
 
   @media (min-width: 480px) {
-    padding: 20px 16px 72px;
+    padding: 24px 28px 80px;
   }
 
   @media (min-width: 768px) {
-    padding: 28px 20px 80px;
+    padding: 36px 40px 92px;
   }
 `;
 

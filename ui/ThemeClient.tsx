@@ -16,7 +16,19 @@ const GlobalStyle = createGlobalStyle`
     margin: 0;
     background: ${(p: any) => p.theme.pageBg};
     color: ${(p: any) => p.theme.text};
+    font-family: ${(p: any) => p.theme.fontBody};
+    font-size: 16px;
+    line-height: 1.5;
     overflow-x: hidden;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2 {
+    font-family: ${(p: any) => p.theme.fontDisplay};
+    font-weight: 500;
   }
 
   html {

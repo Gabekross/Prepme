@@ -23,12 +23,12 @@ const fillBar = keyframes`
 /* ── layout ─────────────────────────────────────────────────────────────── */
 
 const Page = styled.div`
-  max-width: 960px;
+  max-width: 1060px;
   margin: 0 auto;
 `;
 
 const Section = styled.section<{ $delay?: number }>`
-  padding: 48px 0;
+  padding: 56px 0;
   animation: ${fadeUp} 600ms ${(p) => p.$delay ?? 0}ms ease both;
 
   @media (max-width: 640px) {
@@ -44,12 +44,12 @@ const Divider = styled.div`
 /* ── hero ────────────────────────────────────────────────────────────────── */
 
 const Hero = styled.div`
-  text-align: center;
-  padding: 40px 0 48px;
+  text-align: left;
+  padding: 64px 0 60px;
   animation: ${fadeUp} 500ms ease both;
 
   @media (min-width: 640px) {
-    padding: 64px 0 56px;
+    padding: 84px 0 72px;
   }
 `;
 
@@ -57,39 +57,40 @@ const HeroKicker = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 16px;
-  border-radius: 999px;
-  background: ${(p) => p.theme.accentSoft};
-  border: 1px solid ${(p) => p.theme.accent}33;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
   color: ${(p) => p.theme.accent};
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.6px;
+  letter-spacing: 1.9px;
   text-transform: uppercase;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 `;
 
 const H1 = styled.h1`
-  margin: 0 0 16px;
-  font-size: clamp(30px, 5.5vw, 48px);
-  font-weight: 900;
-  letter-spacing: -1px;
-  line-height: 1.1;
+  margin: 0 0 24px;
+  max-width: 760px;
+  font-size: clamp(44px, 7.4vw, 76px);
+  font-weight: 500;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
   color: ${(p) => p.theme.text};
 `;
 
 const HeroSub = styled.p`
-  margin: 0 auto 28px;
-  max-width: 560px;
+  margin: 0 0 30px;
+  max-width: 700px;
   color: ${(p) => p.theme.muted};
-  font-size: 16px;
-  line-height: 1.65;
+  font-size: clamp(17px, 2vw, 20px);
+  line-height: 1.72;
 `;
 
 const HeroCTAs = styled.div`
   display: flex;
   gap: 12px;
-  justify-content: center;
+  justify-content: flex-start;
   flex-wrap: wrap;
 `;
 
@@ -97,10 +98,10 @@ const PrimaryCTA = styled(Link)`
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 14px 32px;
-  border-radius: 14px;
+  padding: 15px 28px;
+  border-radius: 7px;
   background: ${(p) => p.theme.accent};
-  color: white;
+  color: ${(p) => p.theme.accentText};
   font-size: 15px;
   font-weight: 800;
   text-decoration: none;
@@ -115,10 +116,11 @@ const PrimaryCTA = styled(Link)`
 
 
 const DisclaimerLine = styled.div`
-  margin-top: 10px;
-  font-size: 11px;
+  margin-top: 16px;
+  max-width: 700px;
+  font-size: 12px;
   color: ${(p) => p.theme.muted};
-  opacity: 0.6;
+  opacity: 0.72;
 `;
 
 /* ── social proof stats ─────────────────────────────────────────────────── */
@@ -141,8 +143,8 @@ const StatCard = styled.div`
   max-width: 260px;
   background: ${(p) => p.theme.cardBg};
   border: 1px solid ${(p) => p.theme.cardBorder};
-  border-radius: 16px;
-  padding: 28px 20px;
+  border-radius: 14px;
+  padding: 30px 22px;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -151,8 +153,9 @@ const StatCard = styled.div`
 `;
 
 const StatValue = styled.div`
-  font-size: 32px;
-  font-weight: 900;
+  font-family: ${(p) => p.theme.fontDisplay};
+  font-size: 38px;
+  font-weight: 500;
   color: ${(p) => p.theme.accent};
   letter-spacing: -0.5px;
   line-height: 1;
@@ -171,20 +174,20 @@ const StatLabel = styled.div`
 /* ── section headings ───────────────────────────────────────────────────── */
 
 const SectionHeading = styled.h2`
-  margin: 0 0 8px;
-  font-size: clamp(22px, 4vw, 30px);
-  font-weight: 900;
-  letter-spacing: -0.6px;
+  margin: 0 0 10px;
+  font-size: clamp(30px, 4.4vw, 46px);
+  font-weight: 500;
+  letter-spacing: -0.04em;
   color: ${(p) => p.theme.text};
   text-align: center;
 `;
 
 const SectionSub = styled.p`
   margin: 0 auto 32px;
-  max-width: 520px;
+  max-width: 600px;
   color: ${(p) => p.theme.muted};
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 1.7;
   text-align: center;
 `;
 
