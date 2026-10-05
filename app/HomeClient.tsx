@@ -188,160 +188,6 @@ const SectionSub = styled.p`
   text-align: center;
 `;
 
-/* ── feature cards (why different) ──────────────────────────────────────── */
-
-const FeatureGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const FeatureCard = styled.button<{ $expanded: boolean }>`
-  all: unset;
-  box-sizing: border-box;
-  cursor: pointer;
-  width: 100%;
-  background: ${(p) => p.theme.cardBg};
-  border: 1px solid ${(p) => p.$expanded ? p.theme.accent + "60" : p.theme.cardBorder};
-  border-radius: 20px;
-  padding: 24px 20px;
-  box-shadow: ${(p) => p.theme.shadow};
-  position: relative;
-  overflow: hidden;
-  transition: border-color 200ms ease, box-shadow 200ms ease, transform 150ms ease;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: -40px;
-    right: -40px;
-    width: 160px;
-    height: 160px;
-    border-radius: 50%;
-    pointer-events: none;
-  }
-
-  &:hover {
-    border-color: ${(p) => p.theme.accent}50;
-    box-shadow: ${(p) => p.theme.shadowLg};
-    transform: translateY(-2px);
-  }
-
-  &:focus-visible {
-    outline: 2px solid ${(p) => p.theme.accent};
-    outline-offset: 2px;
-  }
-`;
-
-const FeatureIcon = styled.div`
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: ${(p) => p.theme.cardBg2 ?? "rgba(255,255,255,0.04)"};
-  border: 1px solid ${(p) => p.theme.cardBorder};
-  display: grid;
-  place-items: center;
-  margin-bottom: 14px;
-  overflow: hidden;
-
-  @media (max-width: 768px) {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-  }
-`;
-
-const FeatureImg = styled.img`
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-
-  @media (max-width: 768px) {
-    width: 24px;
-    height: 24px;
-  }
-`;
-
-const FeatureHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-`;
-
-const FeatureTitle = styled.h3`
-  margin: 0;
-  font-size: 16px;
-  font-weight: 800;
-  color: ${(p) => p.theme.text};
-  letter-spacing: -0.2px;
-`;
-
-const FeatureChevron = styled.span<{ $expanded: boolean }>`
-  font-size: 12px;
-  color: ${(p) => p.theme.muted};
-  transition: transform 250ms ease;
-  transform: rotate(${(p) => (p.$expanded ? "180deg" : "0deg")});
-  flex-shrink: 0;
-`;
-
-const FeatureTeaser = styled.p`
-  margin: 6px 0 0;
-  font-size: 13px;
-  color: ${(p) => p.theme.muted};
-  line-height: 1.4;
-`;
-
-const FeatureDetailWrap = styled.div<{ $expanded: boolean }>`
-  display: grid;
-  grid-template-rows: ${(p) => (p.$expanded ? "1fr" : "0fr")};
-  transition: grid-template-rows 300ms ease;
-`;
-
-const FeatureDetailInner = styled.div`
-  overflow: hidden;
-`;
-
-const FeatureDesc = styled.p`
-  margin: 14px 0 0;
-  padding-top: 14px;
-  border-top: 1px solid ${(p) => p.theme.cardBorder};
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: ${(p) => p.theme.mutedStrong};
-`;
-
-
-/* ── growth hook CTA ────────────────────────────────────────────────────── */
-
-const CTABanner = styled.div`
-  background: linear-gradient(135deg, ${(p) => p.theme.accent}18, #7c3aed18);
-  border: 1px solid ${(p) => p.theme.accent}33;
-  border-radius: 24px;
-  padding: 40px 24px;
-  text-align: center;
-`;
-
-const CTABannerH = styled.h2`
-  margin: 0 0 10px;
-  font-size: clamp(20px, 4vw, 26px);
-  font-weight: 900;
-  color: ${(p) => p.theme.text};
-  letter-spacing: -0.4px;
-`;
-
-const CTABannerSub = styled.p`
-  margin: 0 auto 24px;
-  max-width: 440px;
-  font-size: 14px;
-  color: ${(p) => p.theme.muted};
-  line-height: 1.6;
-`;
-
 /* ── FAQ ─────────────────────────────────────────────────────────────────── */
 
 const FAQList = styled.div`
@@ -516,36 +362,8 @@ const FAQ_DATA = [
 
 /* ── component ──────────────────────────────────────────────────────────── */
 
-const FEATURES = [
-  {
-    img: "/images/ui/features/real-exam.svg",
-    alt: "Real exam simulation icon",
-    title: "Real Exam Simulation",
-    teaser: "Timed, weighted, and formatted like the real PMP.",
-    detail:
-      "180 questions. 230-minute timer. Domain-weighted scoring that mirrors the actual PMP. Includes all question types you will see on exam day.",
-  },
-  {
-    img: "/images/ui/features/adaptive-intelligence.svg",
-    alt: "Adaptive intelligence icon",
-    title: "Adaptive Intelligence",
-    teaser: "Targets your weak areas automatically.",
-    detail:
-      "Questions get harder as you improve. Weak domains are prioritized automatically. Difficulty-weighted scoring means harder questions count more (up to 2.5x).",
-  },
-  {
-    img: "/images/ui/features/deep-analytics.svg",
-    alt: "Deep analytics icon",
-    title: "Deep Analytics",
-    teaser: "Know exactly where to focus your study time.",
-    detail:
-      "Domain mastery bands, topic-level insights, difficulty performance matrix, and personalized recommendations. Track progress across every session.",
-  },
-];
-
 export default function HomeClient() {
   const [stats, setStats] = useState<PlatformStats | null>(null);
-  const [expandedCard, setExpandedCard] = useState<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -605,7 +423,7 @@ export default function HomeClient() {
 
       <Divider />
 
-      {/* ── 4. Why This Is Different ─────────────────────────────────── */}
+      {/* ── 4. Blog Promo ────────────────────────────────────────────── */}
       <Section $delay={140}>
         <SectionHeading>PMP Exam Tips & Study Guides</SectionHeading>
         <SectionSub>
@@ -614,60 +432,6 @@ export default function HomeClient() {
         <HeroCTAs>
           <PrimaryCTA href="/blog">Read the Blog</PrimaryCTA>
         </HeroCTAs>
-      </Section>
-
-      <Divider />
-
-      <Section $delay={160}>
-        <SectionHeading>Why This Is Different</SectionHeading>
-        <SectionSub>
-          Most PMP prep tools just shuffle random questions. We built an exam
-          engine that trains you strategically.
-        </SectionSub>
-
-        <FeatureGrid>
-          {FEATURES.map((f, i) => {
-            const isOpen = expandedCard === i;
-            return (
-              <FeatureCard
-                key={f.title}
-                $expanded={isOpen}
-                onClick={() => setExpandedCard(isOpen ? null : i)}
-                aria-expanded={isOpen}
-              >
-                <FeatureIcon><FeatureImg src={f.img} alt={f.alt} loading="lazy" /></FeatureIcon>
-                <FeatureHeader>
-                  <FeatureTitle>{f.title}</FeatureTitle>
-                  <FeatureChevron $expanded={isOpen}>&#x25BC;</FeatureChevron>
-                </FeatureHeader>
-                <FeatureTeaser>{f.teaser}</FeatureTeaser>
-                <FeatureDetailWrap $expanded={isOpen}>
-                  <FeatureDetailInner>
-                    <FeatureDesc>{f.detail}</FeatureDesc>
-                  </FeatureDetailInner>
-                </FeatureDetailWrap>
-              </FeatureCard>
-            );
-          })}
-        </FeatureGrid>
-      </Section>
-
-      <Divider />
-
-      {/* ── 9. Growth Hook CTA ───────────────────────────────────────── */}
-      <Section $delay={280}>
-        <CTABanner>
-          <CTABannerH>
-            Most PMP candidates do not know their weak domains.
-            <br />
-            Find out where you stand.
-          </CTABannerH>
-          <CTABannerSub>
-            Take a practice assessment and get instant feedback on your
-            strengths and weaknesses across all three PMP domains.
-          </CTABannerSub>
-          <PrimaryCTA href="/bank/pmp">Take the Assessment</PrimaryCTA>
-        </CTABanner>
       </Section>
 
       <Divider />
