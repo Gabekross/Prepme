@@ -98,6 +98,13 @@ const Grid = styled.div`
   }
 `;
 
+const ExamGrid = styled(Grid)`
+  @media (min-width: 960px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: stretch;
+  }
+`;
+
 const ModeCard = styled(Link)<{ $variant: "practice" | "exam" }>`
   text-decoration: none;
   color: inherit;
@@ -637,7 +644,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
 
       <SectionLabel style={{ marginTop: 36 }}>Exam Simulations</SectionLabel>
 
-      <Grid>
+      <ExamGrid>
         {/* Set A — Premium only */}
         {isPro || setAAvailable ? (
           <ModeCard href={`/bank/${bank.slug}/exam/set-a/instructions`} $variant="exam">
@@ -773,7 +780,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
             <CardCta $variant="exam">Unlock Set C</CardCta>
           </LockedCard>
         )}
-      </Grid>
+      </ExamGrid>
 
       {/* ── Upgrade Modal ──────────────────────────────────────── */}
       {showUpgrade && (
