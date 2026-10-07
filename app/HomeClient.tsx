@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import styled, { keyframes } from "styled-components";
 import Link from "next/link";
 
@@ -123,54 +123,6 @@ const DisclaimerLine = styled.div`
   opacity: 0.72;
 `;
 
-/* ── social proof stats ─────────────────────────────────────────────────── */
-
-const StatsGrid = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  max-width: 560px;
-  margin: 0 auto;
-
-  @media (max-width: 480px) {
-    gap: 12px;
-  }
-`;
-
-const StatCard = styled.div`
-  flex: 1;
-  min-width: 0;
-  max-width: 260px;
-  background: ${(p) => p.theme.cardBg};
-  border: 1px solid ${(p) => p.theme.cardBorder};
-  border-radius: 14px;
-  padding: 30px 22px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-`;
-
-const StatValue = styled.div`
-  font-family: ${(p) => p.theme.fontDisplay};
-  font-size: 38px;
-  font-weight: 500;
-  color: ${(p) => p.theme.accent};
-  letter-spacing: -0.5px;
-  line-height: 1;
-`;
-
-const StatLabel = styled.div`
-  font-size: 12px;
-  font-weight: 600;
-  color: ${(p) => p.theme.muted};
-  margin-top: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  line-height: 1.3;
-`;
-
 /* ── section headings ───────────────────────────────────────────────────── */
 
 const SectionHeading = styled.h2`
@@ -189,6 +141,25 @@ const SectionSub = styled.p`
   font-size: 16px;
   line-height: 1.7;
   text-align: center;
+`;
+
+/* ── practice-exam overview ────────────────────────────────────────────── */
+
+const OverviewCopy = styled.div`
+  max-width: 760px;
+  margin: 0 auto;
+  color: ${(p) => p.theme.muted};
+  font-size: 16px;
+  line-height: 1.75;
+  text-align: center;
+
+  p {
+    margin: 0 0 16px;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
 `;
 
 /* ── FAQ ─────────────────────────────────────────────────────────────────── */
@@ -329,9 +300,6 @@ const Skeleton = styled.div`
 
 /* ── data ────────────────────────────────────────────────────────────────── */
 
-type PlatformStats = { totalAttempts: number; totalPractice: number; totalExams: number };
-
-
 const FAQ_DATA = [
   {
     q: "Is PMP Mastery Lab updated for 2026?",
@@ -366,21 +334,6 @@ const FAQ_DATA = [
 /* ── component ──────────────────────────────────────────────────────────── */
 
 export default function HomeClient() {
-  const [stats, setStats] = useState<PlatformStats | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/stats");
-        if (!res.ok) throw new Error("fetch failed");
-        const data: PlatformStats = await res.json();
-        setStats(data);
-      } catch {
-        setStats({ totalAttempts: 0, totalPractice: 0, totalExams: 0 });
-      }
-    })();
-  }, []);
-
   return (
     <Page>
       {/* ── 1. Hero ──────────────────────────────────────────────────── */}
@@ -407,26 +360,32 @@ export default function HomeClient() {
         </DisclaimerLine>
       </Hero>
 
-      {/* ── 2. Trust Badges ──────────────────────────────────────────── */}
+      {/* ── 2. Divider ───────────────────────────────────────────────── */}
       <Divider style={{ margin: "40px 0 0" }} />
 
-      {/* ── 3. Social Proof Stats ────────────────────────────────────── */}
-      <Section $delay={120}>
-        <StatsGrid>
-          <StatCard>
-            <StatValue>400+</StatValue>
-            <StatLabel>PMP Questions</StatLabel>
-          </StatCard>
-          <StatCard>
-            <StatValue>3</StatValue>
-            <StatLabel>Full Exam Simulations</StatLabel>
-          </StatCard>
-        </StatsGrid>
+      {/* ── 3. Practice Exam Overview ───────────────────────────────── */}
+      <Section $delay={130}>
+        <SectionHeading>Built to Feel Like Exam Day</SectionHeading>
+        <OverviewCopy>
+          <p>
+            Our full-length PMP practice exams are designed around the format,
+            pacing, and question styles you can expect on test day. Each
+            simulation follows the PMP Exam Content Outline and includes 180
+            questions delivered in timed sections.
+          </p>
+          <p>
+            Choose from three complete simulations to build stamina and test
+            your readiness. When you finish, you&apos;ll see exam-style results
+            across the People, Process, and Business Environment domains, plus
+            answer explanations that help you pinpoint gaps and study with
+            greater confidence.
+          </p>
+        </OverviewCopy>
       </Section>
 
       <Divider />
 
-      {/* ── 4. Blog Promo ────────────────────────────────────────────── */}
+      {/* ── 5. Blog Promo ────────────────────────────────────────────── */}
       <Section $delay={140}>
         <SectionHeading>PMP Exam Tips & Study Guides</SectionHeading>
         <SectionSub>
