@@ -54,6 +54,32 @@ const Hero = styled.div`
 
   @media (min-width: 768px) {
     text-align: center;
+    padding: 84px 48px 72px;
+    overflow: hidden;
+    border-radius: 20px;
+    background-image: linear-gradient(
+        90deg,
+        ${(p) =>
+          p.theme.name === "dark"
+            ? "rgba(16, 27, 31, 0.76)"
+            : "rgba(237, 244, 243, 0.78)"} 0%,
+        ${(p) =>
+          p.theme.name === "dark"
+            ? "rgba(16, 27, 31, 0.9)"
+            : "rgba(237, 244, 243, 0.93)"} 34%,
+        ${(p) =>
+          p.theme.name === "dark"
+            ? "rgba(16, 27, 31, 0.9)"
+            : "rgba(237, 244, 243, 0.93)"} 66%,
+        ${(p) =>
+          p.theme.name === "dark"
+            ? "rgba(16, 27, 31, 0.76)"
+            : "rgba(237, 244, 243, 0.78)"} 100%
+      ),
+      url("/hero-exam-study-underlay.png");
+    background-position: center;
+    background-size: cover;
+    box-shadow: ${(p) => p.theme.shadowLg};
   }
 `;
 
