@@ -51,6 +51,10 @@ const Hero = styled.div`
   @media (min-width: 640px) {
     padding: 84px 0 72px;
   }
+
+  @media (min-width: 768px) {
+    text-align: center;
+  }
 `;
 
 const HeroKicker = styled.div`
@@ -77,6 +81,11 @@ const H1 = styled.h1`
   letter-spacing: -0.055em;
   line-height: 0.98;
   color: ${(p) => p.theme.text};
+
+  @media (min-width: 768px) {
+    margin-left: auto;
+    margin-right: auto;
+  }
 `;
 
 const HeroSub = styled.p`
@@ -85,6 +94,11 @@ const HeroSub = styled.p`
   color: ${(p) => p.theme.muted};
   font-size: clamp(17px, 2vw, 20px);
   line-height: 1.72;
+
+  @media (min-width: 768px) {
+    margin-left: auto;
+    margin-right: auto;
+  }
 `;
 
 const HeroCTAs = styled.div`
@@ -125,6 +139,11 @@ const DisclaimerLine = styled.div`
   font-size: 12px;
   color: ${(p) => p.theme.muted};
   opacity: 0.72;
+
+  @media (min-width: 768px) {
+    margin-left: auto;
+    margin-right: auto;
+  }
 `;
 
 /* ── section headings ───────────────────────────────────────────────────── */
