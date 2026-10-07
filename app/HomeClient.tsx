@@ -92,6 +92,10 @@ const HeroCTAs = styled.div`
   gap: 12px;
   justify-content: flex-start;
   flex-wrap: wrap;
+
+  @media (min-width: 768px) {
+    justify-content: center;
+  }
 `;
 
 const PrimaryCTA = styled(Link)`
