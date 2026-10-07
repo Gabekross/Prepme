@@ -61,20 +61,20 @@ const Hero = styled.div`
         90deg,
         ${(p) =>
           p.theme.name === "dark"
-            ? "rgba(16, 27, 31, 0.76)"
-            : "rgba(237, 244, 243, 0.78)"} 0%,
+            ? "rgba(16, 27, 31, 0.68)"
+            : "rgba(237, 244, 243, 0.7)"} 0%,
         ${(p) =>
           p.theme.name === "dark"
-            ? "rgba(16, 27, 31, 0.9)"
-            : "rgba(237, 244, 243, 0.93)"} 34%,
+            ? "rgba(16, 27, 31, 0.84)"
+            : "rgba(237, 244, 243, 0.86)"} 34%,
         ${(p) =>
           p.theme.name === "dark"
-            ? "rgba(16, 27, 31, 0.9)"
-            : "rgba(237, 244, 243, 0.93)"} 66%,
+            ? "rgba(16, 27, 31, 0.84)"
+            : "rgba(237, 244, 243, 0.86)"} 66%,
         ${(p) =>
           p.theme.name === "dark"
-            ? "rgba(16, 27, 31, 0.76)"
-            : "rgba(237, 244, 243, 0.78)"} 100%
+            ? "rgba(16, 27, 31, 0.68)"
+            : "rgba(237, 244, 243, 0.7)"} 100%
       ),
       url("/hero-exam-study-underlay.png");
     background-position: center;
