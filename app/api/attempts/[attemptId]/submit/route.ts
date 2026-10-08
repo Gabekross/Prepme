@@ -167,7 +167,7 @@ export async function POST(
 
     if (upsertError) {
       console.error("[submit] Failed to persist result:", upsertError.message);
-      // Still return the result even if persistence fails
+      return NextResponse.json({ error: "Your exam could not be saved. Please retry submission." }, { status: 500 });
     }
 
     if (shouldCountFreePractice && !upsertError) {
@@ -185,6 +185,7 @@ export async function POST(
       result,
       passed,
       scorePercent,
+      questions: attemptQuestions,
     });
   } catch (e: any) {
     console.error("[submit] Unexpected error:", e?.message ?? "unknown");

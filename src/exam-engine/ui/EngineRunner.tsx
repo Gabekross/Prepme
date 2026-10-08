@@ -1576,6 +1576,8 @@ export function EngineRunner(props: {
   const [reviewQuestions, setReviewQuestions] = useState<Question[] | null>(null);
   const [reviewLoadError, setReviewLoadError] = useState("");
   const [reviewRequest, setReviewRequest] = useState(0);
+  const submissionAttemptId = useRef<string | null>(null);
+  const [submissionFailed, setSubmissionFailed] = useState(false);
   const [showDomainSection, setShowDomainSection] = useState(true);
   const [showInsightsSection, setShowInsightsSection] = useState(false);
   const [showQuestionList, setShowQuestionList] = useState(false);
@@ -1649,7 +1651,7 @@ export function EngineRunner(props: {
     return () => {
       // On SPA navigation away, mark any unsubmitted attempt as abandoned
       // so it does not surface as in_progress in the dashboard.
-      const att = latestAttemptRef.current;
+      const att = useExamSession.getState().attempt;
       if (att && !att.submittedAt && att.id && userId) {
         try {
           const sb = supabaseBrowser();
@@ -1657,6 +1659,7 @@ export function EngineRunner(props: {
             .update({ status: "abandoned" })
             .eq("id", att.id)
             .eq("user_id", userId)
+            .eq("status", "in_progress")
             .then(({ error }) => {
               if (error) console.warn("[EngineRunner] Failed to abandon attempt on nav:", error.message);
             });
@@ -1680,9 +1683,22 @@ export function EngineRunner(props: {
 
   const currentId = current?.id ?? null;
 
-  /** Persist scoring result to Supabase after submission (fire-and-forget) */
-  function persistResult() {
-    engine.persistScoringResult(questions, passThreshold).catch(() => {});
+  /** A successful submission supplies the exact scored content for review. */
+  async function persistResult(): Promise<boolean> {
+    submissionAttemptId.current = useExamSession.getState().attempt?.id ?? null;
+    setSubmissionFailed(false);
+    setReviewLoadError("");
+    try {
+      const fullQs = await engine.persistScoringResult(questions, passThreshold);
+      setReviewQuestions(fullQs);
+      setExplanationsMap(Object.fromEntries(fullQs.map((q) => [q.id, q.explanation ?? ""])));
+      return true;
+    } catch (error) {
+      setSubmissionFailed(true);
+      setShowProcessing(false);
+      setReviewLoadError(error instanceof Error ? error.message : "Unable to save your exam. Please retry.");
+      return false;
+    }
   }
 
   useEffect(() => {
@@ -1723,26 +1739,14 @@ export function EngineRunner(props: {
   useEffect(() => {
     const submittedAttemptId = engine.attempt?.submittedAt ? engine.attempt.id : null;
     if (!submittedAttemptId || !bankSlug) return;
+    // Fresh submissions use the confirmed POST response, not a racing GET.
+    if (submissionAttemptId.current === submittedAttemptId) return;
     let cancelled = false;
     setReviewQuestions(null);
     setReviewLoadError("");
     (async () => {
       try {
-        let fullQs = questions;
-        if (userId) {
-          // Scoring is saved asynchronously. The content endpoint can briefly
-          // return 403 until that save finishes, so wait before showing review.
-          for (let attemptNumber = 0; attemptNumber < 12; attemptNumber++) {
-            if (cancelled) return;
-            try {
-              fullQs = await loadSubmittedAttemptQuestions(submittedAttemptId);
-              break;
-            } catch (error) {
-              if (attemptNumber === 11 || !(error instanceof Error) || error.message !== "Question review is available after submission") throw error;
-              await new Promise((resolve) => setTimeout(resolve, 750));
-            }
-          }
-        }
+        const fullQs = userId ? await loadSubmittedAttemptQuestions(submittedAttemptId) : questions;
         if (cancelled) return;
         const map: Record<string, string> = {};
         for (const q of fullQs) {
@@ -2043,10 +2047,12 @@ export function EngineRunner(props: {
     setShowSubmitConfirm(true);
   }
 
-  function confirmSubmit() {
+  async function confirmSubmit() {
     setShowSubmitConfirm(false);
     engine.submitAttempt();
-    persistResult();
+    setShowProcessing(true);
+    const saved = await persistResult();
+    if (!saved) return;
     if (mode === "exam") {
       if (showReviewAfterSubmit) {
         setShowProcessing(true);
@@ -2167,7 +2173,10 @@ export function EngineRunner(props: {
     return (
       <Card role={reviewLoadError ? "alert" : "status"}>
         <Subtle>{reviewLoadError || "Loading correct answers and explanations…"}</Subtle>
-        {reviewLoadError && <RetakeBtn onClick={() => setReviewRequest((n) => n + 1)}>Retry review</RetakeBtn>}
+        {reviewLoadError && <RetakeBtn onClick={() => {
+          if (submissionFailed) void persistResult();
+          else setReviewRequest((n) => n + 1);
+        }}>{submissionFailed ? "Retry submission" : "Retry review"}</RetakeBtn>}
       </Card>
     );
   }

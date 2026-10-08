@@ -324,7 +324,12 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
 
   // Load attempt
   useEffect(() => {
-    if (authLoading || !user) return;
+    if (authLoading) return;
+    if (!user) {
+      setError("Sign in to the account that submitted this exam to review it.");
+      setLoading(false);
+      return;
+    }
 
     (async () => {
       try {
@@ -336,13 +341,15 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
           .single();
 
         if (fetchError || !data) {
-          setError("Attempt not found.");
+          setError("This attempt was not found for your account. Open your exam from the Dashboard.");
+          setLoading(false);
           return;
         }
         setAttempt(data as AttemptRow);
       } catch (err) {
         console.error("[Review] Failed to load attempt:", err);
         setError("Failed to load review data.");
+        setLoading(false);
       }
     })();
   }, [user, authLoading, sb, attemptId]);

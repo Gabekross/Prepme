@@ -116,7 +116,7 @@ type State = {
    * Score the current attempt and persist the result to Supabase.
    * Call this after submitAttempt() to save the scoring breakdown.
    */
-  persistScoringResult: (questions: Question[], passThreshold?: number) => Promise<void>;
+  persistScoringResult: (questions: Question[], passThreshold?: number) => Promise<Question[]>;
 
   /** Internal: get the current storage instance (hybrid or local) */
   _storage: () => ReturnType<typeof getOrCreateStorage>;
@@ -612,7 +612,7 @@ export const useExamSession = create<State>((set, get) => ({
 
   persistScoringResult: async (questions: Question[], passThreshold: number = 70) => {
     const att = get().attempt;
-    if (!att || !att.submittedAt) return;
+    if (!att || !att.submittedAt) throw new Error("Submit the exam before loading its results.");
 
     try {
       const bankSlug = get()._bankSlug;
@@ -638,20 +638,24 @@ export const useExamSession = create<State>((set, get) => ({
           });
 
           if (res.ok) {
-            console.info("[persistScoringResult] Saved with server-side scoring:", att.id);
-            return;
+            const receipt = await res.json();
+            if (!Array.isArray(receipt.questions) || receipt.questions.length !== att.questionOrder.length) {
+              throw new Error("The saved exam review is incomplete. Please retry submission.");
+            }
+            return receipt.questions as Question[];
           }
 
-          console.warn("[persistScoringResult] Server-side scoring failed:", res.status);
+          const failure = await res.json().catch(() => ({}));
+          throw new Error(failure.error || "Unable to submit your exam. Please retry.");
         }
+        throw new Error("Please sign in again to save your exam and view its results.");
       }
 
       // Score the attempt
       const attemptQuestions = questions.filter((q) => att.questionOrder.includes(q.id));
-      if (attemptQuestions.length === 0) return;
+      if (attemptQuestions.length === 0) throw new Error("No questions are available for this attempt.");
       if (!attemptQuestions.every(hasScoringAnswerKey)) {
-        console.warn("[persistScoringResult] Skipping client scoring because answer keys are not available");
-        return;
+        throw new Error("Please sign in to submit this exam and load its answers.");
       }
 
       const result = scoreAttempt(att, attemptQuestions);
@@ -675,14 +679,16 @@ export const useExamSession = create<State>((set, get) => ({
             percent: scorePercent,
             passed,
           });
-          return;
+          return attemptQuestions;
         }
       }
 
       // Fallback: no remote storage, save result into the attempt state locally
       console.info("[persistScoringResult] No remote — result computed but not persisted to DB");
+      return attemptQuestions;
     } catch (e) {
       console.warn("[persistScoringResult] Failed:", e);
+      throw e;
     }
   },
 

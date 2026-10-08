@@ -31,6 +31,9 @@ export class SupabaseAttemptStorage implements AttemptStorage {
   }
 
   async saveAttempt(attempt: Attempt): Promise<void> {
+    // The scoring endpoint owns the final submitted record. Review navigation
+    // and delayed autosaves must never upsert over its saved result.
+    if (attempt.submittedAt) return;
     const row: AttemptInsert = {
       id: attempt.id,
       user_id: this.userId,
