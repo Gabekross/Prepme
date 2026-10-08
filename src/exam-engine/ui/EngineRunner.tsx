@@ -9,6 +9,7 @@ import { useExamSession } from "../hooks/useExamSession";
 import { QuestionRenderer } from "./QuestionRenderer";
 import { CorrectAnswerSummary } from "./CorrectAnswerSummary";
 import { scoreAttempt, scoreQuestion } from "../core/scoring";
+import { examPercentage } from "../core/examPercentage";
 import { LocalAttemptStorage } from "../core/storage";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { computeAdaptiveSummary, type AdaptiveSummary } from "../core/analytics";
@@ -1959,8 +1960,7 @@ export function EngineRunner(props: {
   }, [mode, engine.attempt?.submittedAt]);
 
   const examPercent = useMemo(() => {
-    if (!result || result.maxScore === 0) return 0;
-    return Math.round((result.totalScore / result.maxScore) * 100);
+    return examPercentage(result);
   }, [result]);
 
   const examPassed = examPercent >= passThreshold;
@@ -2167,7 +2167,7 @@ export function EngineRunner(props: {
   }
 
   const correctCount = result ? result.scoreResults.filter((r) => r.isCorrect).length : 0;
-  const incorrectCount = result ? result.incorrectQuestionIds.length : 0;
+  const incorrectCount = result ? (mode === "exam" ? result.scoreResults.length - correctCount : result.incorrectQuestionIds.length) : 0;
 
   if (mode === "exam" && engine.attempt?.submittedAt && userId && !reviewQuestions) {
     return (
@@ -2379,6 +2379,7 @@ export function EngineRunner(props: {
                   ? `Strong result at ${examPercent}%. Review the domain breakdown below to keep momentum.`
                   : `You scored ${examPercent}%. Review where you lost marks below.`}
               </ResultsSubtext>
+              {result && <ResultsSubtext>{result.answeredCount} of {result.scoreResults.length} questions answered. Unanswered questions count as incorrect in the exam score.</ResultsSubtext>}
               {engine.attempt.submittedAt && (
                 <SubmittedAt>Submitted {formatSubmittedAt(engine.attempt.submittedAt)}</SubmittedAt>
               )}
