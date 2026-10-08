@@ -59,6 +59,7 @@ supabase/.cache
 !supabase/migrations/20260606_add_instagram_content_assets.sql
 !supabase/migrations/20260624_add_free_usage_limits.sql
 !supabase/migrations/20261008023720_version_question_bank_content.sql
+!supabase/migrations/20261008030706_allow_pull_down_question_type.sql
 *.sqlite
 *.db
 

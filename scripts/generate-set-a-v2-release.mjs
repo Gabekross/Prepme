@@ -25,7 +25,11 @@ const sql = `-- Generated from staging/set-a-replacements.json. Do not hand-edit
 -- Preconditions: the version_question_bank_content migration has succeeded.
 BEGIN;
 
-CREATE TEMP TABLE release_set_a_v2 (item JSONB NOT NULL) ON COMMIT DROP;
+-- The Supabase SQL editor may submit statements independently. Keep this
+-- session-scoped table until the editor session ends instead of dropping it
+-- at an intermediate commit, and make a deliberate retry idempotent.
+DROP TABLE IF EXISTS release_set_a_v2;
+CREATE TEMP TABLE release_set_a_v2 (item JSONB NOT NULL);
 INSERT INTO release_set_a_v2 (item)
 SELECT value FROM jsonb_array_elements($release$${payload}$release$::jsonb);
 
