@@ -110,7 +110,12 @@ export function QuestionRenderer(props: {
   onChange: (r: Response) => void;
   showCorrect?: boolean;
 }) {
-  const { question, scenario, response, optionOrder, onChange, showCorrect } = props;
+  const { question, scenario, response, onChange, showCorrect } = props;
+  // Explanations refer to the authored A/B/C labels. Restore that order for
+  // review while preserving the learner's selected answer by its stable ID.
+  const authoredChoiceOrder = showCorrect &&
+    (question.type === "mcq_single" || question.type === "mcq_multi" || question.type === "pull_down");
+  const optionOrder = authoredChoiceOrder ? question.payload.choices.map((choice) => choice.id) : props.optionOrder;
 
   const domainLabel = DOMAIN_LABELS[question.domain] ?? question.domain;
   const difficultyLabel = question.difficulty ? DIFFICULTY_LABELS[question.difficulty] ?? question.difficulty : null;
@@ -127,6 +132,7 @@ export function QuestionRenderer(props: {
       </MetaRow>
 
       <Prompt>{question.prompt}</Prompt>
+      {authoredChoiceOrder && <small>Review choices use the original order to match the explanation; your selected answer is preserved.</small>}
 
       {question.media?.imageUrl && question.type !== "hotspot" && (
         <Exhibit>
