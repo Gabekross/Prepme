@@ -7,6 +7,7 @@ import styled, { keyframes } from "styled-components";
 import type { Blueprint, Domain, Question, Scenario, Response } from "../core/types";
 import { useExamSession } from "../hooks/useExamSession";
 import { QuestionRenderer } from "./QuestionRenderer";
+import { CorrectAnswerSummary } from "./CorrectAnswerSummary";
 import { scoreAttempt, scoreQuestion } from "../core/scoring";
 import { LocalAttemptStorage } from "../core/storage";
 import { supabaseBrowser } from "@/lib/supabase/browser";
@@ -1573,6 +1574,8 @@ export function EngineRunner(props: {
   const [showReviewAfterSubmit, setShowReviewAfterSubmit] = useState(true);
   const [explanationsMap, setExplanationsMap] = useState<Record<string, string>>({});
   const [reviewQuestions, setReviewQuestions] = useState<Question[] | null>(null);
+  const [reviewLoadError, setReviewLoadError] = useState("");
+  const [reviewRequest, setReviewRequest] = useState(0);
   const [showDomainSection, setShowDomainSection] = useState(true);
   const [showInsightsSection, setShowInsightsSection] = useState(false);
   const [showQuestionList, setShowQuestionList] = useState(false);
@@ -1716,16 +1719,30 @@ export function EngineRunner(props: {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [durationMinutes, mode, engine.attempt?.id, engine.attempt?.submittedAt, isOnBreak]);
 
-  // ── Load explanations after submission ────────────────────────────────────
+  // ── Load immutable answers and explanations after submission ───────────────
   useEffect(() => {
     const submittedAttemptId = engine.attempt?.submittedAt ? engine.attempt.id : null;
     if (!submittedAttemptId || !bankSlug) return;
     let cancelled = false;
+    setReviewQuestions(null);
+    setReviewLoadError("");
     (async () => {
       try {
-        const fullQs = userId
-          ? await loadSubmittedAttemptQuestions(submittedAttemptId)
-          : questions;
+        let fullQs = questions;
+        if (userId) {
+          // Scoring is saved asynchronously. The content endpoint can briefly
+          // return 403 until that save finishes, so wait before showing review.
+          for (let attemptNumber = 0; attemptNumber < 12; attemptNumber++) {
+            if (cancelled) return;
+            try {
+              fullQs = await loadSubmittedAttemptQuestions(submittedAttemptId);
+              break;
+            } catch (error) {
+              if (attemptNumber === 11 || !(error instanceof Error) || error.message !== "Question review is available after submission") throw error;
+              await new Promise((resolve) => setTimeout(resolve, 750));
+            }
+          }
+        }
         if (cancelled) return;
         const map: Record<string, string> = {};
         for (const q of fullQs) {
@@ -1733,12 +1750,12 @@ export function EngineRunner(props: {
         }
         setReviewQuestions(fullQs);
         setExplanationsMap(map);
-      } catch {
-        // Best-effort — explanations remain empty if fetch fails
+      } catch (error) {
+        if (!cancelled) setReviewLoadError(error instanceof Error ? error.message : "Unable to load answers and explanations.");
       }
     })();
     return () => { cancelled = true; };
-  }, [engine.attempt?.submittedAt, engine.attempt?.id, bankSlug, questions, userId]);
+  }, [engine.attempt?.submittedAt, engine.attempt?.id, bankSlug, questions, userId, reviewRequest]);
 
   // ── Break helpers ─────────────────────────────────────────────────────────
 
@@ -2146,6 +2163,15 @@ export function EngineRunner(props: {
   const correctCount = result ? result.scoreResults.filter((r) => r.isCorrect).length : 0;
   const incorrectCount = result ? result.incorrectQuestionIds.length : 0;
 
+  if (mode === "exam" && engine.attempt?.submittedAt && userId && !reviewQuestions) {
+    return (
+      <Card role={reviewLoadError ? "alert" : "status"}>
+        <Subtle>{reviewLoadError || "Loading correct answers and explanations…"}</Subtle>
+        {reviewLoadError && <RetakeBtn onClick={() => setReviewRequest((n) => n + 1)}>Retry review</RetakeBtn>}
+      </Card>
+    );
+  }
+
   return (
     <>
       {/* ── Break overlay ──────────────────────────────────────── */}
@@ -2506,6 +2532,7 @@ export function EngineRunner(props: {
           <>
             <Card>
               {current ? (
+                <>
                 <QuestionRenderer
                   question={current}
                   scenario={current.scenarioId ? scenarios.find((s) => s.id === current.scenarioId) : undefined}
@@ -2514,6 +2541,8 @@ export function EngineRunner(props: {
                   onChange={() => {}}
                   showCorrect={true}
                 />
+                <CorrectAnswerSummary question={current} />
+                </>
               ) : (
                 <Subtle>Loading…</Subtle>
               )}

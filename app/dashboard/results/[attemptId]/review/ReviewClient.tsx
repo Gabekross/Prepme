@@ -10,6 +10,7 @@ import type { Question, Scenario, AttemptResult, Response } from "@/src/exam-eng
 import { loadBankBySlug, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
 import { loadSubmittedAttemptQuestions } from "@/src/exam-engine/data/loadAttemptQuestions";
 import { QuestionRenderer } from "@/src/exam-engine/ui/QuestionRenderer";
+import { CorrectAnswerSummary } from "@/src/exam-engine/ui/CorrectAnswerSummary";
 
 /* ── types ──────────────────────────────────────────────────────────────── */
 
@@ -550,6 +551,7 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
               onChange={() => {}}
               showCorrect={true}
             />
+            <CorrectAnswerSummary question={currentQuestion} />
           </QuestionCard>
 
           {/* ── Explanation ─────────────────────────────────────── */}
