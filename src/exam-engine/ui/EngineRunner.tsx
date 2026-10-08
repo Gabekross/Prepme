@@ -13,7 +13,7 @@ import { supabaseBrowser } from "@/lib/supabase/browser";
 import { computeAdaptiveSummary, type AdaptiveSummary } from "../core/analytics";
 import { AdaptiveResults } from "./AdaptiveResults";
 import { ProcessingOverlay } from "./ProcessingOverlay";
-import { loadBankBySlug, loadQuestions } from "../data/loadFromSupabase";
+import { loadSubmittedAttemptQuestions } from "../data/loadAttemptQuestions";
 
 /* ── animations ─────────────────────────────────────────────────────────── */
 
@@ -1256,6 +1256,8 @@ function isAnswered(question: Question | null, response: Response): boolean {
   switch (question.type) {
     case "mcq_single":
       return response?.type === "mcq_single" && !!response.choiceId;
+    case "pull_down":
+      return response?.type === "pull_down" && !!response.choiceId;
     case "mcq_multi":
       return response?.type === "mcq_multi" && Array.isArray(response.choiceIds) && response.choiceIds.length > 0;
     case "dnd_match":
@@ -1716,12 +1718,14 @@ export function EngineRunner(props: {
 
   // ── Load explanations after submission ────────────────────────────────────
   useEffect(() => {
-    if (!engine.attempt?.submittedAt || !bankSlug) return;
+    const submittedAttemptId = engine.attempt?.submittedAt ? engine.attempt.id : null;
+    if (!submittedAttemptId || !bankSlug) return;
     let cancelled = false;
     (async () => {
       try {
-        const bank = await loadBankBySlug(bankSlug);
-        const fullQs = await loadQuestions(bank.id);
+        const fullQs = userId
+          ? await loadSubmittedAttemptQuestions(submittedAttemptId)
+          : questions;
         if (cancelled) return;
         const map: Record<string, string> = {};
         for (const q of fullQs) {
@@ -1734,7 +1738,7 @@ export function EngineRunner(props: {
       }
     })();
     return () => { cancelled = true; };
-  }, [engine.attempt?.submittedAt, bankSlug]);
+  }, [engine.attempt?.submittedAt, engine.attempt?.id, bankSlug, questions, userId]);
 
   // ── Break helpers ─────────────────────────────────────────────────────────
 
@@ -2270,6 +2274,7 @@ export function EngineRunner(props: {
                 const resp = engine.attempt!.responsesByQuestionId[qid];
                 const isAns = resp ? (() => {
                   if (resp.type === "mcq_single") return !!resp.choiceId;
+                  if (resp.type === "pull_down") return !!resp.choiceId;
                   if (resp.type === "mcq_multi") return resp.choiceIds.length > 0;
                   if (resp.type === "dnd_match") return Object.values(resp.mapping).some(Boolean);
                   if (resp.type === "dnd_order") return resp.orderedIds.length > 0;

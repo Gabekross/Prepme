@@ -7,7 +7,8 @@ import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import type { Question, Scenario, AttemptResult, Response } from "@/src/exam-engine/core/types";
-import { loadBankBySlug, loadQuestions, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
+import { loadBankBySlug, loadScenarios } from "@/src/exam-engine/data/loadFromSupabase";
+import { loadSubmittedAttemptQuestions } from "@/src/exam-engine/data/loadAttemptQuestions";
 import { QuestionRenderer } from "@/src/exam-engine/ui/QuestionRenderer";
 
 /* ── types ──────────────────────────────────────────────────────────────── */
@@ -27,6 +28,8 @@ function parseQuestionIndex(value: string | null): number {
 
 function defaultResponseFor(question: Question): Response {
   switch (question.type) {
+    case "pull_down":
+      return { type: "pull_down", choiceId: null };
     case "mcq_multi":
       return { type: "mcq_multi", choiceIds: [] };
     case "dnd_match":
@@ -351,7 +354,7 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
     (async () => {
       try {
         const bank = await loadBankBySlug(attempt.bank_slug);
-        const [qs, scs] = await Promise.all([loadQuestions(bank.id), loadScenarios(bank.id)]);
+        const [qs, scs] = await Promise.all([loadSubmittedAttemptQuestions(attemptId), loadScenarios(bank.id)]);
         if (cancelled) return;
         setQuestions(qs);
         setScenarios(scs);
@@ -364,7 +367,7 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
     })();
 
     return () => { cancelled = true; };
-  }, [attempt?.bank_slug]);
+  }, [attempt?.bank_slug, attemptId]);
 
   // Build derived data
   const questionMap = useMemo(

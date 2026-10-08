@@ -58,6 +58,7 @@ supabase/.cache
 !supabase/migrations/20260603_fix_marketing_asset_blog_urls.sql
 !supabase/migrations/20260606_add_instagram_content_assets.sql
 !supabase/migrations/20260624_add_free_usage_limits.sql
+!supabase/migrations/20261008023720_version_question_bank_content.sql
 *.sqlite
 *.db
 
@@ -94,6 +95,7 @@ test-results/
 *.pem
 *.key
 *.crt
+tmp/
 node_modules
 pmbokguide_eighthed_eng.pdf
 standardforprogrammanagementfifthed.pdf

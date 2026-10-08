@@ -5,13 +5,18 @@ export type SetId = "set_a" | "set_b" | "set_c" | "free";
 export type QuestionType =
   | "mcq_single"
   | "mcq_multi"
+  | "pull_down"
   | "dnd_match"
   | "dnd_order"
   | "hotspot";
 
 export type Difficulty = 1 | 2 | 3 | 4 | 5;
 
-export type Media = { imageUrl?: string; alt?: string };
+export type Media = {
+  imageUrl?: string;
+  alt?: string;
+  table?: { caption: string; columns: string[]; rows: string[][] };
+};
 export type Scenario = { id: string; title?: string; text: string };
 export type Choice = { id: string; text: string };
 
@@ -50,6 +55,7 @@ export type Question =
       payload: MCQMultiPayload;
       answerKey: { correctChoiceIds: string[]; scoring?: "strict" | "partial" };
     })
+  | (BaseQuestion & { type: "pull_down"; payload: MCQSinglePayload; answerKey: { correctChoiceId: string } })
   | (BaseQuestion & { type: "dnd_match"; payload: DndMatchPayload; answerKey: { mapping: Record<string, string> } })
   | (BaseQuestion & { type: "dnd_order"; payload: DndOrderPayload; answerKey: { orderedIds: string[] } })
   | (BaseQuestion & { type: "hotspot"; payload: HotspotPayload; answerKey: { correctRegionId: string } });
@@ -57,6 +63,7 @@ export type Question =
 export type Response =
   | { type: "mcq_single"; choiceId: string | null }
   | { type: "mcq_multi"; choiceIds: string[] }
+  | { type: "pull_down"; choiceId: string | null }
   | { type: "dnd_match"; mapping: Record<string, string | null> }
   | { type: "dnd_order"; orderedIds: string[] }
   | { type: "hotspot"; selectedRegionId: string | null; click?: { x: number; y: number } };

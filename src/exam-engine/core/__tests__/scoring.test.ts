@@ -31,6 +31,20 @@ function attemptWith(responsesByQuestionId: Attempt["responsesByQuestionId"], qu
 }
 
 describe("scoreQuestion answer validation", () => {
+  it("treats a pull-down selection as one scored response", () => {
+    const q = {
+      ...base,
+      id: "pull-down",
+      type: "pull_down",
+      payload: { choices: [{ id: "a", text: "Escalate" }, { id: "b", text: "Collaborate" }] },
+      answerKey: { correctChoiceId: "b" },
+    } as Question;
+
+    expect(scoreQuestion(q, { type: "pull_down", choiceId: null })).toMatchObject({ score: 0, maxScore: 0 });
+    expect(scoreQuestion(q, { type: "pull_down", choiceId: "a" })).toMatchObject({ isCorrect: false, score: 0, maxScore: 1 });
+    expect(scoreQuestion(q, { type: "pull_down", choiceId: "b" })).toMatchObject({ isCorrect: true, score: 1, maxScore: 1 });
+  });
+
   it("scores single-select by option id", () => {
     const q = {
       ...base,

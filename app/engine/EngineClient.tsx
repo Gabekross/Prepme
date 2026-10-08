@@ -6,7 +6,7 @@ import { seedBank } from "@/src/exam-engine/data/seed.bank";
 import { seedScenarios } from "@/src/exam-engine/data/seed.scenarios";
 import { QuestionRenderer } from "@/src/exam-engine/ui/QuestionRenderer";
 import { scoreAttempt } from "@/src/exam-engine/core/scoring";
-import type { Domain } from "@/src/exam-engine/core/types";
+import type { Blueprint, Domain, Question } from "@/src/exam-engine/core/types";
 import { Button, Subtle } from "@/src/exam-engine/components/shared";
 
 const Grid = styled.div`
@@ -93,7 +93,13 @@ const Bullets = styled.ul`
   opacity: 0.85;
 `;
 
-export default function EngineClient() {
+type EngineClientProps = {
+  previewBank?: Question[];
+  previewBlueprint?: Blueprint;
+  previewLabel?: string;
+};
+
+export default function EngineClient({ previewBank, previewBlueprint, previewLabel }: EngineClientProps = {}) {
   const engine = useExamSession();
   const scenarios = useMemo(() => seedScenarios, []);
 
@@ -107,6 +113,15 @@ export default function EngineClient() {
   // }, []);
 
   useEffect(() => {
+  if (previewBank) {
+    engine.initIfNeeded({
+      bank: previewBank,
+      defaultBlueprint: previewBlueprint ?? { total: previewBank.length },
+      mode: "practice",
+    });
+    return;
+  }
+
   (async () => {
     try {
       const { loadBankBySlug, loadQuestionsForExam, loadScenarios } = await import("@/src/exam-engine/data/loadFromSupabase");
@@ -133,7 +148,7 @@ export default function EngineClient() {
     }
   })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
+}, [previewBank, previewBlueprint]);
 
 
   const current = useMemo(() => {
@@ -178,6 +193,7 @@ const canNext =
     <Grid>
       <Card>
         <Title>Controls</Title>
+        {previewLabel ? <Subtle>{previewLabel}</Subtle> : null}
         <Subtle>
           Demo engine showing all PMP-style formats + production behaviors (deterministic shuffle, resume, flag, analytics).
         </Subtle>

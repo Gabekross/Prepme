@@ -71,7 +71,9 @@ export async function loadQuestions(bankId: string): Promise<Question[]> {
     .select(
       "question_key,type,domain,prompt,scenario_key,difficulty,tags,access_tier,set_id,version,media,payload,answer_key,explanation"
     )
-    .eq("bank_id", bankId);
+    .eq("bank_id", bankId)
+    .eq("is_current", true)
+    .eq("is_published", true);
 
   if (error) throw error;
 
@@ -111,7 +113,9 @@ export async function loadQuestionsForExam(bankId: string): Promise<Question[]> 
     .select(
       "question_key,type,domain,prompt,scenario_key,difficulty,tags,access_tier,set_id,version,media,payload"
     )
-    .eq("bank_id", bankId);
+    .eq("bank_id", bankId)
+    .eq("is_current", true)
+    .eq("is_published", true);
 
   if (error) throw error;
 

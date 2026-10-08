@@ -93,7 +93,9 @@ const AnswersList = styled.div`
   gap: 10px;
 `;
 
-const AnswerCard = styled.div<{ $dragging?: boolean; $selected?: boolean }>`
+const AnswerCard = styled.button<{ $dragging?: boolean; $selected?: boolean }>`
+  width: 100%;
+  text-align: left;
   border-radius: 12px;
   border: 1.5px solid ${(p) => p.$selected ? p.theme.accent : p.theme.cardBorder};
   background: ${(p) => p.$selected ? p.theme.accentSoft : p.theme.buttonBg};
@@ -111,6 +113,11 @@ const AnswerCard = styled.div<{ $dragging?: boolean; $selected?: boolean }>`
   &:hover {
     background: ${(p) => !p.$selected && p.theme.buttonHover};
     border-color: ${(p) => !p.$selected && p.theme.accent};
+  }
+
+  &:focus-visible {
+    outline: 3px solid ${(p) => p.theme.accentSoft};
+    outline-offset: 2px;
   }
 `;
 
@@ -131,12 +138,22 @@ function SlotDroppable({ id, children }: { id: string; children: React.ReactNode
   return <div ref={setNodeRef}>{children}</div>;
 }
 
-function SortableAnswer(props: { id: string; text: string; selected?: boolean }) {
+function SortableAnswer(props: { id: string; text: string; selected?: boolean; disabled: boolean; onSelect: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: props.id });
+  const { role: _sortableRole, "aria-roledescription": _sortableDescription, ...sortableAttributes } = attributes;
   return (
     <TransformWrap $transform={CSS.Transform.toString(transform)} $transition={transition}>
       <div ref={setNodeRef}>
-        <AnswerCard $dragging={isDragging} $selected={props.selected} {...attributes} {...listeners}>
+        <AnswerCard
+          {...sortableAttributes}
+          {...listeners}
+          type="button"
+          $dragging={isDragging}
+          $selected={props.selected}
+          disabled={props.disabled}
+          aria-label={`${props.text}${props.selected ? ", selected" : ""}`}
+          onClick={props.onSelect}
+        >
           {props.text}
         </AnswerCard>
       </div>
@@ -249,9 +266,14 @@ export function DndMatch(props: {
                 const a = answers.find((x) => x.id === id)!;
                 const selected = selectedAnswerId === id;
                 return (
-                  <div key={id} onClick={() => !showCorrect && setSelectedAnswerId(selected ? null : id)}>
-                    <SortableAnswer id={id} text={a.text} selected={selected} />
-                  </div>
+                  <SortableAnswer
+                    key={id}
+                    id={id}
+                    text={a.text}
+                    selected={selected}
+                    disabled={showCorrect}
+                    onSelect={() => setSelectedAnswerId(selected ? null : id)}
+                  />
                 );
               })}
             </AnswersList>

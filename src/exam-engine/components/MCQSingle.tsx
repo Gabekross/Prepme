@@ -8,7 +8,7 @@ import type { AnswerState } from "./shared";
 
 /* ── option button ──────────────────────────────────────────────────────── */
 
-const OptionBtn = styled.button<{ $state: AnswerState; $selected: boolean }>`
+const OptionBtn = styled.label<{ $state: AnswerState; $selected: boolean; $disabled: boolean }>`
   width: 100%;
   text-align: left;
   border-radius: 14px;
@@ -67,7 +67,7 @@ const OptionBtn = styled.button<{ $state: AnswerState; $selected: boolean }>`
   `
       : ""}
 
-  &:hover:not(:disabled) {
+  &:hover {
     background: ${(p) =>
       p.$state !== "neutral"
         ? undefined
@@ -77,9 +77,43 @@ const OptionBtn = styled.button<{ $state: AnswerState; $selected: boolean }>`
     transform: translateX(2px);
   }
 
-  &:active:not(:disabled) {
+  &:active {
     transform: translateX(0);
   }
+
+  &:focus-within {
+    outline: 3px solid ${(p) => p.theme.accentSoft};
+    outline-offset: 2px;
+  }
+
+  ${(p) => p.$disabled ? "cursor: not-allowed;" : ""}
+`;
+
+const ChoiceGroup = styled.fieldset`
+  border: 0;
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+`;
+
+const VisuallyHidden = styled.span`
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+`;
+
+const NativeRadio = styled.input`
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 `;
 
 const LetterBadge = styled.div<{ $state: AnswerState; $selected: boolean }>`
@@ -203,7 +237,9 @@ export function MCQSingle(props: {
         </ResultBadge>
       )}
 
-      {choices.map((c: any, idx: number) => {
+      <ChoiceGroup>
+        <VisuallyHidden as="legend">Select one answer.</VisuallyHidden>
+        {choices.map((c: any, idx: number) => {
         const selected = c.id === choiceId;
         const state = stateFor(c.id);
         const icon = stateIcon(state);
@@ -213,10 +249,15 @@ export function MCQSingle(props: {
             key={c.id}
             $selected={selected}
             $state={state}
-            onClick={() => !showCorrect && onChange({ type: "mcq_single", choiceId: c.id })}
-            disabled={showCorrect}
-            aria-pressed={selected}
+            $disabled={showCorrect}
           >
+            <NativeRadio
+              type="radio"
+              name={`question-${question.id}`}
+              checked={selected}
+              disabled={showCorrect}
+              onChange={() => onChange({ type: "mcq_single", choiceId: c.id })}
+            />
             <LetterBadge $state={state} $selected={selected}>
               {icon ?? idxToLetter(idx)}
             </LetterBadge>
@@ -224,7 +265,8 @@ export function MCQSingle(props: {
             {state === "missed" && <StateIcon title="Correct answer">◎</StateIcon>}
           </OptionBtn>
         );
-      })}
+        })}
+      </ChoiceGroup>
     </Stack>
   );
 }

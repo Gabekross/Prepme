@@ -2,8 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ── Hoisted mock fns ──────────────────────────────────────────────────────
 
-const { mockSelect } = vi.hoisted(() => ({
+const { mockSelect, mockEq } = vi.hoisted(() => ({
   mockSelect: vi.fn(),
+  mockEq: vi.fn(),
 }));
 
 // Track the select() column string to verify what columns are queried
@@ -15,7 +16,7 @@ vi.mock("@/lib/supabase/browser", () => ({
       select: vi.fn((cols: string) => {
         lastSelectColumns = cols;
         return {
-          eq: mockSelect,
+          eq: mockEq,
         };
       }),
     })),
@@ -67,6 +68,9 @@ describe("loadQuestions (full data — admin/review)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     lastSelectColumns = "";
+    mockEq.mockImplementation((column: string) =>
+      column === "is_published" ? mockSelect() : { eq: mockEq }
+    );
   });
 
   it("includes answer_key and explanation in the select query", async () => {
@@ -76,6 +80,15 @@ describe("loadQuestions (full data — admin/review)", () => {
 
     expect(lastSelectColumns).toContain("answer_key");
     expect(lastSelectColumns).toContain("explanation");
+  });
+
+  it("loads only the currently published version", async () => {
+    mockSelect.mockResolvedValueOnce({ data: [sampleFullRow], error: null });
+
+    await loadQuestions("bank-1");
+
+    expect(mockEq).toHaveBeenCalledWith("is_current", true);
+    expect(mockEq).toHaveBeenCalledWith("is_published", true);
   });
 
   it("maps answer_key to answerKey in the returned Question", async () => {
@@ -101,6 +114,9 @@ describe("loadQuestionsForExam (no answer keys — active sessions)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     lastSelectColumns = "";
+    mockEq.mockImplementation((column: string) =>
+      column === "is_published" ? mockSelect() : { eq: mockEq }
+    );
   });
 
   it("does NOT include answer_key in the select query", async () => {
@@ -109,6 +125,15 @@ describe("loadQuestionsForExam (no answer keys — active sessions)", () => {
     await loadQuestionsForExam("bank-1");
 
     expect(lastSelectColumns).not.toContain("answer_key");
+  });
+
+  it("loads only the currently published version", async () => {
+    mockSelect.mockResolvedValueOnce({ data: [sampleExamRow], error: null });
+
+    await loadQuestionsForExam("bank-1");
+
+    expect(mockEq).toHaveBeenCalledWith("is_current", true);
+    expect(mockEq).toHaveBeenCalledWith("is_published", true);
   });
 
   it("does NOT include explanation in the select query", async () => {

@@ -5,6 +5,7 @@ import type { Question, Response, Scenario } from "../core/types";
 import { ScenarioBlock } from "./ScenarioBlock";
 import { MCQSingle } from "../components/MCQSingle";
 import { MCQMulti } from "../components/MCQMulti";
+import { PullDown } from "../components/PullDown";
 import { DndMatch } from "../components/DndMatch";
 import { DndOrder } from "../components/DndOrder";
 import { Hotspot } from "../components/Hotspot";
@@ -64,6 +65,22 @@ const Prompt = styled.div`
   }
 `;
 
+const Exhibit = styled.figure`
+  margin: 0;
+  img { display: block; max-width: 100%; height: auto; border-radius: 12px; }
+`;
+
+const TableExhibit = styled.div`
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 12px;
+  table { width: 100%; border-collapse: collapse; color: ${(p) => p.theme.text}; }
+  caption { text-align: left; padding: 12px 14px; font-weight: 700; }
+  th, td { padding: 10px 14px; border-top: 1px solid ${(p) => p.theme.cardBorder}; text-align: left; vertical-align: top; }
+  thead th { background: ${(p) => p.theme.buttonBg}; }
+`;
+
 const DOMAIN_LABELS: Record<string, string> = {
   people: "People",
   process: "Process",
@@ -79,6 +96,7 @@ const DIFFICULTY_LABELS: Record<string, string> = {
 const TYPE_LABELS: Record<string, string> = {
   mcq_single: "Single Choice",
   mcq_multi: "Multi Choice",
+  pull_down: "Pull-down",
   dnd_match: "Matching",
   dnd_order: "Ordering",
   hotspot: "Hotspot",
@@ -110,6 +128,30 @@ export function QuestionRenderer(props: {
 
       <Prompt>{question.prompt}</Prompt>
 
+      {question.media?.imageUrl && question.type !== "hotspot" && (
+        <Exhibit>
+          <img src={question.media.imageUrl} alt={question.media.alt || "Question exhibit"} />
+        </Exhibit>
+      )}
+
+      {question.media?.table && (
+        <TableExhibit role="region" aria-label={question.media.table.caption} tabIndex={0}>
+          <table>
+            <caption>{question.media.table.caption}</caption>
+            <thead><tr>{question.media.table.columns.map((column, index) => <th key={index} scope="col">{column}</th>)}</tr></thead>
+            <tbody>
+              {question.media.table.rows.map((row, rowIndex) => (
+                <tr key={rowIndex}>
+                  {row.map((cell, cellIndex) => cellIndex === 0
+                    ? <th key={cellIndex} scope="row">{cell}</th>
+                    : <td key={cellIndex}>{cell}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </TableExhibit>
+      )}
+
       {question.type === "mcq_single" && (
         <MCQSingle
           question={question}
@@ -128,6 +170,10 @@ export function QuestionRenderer(props: {
           onChange={onChange}
           showCorrect={!!showCorrect}
         />
+      )}
+
+      {question.type === "pull_down" && (
+        <PullDown question={question} response={response} optionOrder={optionOrder} onChange={onChange} showCorrect={!!showCorrect} />
       )}
 
       {question.type === "dnd_match" && (

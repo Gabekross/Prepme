@@ -173,6 +173,7 @@ function applyDomainFilter(questions: Question[], domain: DomainFilter) {
 function hasScoringAnswerKey(q: Question) {
   switch (q.type) {
     case "mcq_single":
+    case "pull_down":
       return !!q.answerKey?.correctChoiceId;
     case "mcq_multi":
       return Array.isArray(q.answerKey?.correctChoiceIds) && q.answerKey.correctChoiceIds.length > 0;

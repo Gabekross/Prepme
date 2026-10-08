@@ -639,15 +639,29 @@ function safeParseJson(s: string) {
   }
 }
 
+function buildQuestionMedia(imageUrl: string, imageAlt: string, tableJson: string, otherMedia: Record<string, any>) {
+  const table = tableJson.trim() ? safeParseJson(tableJson) : null;
+  if (table && !table.ok) return { ok: false as const, error: `Table JSON error: ${table.error}` };
+  if (table && (!table.value || typeof table.value !== "object" || Array.isArray(table.value))) return { ok: false as const, error: "Table exhibit must be a JSON object." };
+  const media = { ...otherMedia, ...(imageUrl ? { imageUrl, alt: imageAlt || undefined } : {}), ...(table ? { table: table.value } : {}) };
+  return { ok: true as const, value: Object.keys(media).length ? media : undefined };
+}
+
 function validateQuestion(q: Question): string[] {
   const errs: string[] = [];
   if (!q.id.trim()) errs.push("Question key is required.");
   if (!q.prompt.trim()) errs.push("Prompt is required.");
+  const table = q.media?.table;
+  if (table) {
+    if (typeof table.caption !== "string" || !table.caption.trim()) errs.push("Table exhibit requires a caption.");
+    if (!Array.isArray(table.columns) || table.columns.length < 2 || !table.columns.every((c) => typeof c === "string" && c.trim())) errs.push("Table exhibit requires at least 2 named columns.");
+    if (!Array.isArray(table.rows) || !table.rows.length || !table.rows.every((r) => Array.isArray(r) && r.length === table.columns?.length && r.every((v) => typeof v === "string"))) errs.push("Table exhibit rows must match the columns and contain text values.");
+  }
 
-  if (q.type === "mcq_single") {
+  if (q.type === "mcq_single" || q.type === "pull_down") {
     const choices = (q as any).payload?.choices;
-    if (!Array.isArray(choices) || choices.length < 2) errs.push("mcq_single requires at least 2 choices.");
-    if (!(q as any).answerKey?.correctChoiceId) errs.push("mcq_single requires answerKey.correctChoiceId.");
+    if (!Array.isArray(choices) || choices.length < 2) errs.push(`${q.type} requires at least 2 choices.`);
+    if (!(q as any).answerKey?.correctChoiceId) errs.push(`${q.type} requires answerKey.correctChoiceId.`);
   }
   if (q.type === "mcq_multi") {
     const choices = (q as any).payload?.choices;
@@ -756,6 +770,8 @@ export default function AdminQuestionsClient() {
   const [explanation, setExplanation] = useState<string>("");
   const [imageUrl, setImageUrl] = useState<string>("");
   const [imageAlt, setImageAlt] = useState<string>("");
+  const [tableJson, setTableJson] = useState<string>("");
+  const [otherMedia, setOtherMedia] = useState<Record<string, any>>({});
   const [payloadJson, setPayloadJson] = useState<string>("{}");
   const [answerKeyJson, setAnswerKeyJson] = useState<string>("{}");
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -904,13 +920,16 @@ export default function AdminQuestionsClient() {
     setExplanation(row.explanation ?? "");
     setImageUrl(row.media?.imageUrl ?? "");
     setImageAlt(row.media?.alt ?? "");
+    setTableJson(row.media?.table ? JSON.stringify(row.media.table, null, 2) : "");
+    const { imageUrl: _imageUrl, alt: _alt, table: _table, ...remainingMedia } = row.media ?? {};
+    setOtherMedia(remainingMedia);
     setPayloadJson(JSON.stringify(row.payload ?? {}, null, 2));
     setAnswerKeyJson(JSON.stringify(row.answer_key ?? {}, null, 2));
     setValidationErrors([]);
   }
 
   function newQuestionTemplate(t: Question["type"]) {
-    if (t === "mcq_single") {
+    if (t === "mcq_single" || t === "pull_down") {
       setPayloadJson(JSON.stringify({ choices: [{ id: "a", text: "Option A" }, { id: "b", text: "Option B" }] }, null, 2));
       setAnswerKeyJson(JSON.stringify({ correctChoiceId: "a" }, null, 2));
       return;
@@ -965,7 +984,8 @@ export default function AdminQuestionsClient() {
   const preview: Question | null = useMemo(() => {
     const payload = safeParseJson(payloadJson);
     const answerKey = safeParseJson(answerKeyJson);
-    if (!payload.ok || !answerKey.ok) return null;
+    const media = buildQuestionMedia(imageUrl, imageAlt, tableJson, otherMedia);
+    if (!payload.ok || !answerKey.ok || !media.ok) return null;
 
     const q: Question = {
       id: questionKey,
@@ -978,7 +998,7 @@ export default function AdminQuestionsClient() {
       accessTier,
       setId,
       version: 1,
-      media: imageUrl ? { imageUrl, alt: imageAlt || undefined } : undefined,
+      media: media.value,
       payload: payload.value,
       answerKey: answerKey.value,
       explanation: explanation || undefined,
@@ -988,7 +1008,7 @@ export default function AdminQuestionsClient() {
     setValidationErrors(errs);
     if (errs.length) return null;
     return q;
-  }, [questionKey, type, domain, prompt, scenarioId, difficulty, tags, accessTier, setId, imageUrl, imageAlt, payloadJson, answerKeyJson, explanation]);
+  }, [questionKey, type, domain, prompt, scenarioId, difficulty, tags, accessTier, setId, imageUrl, imageAlt, tableJson, otherMedia, payloadJson, answerKeyJson, explanation]);
 
   async function createNew() {
     setActiveKey("");
@@ -999,6 +1019,8 @@ export default function AdminQuestionsClient() {
     setExplanation("");
     setImageUrl("");
     setImageAlt("");
+    setTableJson("");
+    setOtherMedia({});
     setIsPublished(true);
     newQuestionTemplate(type);
     setMsg("New question template ready. Edit and save.");
@@ -1013,6 +1035,8 @@ export default function AdminQuestionsClient() {
     const answerKey = safeParseJson(answerKeyJson);
     if (!payload.ok) return setMsg(`Payload JSON error: ${payload.error}`);
     if (!answerKey.ok) return setMsg(`AnswerKey JSON error: ${answerKey.error}`);
+    const media = buildQuestionMedia(imageUrl, imageAlt, tableJson, otherMedia);
+    if (!media.ok) return setMsg(media.error);
 
     const q: Question = {
       id: questionKey,
@@ -1025,7 +1049,7 @@ export default function AdminQuestionsClient() {
       accessTier,
       setId,
       version: 1,
-      media: imageUrl ? { imageUrl, alt: imageAlt || undefined } : undefined,
+      media: media.value,
       payload: payload.value,
       answerKey: answerKey.value,
       explanation: explanation || undefined,
@@ -1064,7 +1088,7 @@ export default function AdminQuestionsClient() {
     await reloadList();
     setActiveKey(questionKey);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, bankId, payloadJson, answerKeyJson, questionKey, type, domain, prompt, scenarioId, difficulty, tags, accessTier, setId, isPublished, imageUrl, imageAlt, explanation]);
+  }, [ready, bankId, payloadJson, answerKeyJson, questionKey, type, domain, prompt, scenarioId, difficulty, tags, accessTier, setId, isPublished, imageUrl, imageAlt, tableJson, otherMedia, explanation]);
 
   // Keep the ref in sync so Ctrl+S always calls the latest version
   useEffect(() => { saveRef.current = save; }, [save]);
@@ -1240,6 +1264,7 @@ export default function AdminQuestionsClient() {
               <Select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setPage(0); }}>
                 <option value="all">All types</option>
                 <option value="mcq_single">mcq_single</option>
+                <option value="pull_down">pull_down</option>
                 <option value="mcq_multi">mcq_multi</option>
                 <option value="dnd_match">dnd_match</option>
                 <option value="dnd_order">dnd_order</option>
@@ -1329,6 +1354,7 @@ export default function AdminQuestionsClient() {
                 Type
                 <Select value={type} onChange={(e) => { const t = e.target.value as any; setType(t); newQuestionTemplate(t); }}>
                   <option value="mcq_single">mcq_single</option>
+                  <option value="pull_down">pull_down</option>
                   <option value="mcq_multi">mcq_multi</option>
                   <option value="dnd_match">dnd_match</option>
                   <option value="dnd_order">dnd_order</option>
@@ -1412,6 +1438,10 @@ export default function AdminQuestionsClient() {
             Tags (comma-separated)
             <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="e.g. agile, risk, scope" />
           </Label>
+          <Label style={{ marginTop: 8 }}>
+            Table exhibit (JSON, optional)
+            <JsonArea value={tableJson} onChange={(e) => setTableJson(e.target.value)} placeholder={'{"caption":"Exhibit title","columns":["Item","Value"],"rows":[["A","1"]]}'} />
+          </Label>
 
           {type === "hotspot" && (
             <>
@@ -1450,6 +1480,7 @@ export default function AdminQuestionsClient() {
           {!advancedJsonMode ? (
             <>
               {type === "mcq_single" && <McqSingleForm payloadJson={payloadJson} answerKeyJson={answerKeyJson} onChange={setPayloadAndAnswerKey} />}
+              {type === "pull_down" && <McqSingleForm payloadJson={payloadJson} answerKeyJson={answerKeyJson} onChange={setPayloadAndAnswerKey} />}
               {type === "mcq_multi" && <McqMultiForm payloadJson={payloadJson} answerKeyJson={answerKeyJson} onChange={setPayloadAndAnswerKey} />}
               {type === "dnd_match" && <DndMatchForm payloadJson={payloadJson} answerKeyJson={answerKeyJson} onChange={setPayloadAndAnswerKey} />}
               {type === "dnd_order" && <DndOrderForm payloadJson={payloadJson} answerKeyJson={answerKeyJson} onChange={setPayloadAndAnswerKey} />}
@@ -1559,6 +1590,8 @@ export default function AdminQuestionsClient() {
               response={
                 preview.type === "mcq_single"
                   ? { type: "mcq_single", choiceId: null }
+                  : preview.type === "pull_down"
+                  ? { type: "pull_down", choiceId: null }
                   : preview.type === "mcq_multi"
                   ? { type: "mcq_multi", choiceIds: [] }
                   : preview.type === "dnd_match"

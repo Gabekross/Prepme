@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin, supabaseFromToken } from "@/lib/supabase/server";
 import { scoreAttempt } from "@/src/exam-engine/core/scoring";
 import type { Attempt, Question } from "@/src/exam-engine/core/types";
+import { questionFromVersionRow } from "@/src/exam-engine/data/questionVersioning";
 
 /**
  * POST /api/attempts/[attemptId]/submit
@@ -88,49 +89,37 @@ export async function POST(
       );
     }
 
-    const { data: questions } = await admin
-      .from("questions")
-      .select("*")
-      .eq("bank_id", bankData.id);
+    const refs = (attempt.questionRefs?.length
+      ? attempt.questionRefs
+      : attempt.questionOrder.map((id) => ({ id, version: 1 })))
+      .filter((ref) => attempt.questionOrder.includes(ref.id));
 
-    if (!questions?.length) {
-      return NextResponse.json(
-        { error: "No questions found for bank" },
-        { status: 404 }
-      );
+    const questionKeys = [...new Set(refs.map((ref) => ref.id))];
+    const { data: versionRows, error: versionError } = await admin
+      .from("question_versions")
+      .select("bank_id,question_key,version,content")
+      .eq("bank_id", bankData.id)
+      .in("question_key", questionKeys);
+
+    if (versionError) {
+      console.error("[submit] Failed to load immutable question versions:", versionError.message);
+      return NextResponse.json({ error: "Unable to load attempt content" }, { status: 500 });
     }
 
-    // Map Supabase rows to Question type
-    const mappedQuestions: Question[] = questions.map((q: any) => ({
-      id: q.question_key,
-      type: q.type,
-      domain: q.domain,
-      prompt: q.prompt,
-      scenarioId: q.scenario_key ?? undefined,
-      tags: q.tags ?? [],
-      difficulty: q.difficulty,
-      accessTier: q.access_tier ?? "free",
-      setId: q.set_id ?? undefined,
-      version: q.version ?? 1,
-      media: q.media ?? undefined,
-      explanation: q.explanation ?? undefined,
-      payload: q.payload,
-      answerKey: q.answer_key,
-    }));
-
-    // Filter to only questions in the attempt
-    const attemptQuestions = mappedQuestions.filter((q) =>
-      attempt.questionOrder.includes(q.id)
+    const snapshots = new Map(
+      (versionRows ?? []).map((row: any) => [`${row.question_key}:${row.version}`, questionFromVersionRow(row)])
     );
-
-    if (attemptQuestions.length === 0) {
-      // Fallback: the attempt might use seed data not in Supabase
-      // In this case, return an error and let the client handle scoring
+    const missing = refs.filter((ref) => !snapshots.has(`${ref.id}:${ref.version ?? 1}`));
+    if (missing.length) {
       return NextResponse.json(
-        { error: "Questions not found in server bank — use client scoring" },
-        { status: 422 }
+        { error: "This attempt's historical question version is unavailable" },
+        { status: 409 }
       );
     }
+
+    const attemptQuestions: Question[] = refs.map(
+      (ref) => snapshots.get(`${ref.id}:${ref.version ?? 1}`)!
+    );
 
     // Score the attempt server-side
     const result = scoreAttempt(attempt, attemptQuestions);

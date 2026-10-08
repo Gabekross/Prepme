@@ -122,6 +122,7 @@ export function weightedScoreAttempt(attempt: Attempt, questions: Question[]): W
   const byType: Record<QuestionType, DomainWeightedStats> = {
     mcq_single: emptyDomainStats(),
     mcq_multi: emptyDomainStats(),
+    pull_down: emptyDomainStats(),
     dnd_match: emptyDomainStats(),
     dnd_order: emptyDomainStats(),
     hotspot: emptyDomainStats(),

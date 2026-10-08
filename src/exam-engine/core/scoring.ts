@@ -12,6 +12,7 @@ export function isQuestionAttempted(q: Question, response: any): boolean {
 
   switch (q.type) {
     case "mcq_single":
+    case "pull_down":
       return "choiceId" in response && !!response.choiceId;
 
     case "mcq_multi":
@@ -66,6 +67,11 @@ export function scoreQuestion(q: Question, response: any): ScoreResult {
 
   switch (q.type) {
     case "mcq_single": {
+      const ok = response.choiceId === q.answerKey?.correctChoiceId;
+      return { questionId: q.id, isCorrect: ok, score: ok ? 1 : 0, maxScore: 1 };
+    }
+
+    case "pull_down": {
       const ok = response.choiceId === q.answerKey?.correctChoiceId;
       return { questionId: q.id, isCorrect: ok, score: ok ? 1 : 0, maxScore: 1 };
     }
@@ -167,6 +173,7 @@ export function scoreAttempt(attempt: Attempt, questions: Question[]): AttemptRe
   const byType: Record<QuestionType, any> = {
     mcq_single: { score: 0, maxScore: 0, correct: 0, total: 0 },
     mcq_multi: { score: 0, maxScore: 0, correct: 0, total: 0 },
+    pull_down: { score: 0, maxScore: 0, correct: 0, total: 0 },
     dnd_match: { score: 0, maxScore: 0, correct: 0, total: 0 },
     dnd_order: { score: 0, maxScore: 0, correct: 0, total: 0 },
     hotspot: { score: 0, maxScore: 0, correct: 0, total: 0 },

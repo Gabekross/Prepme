@@ -22,6 +22,8 @@ function defaultResponseFor(q: Question): Response {
   switch (q.type) {
     case "mcq_single":
       return { type: "mcq_single", choiceId: null };
+    case "pull_down":
+      return { type: "pull_down", choiceId: null };
     case "mcq_multi":
       return { type: "mcq_multi", choiceIds: [] };
     case "dnd_match":
@@ -59,7 +61,7 @@ export function createAttempt(args: {
 
   const optionOrderByQuestionId: Record<string, string[]> = {};
   selected.forEach((q) => {
-    if (q.type === "mcq_single" || q.type === "mcq_multi") {
+    if (q.type === "mcq_single" || q.type === "mcq_multi" || q.type === "pull_down") {
       optionOrderByQuestionId[q.id] = shuffleArray(
         payloadArray<{ id: string }>((q as any).payload?.choices).map((c) => c.id),
         rand
