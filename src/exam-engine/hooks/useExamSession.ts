@@ -617,6 +617,11 @@ export const useExamSession = create<State>((set, get) => ({
     try {
       const bankSlug = get()._bankSlug;
       const userId = get()._userId;
+      const storage = get()._storage();
+
+      // Finish every queued attempt save before the final scoring write. A
+      // delayed in-progress upsert must not overwrite the submitted row.
+      if (storage instanceof HybridAttemptStorage) await storage.flush();
 
       if (userId && bankSlug) {
         const { data } = await supabaseBrowser().auth.getSession();
@@ -660,7 +665,6 @@ export const useExamSession = create<State>((set, get) => ({
       const passed = scorePercent >= passThreshold;
 
       // Persist via the remote storage if available
-      const storage = get()._storage();
       if (storage && "getRemote" in storage) {
         const hybrid = storage as import("../core/hybridStorage").HybridAttemptStorage;
         const remote = hybrid.getRemote();

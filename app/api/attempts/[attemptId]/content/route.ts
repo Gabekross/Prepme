@@ -23,17 +23,19 @@ export async function GET(
   const admin = supabaseAdmin();
   const { data: attemptRow, error: attemptError } = await admin
     .from("attempts")
-    .select("bank_slug,status,state")
+    .select("bank_slug,status,submitted_at,result,state")
     .eq("id", params.attemptId)
     .eq("user_id", userData.user.id)
     .maybeSingle();
 
   if (attemptError || !attemptRow) return NextResponse.json({ error: "Attempt not found" }, { status: 404 });
-  if (attemptRow.status !== "submitted") {
+  const attempt = attemptRow.state as Attempt;
+  // Older completed attempts can retain an in_progress status after a late
+  // autosave. Any persisted completion marker seals the attempt for review.
+  if (attemptRow.status !== "submitted" && !attemptRow.submitted_at && !attempt?.submittedAt && !attemptRow.result) {
     return NextResponse.json({ error: "Question review is available after submission" }, { status: 403 });
   }
 
-  const attempt = attemptRow.state as Attempt;
   const { data: bankData } = await admin
     .from("question_banks")
     .select("id")

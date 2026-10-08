@@ -19,6 +19,7 @@ export class HybridAttemptStorage implements AttemptStorage {
   /** Throttle remote saves to avoid hammering Supabase on rapid state changes */
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingAttempt: Attempt | null = null;
+  private remoteSave: Promise<void> = Promise.resolve();
   private readonly SAVE_DEBOUNCE_MS = 2000;
   /** Track whether the first remote save has happened (first save is immediate) */
   private firstSaveDone = false;
@@ -45,10 +46,10 @@ export class HybridAttemptStorage implements AttemptStorage {
       if (!this.firstSaveDone) {
         // First save — flush immediately so the row exists in Supabase
         this.firstSaveDone = true;
-        this.flushRemote();
+        void this.flushRemote();
       } else if (!this.saveTimer) {
         this.saveTimer = setTimeout(() => {
-          this.flushRemote();
+          void this.flushRemote();
         }, this.SAVE_DEBOUNCE_MS);
       }
     }
@@ -64,6 +65,7 @@ export class HybridAttemptStorage implements AttemptStorage {
       this.saveTimer = null;
     }
     await this.flushRemote();
+    await this.remoteSave;
   }
 
   private async flushRemote(): Promise<void> {
@@ -72,13 +74,17 @@ export class HybridAttemptStorage implements AttemptStorage {
     this.pendingAttempt = null;
 
     if (attempt && this.remote) {
-      try {
-        await this.remote.saveAttempt(attempt);
-      } catch (e) {
-        console.warn("[HybridStorage] Remote save failed:", e);
-        // Non-fatal — localStorage still has the data
-      }
+      const remote = this.remote;
+      this.remoteSave = this.remoteSave.then(async () => {
+        try {
+          await remote.saveAttempt(attempt);
+        } catch (e) {
+          console.warn("[HybridStorage] Remote save failed:", e);
+          // Non-fatal — localStorage still has the data
+        }
+      });
     }
+    await this.remoteSave;
   }
 
   async loadAttempt(attemptId: string): Promise<Attempt | null> {
