@@ -76,7 +76,13 @@ SET
   type = r.item->>'type',
   domain = r.item->>'domain',
   prompt = r.item->>'prompt',
-  media = r.item->'media',
+  -- Most reviewed replacements have no new exhibit. Preserve the current
+  -- non-null media JSON in that case; overwrite it only when the fixture
+  -- supplies a real table/image exhibit.
+  media = CASE
+    WHEN r.item ? 'media' AND r.item->'media' <> 'null'::jsonb THEN r.item->'media'
+    ELSE q.media
+  END,
   payload = r.item->'payload',
   answer_key = r.item->'answerKey',
   explanation = r.item->>'explanation',
