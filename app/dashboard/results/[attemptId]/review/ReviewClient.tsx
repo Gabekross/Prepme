@@ -354,13 +354,20 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
     (async () => {
       try {
         const bank = await loadBankBySlug(attempt.bank_slug);
-        const [qs, scs] = await Promise.all([loadSubmittedAttemptQuestions(attemptId), loadScenarios(bank.id)]);
+        // Scenario context is supplementary on the review screen. Do not
+        // hide an otherwise valid submitted attempt if that optional lookup
+        // is unavailable (for example, due to a legacy RLS configuration).
+        const qs = await loadSubmittedAttemptQuestions(attemptId);
+        const scs = await loadScenarios(bank.id).catch((scenarioError) => {
+          console.warn("[Review] Failed to load optional scenarios:", scenarioError);
+          return [] as Scenario[];
+        });
         if (cancelled) return;
         setQuestions(qs);
         setScenarios(scs);
       } catch (err) {
         console.error("[Review] Failed to load questions:", err);
-        setError("Failed to load questions.");
+        setError(err instanceof Error ? err.message : "Failed to load questions.");
       } finally {
         setLoading(false);
       }

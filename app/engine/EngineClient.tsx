@@ -127,7 +127,13 @@ export default function EngineClient({ previewBank, previewBlueprint, previewLab
       const { loadBankBySlug, loadQuestionsForExam, loadScenarios } = await import("@/src/exam-engine/data/loadFromSupabase");
 
       const bank = await loadBankBySlug("pmp"); // you’ll create this bank row
-      const [qs, scns] = await Promise.all([loadQuestionsForExam(bank.id), loadScenarios(bank.id)]);
+      const qs = await loadQuestionsForExam(bank.id);
+      // Scenario context is optional; do not fall back to seed questions just
+      // because the scenario lookup is unavailable.
+      const scns = await loadScenarios(bank.id).catch((scenarioError) => {
+        console.warn("[Engine] Failed to load optional scenarios:", scenarioError);
+        return [];
+      });
 
       engine.initIfNeeded({
         bank: qs,

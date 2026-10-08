@@ -499,7 +499,13 @@ export default function ExamClient({ bankSlug, setId: rawSetId }: ExamClientProp
         const bank = await loadBankBySlug(bankSlug);
         if (cancelled) return;
         setBankConfig(bank);
-        const [qs, scns] = await Promise.all([loadQuestionsForExam(bank.id), loadScenarios(bank.id)]);
+        const qs = await loadQuestionsForExam(bank.id);
+        // Scenarios are supplemental context. A scenario RLS issue must not
+        // silently replace the production bank with local fallback questions.
+        const scns = await loadScenarios(bank.id).catch((scenarioError) => {
+          console.warn("[Exam] Failed to load optional scenarios:", scenarioError);
+          return [] as Scenario[];
+        });
         if (cancelled) return;
 
         let finalQs: Question[];
