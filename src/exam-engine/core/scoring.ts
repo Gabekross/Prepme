@@ -136,7 +136,8 @@ export function scoreQuestion(q: Question, response: any): ScoreResult {
 /**
  * Score an entire attempt. Only attempted questions contribute to totals.
  * Unanswered questions get scoreResult {score:0, maxScore:0} and are
- * excluded from byDomain/byType/incorrectQuestionIds.
+ * excluded from byType/incorrectQuestionIds. Exam domain question totals
+ * include unanswered items; practice domain totals describe attempted items.
  *
  * Production-safe: skips missing questions in byId mapping.
  */
@@ -182,8 +183,12 @@ export function scoreAttempt(attempt: Attempt, questions: Question[]): AttemptRe
   const incorrectQuestionIds: string[] = [];
 
   for (const sr of scoreResults) {
-    // Skip unanswered questions (maxScore === 0) from analytics
-    if (sr.maxScore === 0) continue;
+    // Exam domain totals include every assigned question, matching the final
+    // percentage. Practice analytics continue to describe attempted items.
+    if (sr.maxScore === 0) {
+      if (attempt.mode === "exam") byDomain[byId[sr.questionId].domain].total += 1;
+      continue;
+    }
 
     const q = byId[sr.questionId];
     if (!q) continue;

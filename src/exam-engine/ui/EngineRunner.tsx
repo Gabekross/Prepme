@@ -8,6 +8,7 @@ import type { Blueprint, Domain, Question, Scenario, Response } from "../core/ty
 import { useExamSession } from "../hooks/useExamSession";
 import { QuestionRenderer } from "./QuestionRenderer";
 import { CorrectAnswerSummary } from "./CorrectAnswerSummary";
+import { ExamResultsOverview } from "./ExamResultsOverview";
 import { scoreAttempt, scoreQuestion } from "../core/scoring";
 import { examPercentage } from "../core/examPercentage";
 import { LocalAttemptStorage } from "../core/storage";
@@ -2182,6 +2183,20 @@ export function EngineRunner(props: {
     );
   }
 
+  if (mode === "exam" && engine.attempt?.submittedAt && examView === "review_list" && result) {
+    return <ExamResultsOverview result={result} questions={Array.from(allQsMap.values())}
+      passThreshold={passThreshold} setLabel={(setId ?? "set_a").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
+      saved={!!userId && !!reviewQuestions}
+      timeMs={Object.values(engine.attempt.timeSpentMsByQuestionId ?? {}).reduce((sum, ms) => sum + ms, 0)}
+      onReview={(missed) => {
+        if (userId) router.push(`/dashboard/results/${engine.attempt!.id}/review${missed ? "?filter=missed" : ""}`);
+        else openReviewQuestion(Math.max(0, missed ? engine.attempt!.questionOrder.findIndex(id => !scoreById.get(id)) : 0));
+      }}
+      onReport={() => router.push(`/dashboard/results/${engine.attempt!.id}`)}
+      onRetake={retakeExam}
+      onPractice={domain => router.push(`/bank/${bankSlug ?? "pmp"}/practice?count=20&domain=${domain}`)} />;
+  }
+
   return (
     <>
       {/* ── Break overlay ──────────────────────────────────────── */}
@@ -2367,177 +2382,6 @@ export function EngineRunner(props: {
 
       {/* ── RIGHT COLUMN ───────────────────────────────────────── */}
       <RightCol>
-        {/* EXAM: submitted → review list */}
-        {mode === "exam" && engine.attempt?.submittedAt && examView === "review_list" && (
-          <Card>
-            <ResultsHero $pass={examPassed}>
-              <ResultsIcon $pass={examPassed}>
-                {examPassed ? "Passed ✓" : "Not Passed"}
-              </ResultsIcon>
-              <ResultsScore>{examPercent}%</ResultsScore>
-              <ResultsSubtext>
-                {examPassed
-                  ? `Strong result at ${examPercent}%. Review the domain breakdown below to keep momentum.`
-                  : `You scored ${examPercent}%. Review where you lost marks below.`}
-              </ResultsSubtext>
-              {result && <ResultsSubtext>{result.answeredCount} of {result.scoreResults.length} questions answered. Unanswered questions count as incorrect in the exam score.</ResultsSubtext>}
-              {engine.attempt.submittedAt && (
-                <SubmittedAt>Submitted {formatSubmittedAt(engine.attempt.submittedAt)}</SubmittedAt>
-              )}
-            </ResultsHero>
-
-            {result && (
-              <ResultsStatRow>
-                <ResultsStatBox $variant="success">
-                  <ResultsStatValue $variant="success">{correctCount}</ResultsStatValue>
-                  <ResultsStatLabel>Correct</ResultsStatLabel>
-                </ResultsStatBox>
-                <ResultsStatBox $variant="error">
-                  <ResultsStatValue $variant="error">{incorrectCount}</ResultsStatValue>
-                  <ResultsStatLabel>Incorrect</ResultsStatLabel>
-                </ResultsStatBox>
-                <ResultsStatBox>
-                  <ResultsStatValue>{result.totalScore}/{result.maxScore}</ResultsStatValue>
-                  <ResultsStatLabel>Points</ResultsStatLabel>
-                </ResultsStatBox>
-              </ResultsStatRow>
-            )}
-
-            {/* Domain breakdown — collapsible */}
-            {result && (
-              <>
-                <Divider />
-                <SectionToggleBtn onClick={() => setShowDomainSection((v) => !v)}>
-                  Score by Domain
-                  <SectionArrow $open={showDomainSection}>▼</SectionArrow>
-                </SectionToggleBtn>
-                {showDomainSection && (
-                  <DomainTable>
-                    {(Object.entries(result.byDomain) as [string, { correct: number; total: number }][])
-                      .filter(([, d]) => d.total > 0)
-                      .map(([domain, d]) => {
-                        const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
-                        const pass = pct >= passThreshold;
-                        return (
-                          <React.Fragment key={domain}>
-                            <DomainRow>
-                              <DomainName>{DOMAIN_LABELS[domain] ?? domain}</DomainName>
-                              <DomainScore>{d.correct}/{d.total}</DomainScore>
-                              <DomainPct $pass={pass}>{pct}%</DomainPct>
-                            </DomainRow>
-                            <DomainTrack>
-                              <DomainFill $pct={pct} $pass={pass} />
-                            </DomainTrack>
-                          </React.Fragment>
-                        );
-                      })}
-                  </DomainTable>
-                )}
-              </>
-            )}
-
-            {/* Topic breakdown link */}
-            {result && (
-              <>
-                <Divider />
-                {engine.attempt?.id && (
-                  <RetakeBtn
-                    style={{ width: "100%", marginTop: 8, textAlign: "center" }}
-                    onClick={() => router.push(`/dashboard/results/${engine.attempt!.id}`)}
-                  >
-                    View Full Topic Breakdown
-                  </RetakeBtn>
-                )}
-              </>
-            )}
-
-            {/* Adaptive insights — collapsible */}
-            {adaptiveSummary && (
-              <>
-                <Divider />
-                <SectionToggleBtn onClick={() => setShowInsightsSection((v) => !v)}>
-                  Adaptive Insights
-                  <SectionArrow $open={showInsightsSection}>▼</SectionArrow>
-                </SectionToggleBtn>
-                {showInsightsSection && (
-                  <AdaptiveResults summary={adaptiveSummary} passThreshold={passThreshold} flagStats={flagStats ?? undefined} />
-                )}
-              </>
-            )}
-
-            <Divider />
-
-            <ActionRow>
-              {engine.attempt?.id && (
-                <FullReportBtn onClick={() => router.push(`/dashboard/results/${engine.attempt!.id}`)}>
-                  View Full Report
-                </FullReportBtn>
-              )}
-              <RetakeBtn onClick={retakeExam}>Retake Exam</RetakeBtn>
-            </ActionRow>
-
-            {/* Question review — collapsible */}
-            <Divider />
-            <SectionToggleBtn onClick={() => setShowQuestionList((v) => !v)}>
-              Question Review ({engine.attempt.questionOrder.length})
-              <SectionArrow $open={showQuestionList}>▼</SectionArrow>
-            </SectionToggleBtn>
-
-            {showQuestionList && (
-              <>
-                <FilterToggleRow>
-                  <FilterToggle $active={!incorrectOnly && !flaggedOnly}>
-                    <FilterToggleBox
-                      type="radio"
-                      name="reviewFilter"
-                      checked={!incorrectOnly && !flaggedOnly}
-                      onChange={() => { setIncorrectOnly(false); setFlaggedOnly(false); }}
-                    />
-                    All ({engine.attempt.questionOrder.length})
-                  </FilterToggle>
-                  <FilterToggle $active={incorrectOnly}>
-                    <FilterToggleBox
-                      type="radio"
-                      name="reviewFilter"
-                      checked={incorrectOnly}
-                      onChange={() => { setIncorrectOnly(true); setFlaggedOnly(false); }}
-                    />
-                    Incorrect ({incorrectCount})
-                  </FilterToggle>
-                  {flaggedCount > 0 && (
-                    <FilterToggle $active={flaggedOnly}>
-                      <FilterToggleBox
-                        type="radio"
-                        name="reviewFilter"
-                        checked={flaggedOnly}
-                        onChange={() => { setFlaggedOnly(true); setIncorrectOnly(false); }}
-                      />
-                      Flagged ({flaggedCount})
-                    </FilterToggle>
-                  )}
-                </FilterToggleRow>
-
-                <ReviewList>
-                  {reviewRows.map((r) => (
-                    <ReviewItem key={r.qid} $ok={r.isCorrect} onClick={() => openReviewQuestion(r.idx)}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <ReviewItemMeta>
-                          Q{r.idx + 1} · {r.isCorrect ? "Correct" : "Incorrect"}
-                          {r.isFlagged && <ReviewFlagBadge> Flagged</ReviewFlagBadge>}
-                        </ReviewItemMeta>
-                        {r.promptPreview && <ReviewItemPrompt>{r.promptPreview}{r.promptPreview.length >= 72 ? "…" : ""}</ReviewItemPrompt>}
-                      </div>
-                      <ReviewStatusDot $ok={r.isCorrect}>
-                        {r.isCorrect ? "Correct" : "Wrong"}
-                      </ReviewStatusDot>
-                    </ReviewItem>
-                  ))}
-                </ReviewList>
-              </>
-            )}
-          </Card>
-        )}
-
         {/* EXAM: submitted → review a specific question */}
         {mode === "exam" && engine.attempt?.submittedAt && examView === "review_question" && (
           <>

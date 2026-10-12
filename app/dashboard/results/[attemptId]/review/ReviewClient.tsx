@@ -14,9 +14,9 @@ import { CorrectAnswerSummary } from "@/src/exam-engine/ui/CorrectAnswerSummary"
 
 /* ── types ──────────────────────────────────────────────────────────────── */
 
-type FilterMode = "all" | "incorrect" | "unanswered" | "flagged";
+type FilterMode = "all" | "incorrect" | "unanswered" | "flagged" | "missed";
 
-const FILTERS: FilterMode[] = ["all", "incorrect", "unanswered", "flagged"];
+const FILTERS: FilterMode[] = ["all", "incorrect", "unanswered", "flagged", "missed"];
 
 function parseFilter(value: string | null): FilterMode {
   return FILTERS.includes(value as FilterMode) ? (value as FilterMode) : "all";
@@ -446,12 +446,13 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
   // Filtered list based on current filter mode
   const filteredIds = useMemo(() => {
     switch (filter) {
+      case "missed": return allQuestionIds.filter(qid => !scoreResultMap.get(qid)?.isCorrect);
       case "incorrect": return incorrectIds;
       case "unanswered": return unansweredIds;
       case "flagged": return flaggedIds;
       default: return allQuestionIds;
     }
-  }, [filter, allQuestionIds, incorrectIds, unansweredIds, flaggedIds]);
+  }, [filter, allQuestionIds, incorrectIds, unansweredIds, flaggedIds, scoreResultMap]);
 
   // Reset index when filter changes
   useEffect(() => {
@@ -516,6 +517,9 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
 
       {/* ── Filter bar ───────────────────────────────────────── */}
       <FilterBar>
+        <FilterBtn $active={filter === "missed"} onClick={() => setFilter("missed")}>
+          Missed or unanswered <FilterCount>({incorrectIds.length + unansweredIds.length})</FilterCount>
+        </FilterBtn>
         <FilterBtn $active={filter === "all"} onClick={() => setFilter("all")}>
           All <FilterCount>({allQuestionIds.length})</FilterCount>
         </FilterBtn>

@@ -30,6 +30,16 @@ function attemptWith(responsesByQuestionId: Attempt["responsesByQuestionId"], qu
   };
 }
 
+it("includes unanswered domain questions for exams without changing practice analytics", () => {
+  const questions: Question[] = ["a", "b"].map(id => ({
+    ...base, id, type: "mcq_single", payload: { choices: [{ id: "yes", text: "Yes" }] },
+    answerKey: { correctChoiceId: "yes" },
+  }));
+  const attempt = attemptWith({ a: { type: "mcq_single", choiceId: "yes" } }, ["a", "b"]);
+  expect(scoreAttempt(attempt, questions).byDomain.people.total).toBe(1);
+  expect(scoreAttempt({ ...attempt, mode: "exam" }, questions).byDomain.people).toMatchObject({ correct: 1, total: 2 });
+});
+
 describe("scoreQuestion answer validation", () => {
   it("treats a pull-down selection as one scored response", () => {
     const q = {
