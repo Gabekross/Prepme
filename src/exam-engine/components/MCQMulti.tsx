@@ -9,6 +9,8 @@ import type { AnswerState } from "./shared";
 /* ── option button ──────────────────────────────────────────────────────── */
 
 const OptionBtn = styled.label<{ $state: AnswerState; $selected: boolean; $disabled: boolean }>`
+  box-sizing: border-box;
+  max-width: 100%;
   width: 100%;
   text-align: left;
   border-radius: 14px;
@@ -85,6 +87,7 @@ const OptionBtn = styled.label<{ $state: AnswerState; $selected: boolean; $disab
 `;
 
 const ChoiceGroup = styled.fieldset`
+  grid-template-columns: minmax(0, 1fr);
   border: 0;
   margin: 0;
   min-width: 0;

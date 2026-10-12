@@ -402,6 +402,7 @@ const LearnMoreBtn = styled.button`
 /* ── flag button ─────────────────────────────────────────────────────────── */
 
 const FlagBtn = styled.button<{ $flagged?: boolean }>`
+  @media (max-width: 979px) { display: none; }
   width: 100%;
   border-radius: 12px;
   border: 1px solid ${(p) => p.$flagged ? p.theme.warningBorder : p.theme.buttonBorder};

@@ -6,6 +6,8 @@ import type { Question } from "../core/types";
 import { correctAnswerLines } from "./correctAnswerLines";
 
 const AnswerBox = styled.section`
+  min-width: 0;
+  overflow-wrap: anywhere;
   margin-top: 16px;
   border: 1px solid ${(p) => p.theme.success};
   border-radius: 12px;

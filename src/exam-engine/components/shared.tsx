@@ -6,6 +6,8 @@ export type AnswerState = "neutral" | "correct" | "incorrect" | "missed";
 
 export const Stack = styled.div`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 10px;
 `;
 

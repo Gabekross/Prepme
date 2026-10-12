@@ -12,7 +12,14 @@ import { Hotspot } from "../components/Hotspot";
 
 const Wrap = styled.div`
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   gap: 16px;
+
+  &, *, *::before, *::after { box-sizing: border-box; }
+  > * { min-width: 0; max-width: 100%; }
 `;
 
 const MetaRow = styled.div`
