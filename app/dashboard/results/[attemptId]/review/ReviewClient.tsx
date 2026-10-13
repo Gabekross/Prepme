@@ -11,6 +11,7 @@ import { loadBankBySlug, loadScenarios } from "@/src/exam-engine/data/loadFromSu
 import { loadSubmittedAttemptQuestions } from "@/src/exam-engine/data/loadAttemptQuestions";
 import { QuestionRenderer } from "@/src/exam-engine/ui/QuestionRenderer";
 import { CorrectAnswerSummary } from "@/src/exam-engine/ui/CorrectAnswerSummary";
+import { questionTopics } from "@/src/exam-engine/core/detailedReport";
 
 /* ── types ──────────────────────────────────────────────────────────────── */
 
@@ -318,6 +319,7 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
   // Filter & nav state
   const initialFilter = parseFilter(searchParams.get("filter"));
   const initialQ = parseQuestionIndex(searchParams.get("q"));
+  const topic = searchParams.get("topic");
   const [filter, setFilter] = useState<FilterMode>(initialFilter);
   const [currentIdx, setCurrentIdx] = useState(initialQ);
   const didMountFilter = useRef(false);
@@ -410,8 +412,8 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
   const allQuestionIds = useMemo(() => {
     const order: string[] = attempt?.state?.questionOrder ?? [];
     // Only include questions we have loaded in the bank
-    return order.filter((qid) => questionMap[qid]);
-  }, [attempt?.state, questionMap]);
+    return order.filter((qid) => questionMap[qid] && (!topic || questionTopics(questionMap[qid]).some(t => t.key === topic)));
+  }, [attempt?.state, questionMap, topic]);
 
   // Attempted questions (maxScore > 0)
   const attemptedIds = useMemo(
@@ -516,6 +518,7 @@ export default function ReviewClient({ attemptId }: { attemptId: string }) {
       </TopBar>
 
       {/* ── Filter bar ───────────────────────────────────────── */}
+      {topic && <p>Reviewing a selected topic. <Link href={`/dashboard/results/${attemptId}/review`}>Show all questions</Link></p>}
       <FilterBar>
         <FilterBtn $active={filter === "missed"} onClick={() => setFilter("missed")}>
           Missed or unanswered <FilterCount>({incorrectIds.length + unansweredIds.length})</FilterCount>
