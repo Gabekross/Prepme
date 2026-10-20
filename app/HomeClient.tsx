@@ -352,11 +352,11 @@ const Skeleton = styled.div`
 const FAQ_DATA = [
   {
     q: "Is PMP Mastery Lab updated for 2026?",
-    a: "Yes. Our question bank is aligned with the current PMP Exam Content Outline (ECO). Questions cover all three domains: People (42%), Process (50%), and Business Environment (8%) with the correct weighting.",
+    a: "Our 2026 full-length simulation is structured around the July 2026 PMP Exam Content Outline (ECO): People 33%, Process 41%, and Business Environment 26%.",
   },
   {
     q: "How does the adaptive difficulty engine work?",
-    a: "The engine tracks your consecutive correct and incorrect answers. After 3 correct answers in a row, it increases difficulty. After 2 wrong answers, it decreases. It also identifies your weakest domains and topics, then prioritizes those in your next practice session. Harder questions are weighted up to 2.5x in your score.",
+    a: "The engine tracks your consecutive correct and incorrect answers. After 3 correct answers in a row, it increases difficulty. After 2 wrong answers, it decreases. It also identifies your weakest domains and topics, then prioritizes those in your next practice session. Our practice analytics weight harder questions up to 2.5x to guide your study; this is not PMI's official scoring method.",
   },
   {
     q: "Can I try PMP-style questions before choosing a plan?",
@@ -364,15 +364,15 @@ const FAQ_DATA = [
   },
   {
     q: "How many questions are in the question bank?",
-    a: "We currently have 400+ unique PMP questions across all question types: single-select MCQ, multi-select MCQ, drag-and-drop matching, drag-and-drop ordering, hotspot (image-based), and fill-in-the-blank. This matches the variety you will see on the real PMP exam.",
+    a: "We currently have 400+ unique PMP-style questions across our supported formats, including single-select, multi-select, drag-and-drop matching, ordering, hotspot, and fill-in-the-blank practice items.",
   },
   {
     q: "What question types are on the real PMP exam?",
-    a: "The actual PMP exam includes multiple-choice (single and multi-select), drag-and-drop, hotspot, and fill-in-the-blank questions. Our simulator covers all of these, so you will not encounter any surprises on exam day.",
+    a: "The July 2026 PMP exam may include case or scenario sets, enhanced matching, graphic-based questions, single-response and multiple-response questions, point-and-click items, matching, and pull-down lists. Exact question-type counts vary by exam form.",
   },
   {
     q: "How is this different from other PMP practice tests?",
-    a: "Most PMP prep tools just shuffle random questions. Our platform uses an adaptive engine that adjusts difficulty based on your performance, targets your weak areas, applies weighted scoring based on question difficulty, and provides detailed analytics down to the topic level. It trains you like the real exam.",
+    a: "Most PMP prep tools just shuffle random questions. Our platform uses an adaptive engine that adjusts difficulty based on your performance, targets your weak areas, applies practice-only weighted scoring, and provides detailed analytics down to the topic level.",
   },
   {
     q: "How do I pass the PMP on my first attempt?",
@@ -419,8 +419,8 @@ export default function HomeClient() {
           <p>
             Our full-length PMP practice exams are designed around the format,
             pacing, and question styles you can expect on test day. Each
-            simulation follows the PMP Exam Content Outline and includes 180
-            questions delivered in timed sections.
+            simulation is designed around the July 2026 PMP Exam Content Outline
+            and includes 180 questions delivered in timed sections.
           </p>
           <p>
             Choose from three complete simulations to build stamina and test

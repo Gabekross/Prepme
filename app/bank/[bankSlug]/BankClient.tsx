@@ -805,7 +805,7 @@ export default function BankClient({ bankSlug }: { bankSlug: string }) {
               </UpgradeFeatureItem>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>
-                Real PMP break structure + Adaptive Training mode
+                PMP-style break practice + Adaptive Training mode
               </UpgradeFeatureItem>
               <UpgradeFeatureItem>
                 <UpgradeCheckmark>✓</UpgradeCheckmark>

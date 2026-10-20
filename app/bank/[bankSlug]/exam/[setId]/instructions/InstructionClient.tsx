@@ -846,7 +846,7 @@ export default function InstructionClient({ bankSlug, setSlug }: Props) {
         <ModeBadge>Exam Simulation</ModeBadge>
         <Title>PMP Exam Simulation — {setLabel}</Title>
         <Subtitle>
-          A full-length, timed simulation that mirrors the real PMI® exam experience.
+          A full-length, timed simulation designed around the current PMP® exam experience.
           Read the details below, then begin when you're ready.
         </Subtitle>
         <MetaRow>180 Questions &nbsp;·&nbsp; {durationStr} &nbsp;·&nbsp; 2 Optional Breaks</MetaRow>
@@ -872,7 +872,11 @@ export default function InstructionClient({ bankSlug, setSlug }: Props) {
             </ExpectItem>
             <ExpectItem>
               <ExpectDot />
-              Question types include multiple choice, drag-and-drop matching, ordering, and hotspot questions.
+              This simulation includes multiple choice, drag-and-drop matching, ordering, and hotspot questions.
+            </ExpectItem>
+            <ExpectItem>
+              <ExpectDot />
+              The July 2026 PMP exam may also use case or scenario sets, enhanced matching, graphic-based, point-and-click, and pull-down questions.
             </ExpectItem>
             <ExpectItem>
               <ExpectDot />

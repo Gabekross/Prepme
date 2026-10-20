@@ -371,18 +371,18 @@ function BreakModeSelector({
 
       <ModeGrid>
 
-        {/* ── Real PMP ── */}
+        {/* ── PMP-style breaks ── */}
         <ModeCard $selected={modeId === "real_pmp"} onClick={() => onModeChange("real_pmp")}>
           <CardGlow $selected={modeId === "real_pmp"} />
           {modeId === "real_pmp" && <SelectedCheck>✓</SelectedCheck>}
-          <CardBadge $color="accent">Official Format</CardBadge>
-          <CardTitle>Real PMP Exam</CardTitle>
+          <CardBadge $color="accent">Simulation Format</CardBadge>
+          <CardTitle>PMP-Style Breaks</CardTitle>
           <CardDesc>
-            Mirrors the official PMI® exam structure exactly, including the two scheduled break points.
+            Practices two timed breaks in this simulator&apos;s three-section format.
           </CardDesc>
           <CardFeatures>
-            <CardFeature><CardFeatureDot>✓</CardFeatureDot>Optional break after Q60</CardFeature>
-            <CardFeature><CardFeatureDot>✓</CardFeatureDot>Optional break after Q120</CardFeature>
+            <CardFeature><CardFeatureDot>✓</CardFeatureDot>Simulator break after Q60</CardFeature>
+            <CardFeature><CardFeatureDot>✓</CardFeatureDot>Simulator break after Q120</CardFeature>
             <CardFeature><CardFeatureDot>✓</CardFeatureDot>Up to 10 min per break</CardFeature>
             <CardFeature><CardFeatureDot>✓</CardFeatureDot>Previous sections lock</CardFeature>
           </CardFeatures>
@@ -395,12 +395,12 @@ function BreakModeSelector({
           <CardBadge $color="warning">Focus Mode</CardBadge>
           <CardTitle>Continuous Mode</CardTitle>
           <CardDesc>
-            No scheduled interruptions. A single unbroken 230-minute focus session.
+            No scheduled interruptions. A single unbroken {durationStr} focus session.
           </CardDesc>
           <CardFeatures>
             <CardFeature><CardFeatureDot>✓</CardFeatureDot>No scheduled breaks</CardFeature>
             <CardFeature><CardFeatureDot>✓</CardFeatureDot>Maximum immersion</CardFeature>
-            <CardFeature><CardFeatureDot>✓</CardFeatureDot>Full 230 min timer</CardFeature>
+            <CardFeature><CardFeatureDot>✓</CardFeatureDot>Full {durationStr} timer</CardFeature>
           </CardFeatures>
         </ModeCard>
 

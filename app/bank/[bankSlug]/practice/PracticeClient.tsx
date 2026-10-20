@@ -533,7 +533,7 @@ export default function PracticeClient({ bankSlug }: { bankSlug: string }) {
                 </UpgradeFeatureItem>
                 <UpgradeFeatureItem>
                   <UpgradeCheckmark>✓</UpgradeCheckmark>
-                  Real PMP break structure + Adaptive Training mode
+                  PMP-style break practice + Adaptive Training mode
                 </UpgradeFeatureItem>
               </UpgradeFeature>
               <UpgradePrice>$59.99</UpgradePrice>
