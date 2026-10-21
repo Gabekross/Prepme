@@ -19,7 +19,7 @@ const warnings = [];
 const seen = new Set();
 const counts = { people: 0, process: 0, business_environment: 0 };
 const typeCounts = {};
-const approachCounts = { predictive: 0, adaptive: 0, hybrid: 0, unclassified: 0 };
+const approachCounts = { predictive: 0, adaptive: 0, hybrid: 0, neutral: 0, unclassified: 0 };
 const tasks = new Set();
 
 function problem(id, message) { issues.push({ id, message }); }
@@ -47,6 +47,13 @@ for (const [index, q] of questions.entries()) {
   }
   if (typeof q.explanation !== "string" || q.explanation.trim().length < 250) {
     problem(id, "Explanation missing or too short for detailed editorial review");
+  } else {
+    if (!/^Correct (?:answer|answers|matches|order|region):/i.test(q.explanation)) {
+      problem(id, "Explanation must identify the correct response first");
+    }
+    if (/Accessibility\/scoring|old item|previous item|present item|the candidates?|question deliberately|second-printing errata|corrected[^.]*errata|\*\*|`/i.test(q.explanation)) {
+      problem(id, "Explanation contains learner-inappropriate editorial language or formatting");
+    }
   }
   const metadata = q.metadata ?? {};
   if (metadata.editorialStatus !== "provisionally_approved") problem(id, "Not provisionally approved");
@@ -55,7 +62,8 @@ for (const [index, q] of questions.entries()) {
     const approach = metadata.approach.toLowerCase();
     const category = approach.startsWith("predictive") ? "predictive"
       : approach.startsWith("adaptive") || approach.startsWith("agile") ? "adaptive"
-      : approach.startsWith("hybrid") ? "hybrid" : "unclassified";
+      : approach.startsWith("hybrid") ? "hybrid"
+      : approach.startsWith("approach-neutral") ? "neutral" : "unclassified";
     approachCounts[category]++;
     if (category === "unclassified") warn(id, `Unclassified approach: ${metadata.approach}`);
   }
