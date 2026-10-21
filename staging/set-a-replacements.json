@@ -46,7 +46,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Reconcile the unposted completed-work cost with finance, update or qualify the dashboard's cost status and source artifact, then report the decision-relevant variance and data limitation to the sponsor."
+          "text": "Reconcile the unposted cost, correct or qualify the dashboard, and report the resulting variance and limitation."
         },
         {
           "id": "b",
@@ -88,7 +88,7 @@
         },
         {
           "id": "b",
-          "text": "Pause the affected release, record the failed test, and escalate through the required safety and governance process before making a new release decision."
+          "text": "Pause the release, document the failure, and complete the required safety review before proceeding."
         },
         {
           "id": "c",
@@ -126,7 +126,7 @@
         },
         {
           "id": "b",
-          "text": "Define decision boundaries and escalation criteria with the team within the existing approval limits, then let qualified members make decisions within those boundaries."
+          "text": "Set decision boundaries within existing limits, then let qualified members decide and escalate exceptions."
         },
         {
           "id": "c",
@@ -274,7 +274,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "The missed-appointment rate before and after the pilot, adjusted for comparable patient groups."
+          "text": "Compare missed-appointment rates before and after the pilot for comparable patient groups."
         },
         {
           "id": "b",
@@ -282,7 +282,7 @@
         },
         {
           "id": "c",
-          "text": "Staff time spent on reminder administration per appointment, compared with the current process."
+          "text": "Compare reminder-administration time per appointment with the current process."
         },
         {
           "id": "d",
@@ -423,11 +423,11 @@
       "choices": [
         {
           "id": "a",
-          "text": "Validate operational-transition readiness through the supervised rehearsal and resolve or formally accept any resulting gaps."
+          "text": "Validate transition readiness through rehearsal and resolve or formally accept the resulting gaps."
         },
         {
           "id": "b",
-          "text": "Complete the remaining contract closeout obligations or obtain the appropriate documented disposition before closing procurement."
+          "text": "Complete remaining contract closeout obligations or obtain their documented disposition."
         },
         {
           "id": "c",
@@ -536,7 +536,7 @@
         },
         {
           "id": "c",
-          "text": "Explain that the contractual date has less than 80% confidence, describe the $120,000-per-week delay consequence, and evaluate response or contingency options with the sponsor."
+          "text": "Report the confidence shortfall and delay consequence, then evaluate response options with the sponsor."
         },
         {
           "id": "d",
@@ -833,7 +833,7 @@
         },
         {
           "id": "b",
-          "text": "Keep it out of the release for now, assess its value and impacts with the appropriate stakeholders, and submit it through the agreed change decision process if they want it."
+          "text": "Keep it out of the release, assess its value and impacts, and use the agreed change process if stakeholders want it."
         },
         {
           "id": "c",
@@ -871,7 +871,7 @@
         },
         {
           "id": "b",
-          "text": "Create a small, testable story for overdue requests by region with acceptance criteria, and leave export and trends prioritized separately."
+          "text": "Create a testable story for overdue requests by region and prioritize export and trends separately."
         },
         {
           "id": "c",
@@ -905,7 +905,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "A governance decision log and communication procedure that states decision rights, the $25,000 and community-access escalation thresholds, required evidence, and how approved decisions are shared."
+          "text": "Establish a decision log covering authority, thresholds, evidence, and communication of approvals."
         },
         {
           "id": "b",
@@ -947,7 +947,7 @@
         },
         {
           "id": "b",
-          "text": "Address the confidentiality concern with the manager, agree on safer discussion ground rules, then help the team choose one measurable handoff experiment with an owner and review date."
+          "text": "Address the confidentiality breach, establish safer discussion rules, and assign one measurable handoff experiment with a review date."
         },
         {
           "id": "c",
@@ -1392,7 +1392,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Make the time-critical allocation using the approved safety and priority criteria, communicate the decision, and schedule a later review of the underlying resource conflict."
+          "text": "Apply the approved safety and priority criteria now, communicate the allocation, and review the underlying conflict later."
         },
         {
           "id": "b",
@@ -1434,7 +1434,7 @@
         },
         {
           "id": "b",
-          "text": "Meet with the finance representative in an available time slot, clarify both parties' approval expectations, then facilitate agreement on measurable pilot acceptance criteria."
+          "text": "Clarify both parties' approval expectations with finance and agree measurable pilot acceptance criteria."
         },
         {
           "id": "c",
@@ -1472,7 +1472,7 @@
         },
         {
           "id": "b",
-          "text": "Meet with the sponsor and operations customer to identify decision needs and the source of dissatisfaction, agree on tailored reports and an outcome measure, then monitor whether satisfaction improves."
+          "text": "Clarify the sponsor's and operations customer's decision needs, tailor the reports, agree an outcome measure, and monitor satisfaction."
         },
         {
           "id": "c",
@@ -1506,7 +1506,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Rank both threats using the agreed probability-impact criteria, validate the high-impact exposure with the relevant experts, and prioritize response planning accordingly."
+          "text": "Rank both threats using the agreed criteria, validate the high-impact exposure with relevant experts, and prioritize response planning."
         },
         {
           "id": "b",
@@ -1586,7 +1586,7 @@
         },
         {
           "id": "b",
-          "text": "Assess how the new cadence affects the safety-review work, involve engineers and compliance staff in adjusting the transition, and agree on readiness and adoption measures for the next release."
+          "text": "Assess the cadence's effect on safety reviews, involve engineers and compliance staff in the transition, and agree readiness measures."
         },
         {
           "id": "c",
@@ -1624,7 +1624,7 @@
         },
         {
           "id": "b",
-          "text": "Bring the two leads together to confirm the access need and timing, agree on an authorized resolution, and use the defined escalation path if the blocker remains."
+          "text": "Confirm the access need and timing, agree an authorized resolution, and escalate through the defined path if it remains blocked."
         },
         {
           "id": "c",
@@ -1749,7 +1749,7 @@
         },
         {
           "id": "b",
-          "text": "Clarify the two workstreams' decision rights, manage the portal portion through the backlog, and submit the baselined interface change for impact analysis and authorized approval before implementation."
+          "text": "Clarify decision rights, manage portal work through the backlog, and submit the interface change for authorized approval."
         },
         {
           "id": "c",
@@ -1901,7 +1901,7 @@
         },
         {
           "id": "b",
-          "text": "Facilitate a focused review of the test evidence with both specialists, separate the technical disagreement from personal judgments, and agree on a testable resolution before the next integration run."
+          "text": "Review the test evidence with both specialists, separate technical issues from personal judgments, and agree a testable resolution before integration."
         },
         {
           "id": "c",
@@ -2049,7 +2049,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Assess the night-shift workflow impact with representative users, identify the required handoff information and adoption risks, then prioritize an approved adjustment and readiness support with the clinical director."
+          "text": "Assess the night-shift workflow with users, identify required handoff information, and prioritize an approved adjustment."
         },
         {
           "id": "b",
@@ -2205,7 +2205,7 @@
         },
         {
           "id": "b",
-          "text": "Examine why the groups now interpret the purpose differently, then facilitate a discussion with the sponsor, migration leads, and operations to reaffirm or update the shared vision and the decision signals for phase 2."
+          "text": "Explore the groups' differing interpretations, then reaffirm or update the shared vision and phase-2 decision signals."
         },
         {
           "id": "c",
@@ -2281,7 +2281,7 @@
         },
         {
           "id": "b",
-          "text": "Meet each lead about the work they need to manage, demonstrate the tested integration, co-test an incident view with service staff, and invite both leads to agree on pilot success measures before proposing broader adoption."
+          "text": "Demonstrate the integration, test an incident view with service staff, and agree pilot success measures with both leads."
         },
         {
           "id": "c",
@@ -2319,7 +2319,7 @@
         },
         {
           "id": "b",
-          "text": "Identify the failure decisions critical to the review; pair the specialist with the new engineers on real borderline cases, have them explain and perform the decisions back, and record the rationale and escalation path in the shared repository."
+          "text": "Pair the specialist with the new engineers on critical borderline cases, require teach-back, and record the rationale and escalation path."
         },
         {
           "id": "c",
@@ -2391,7 +2391,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Fund both steps, retain the final test, and monitor the actual failure rate; the expected $41,000 for these steps and residual internal failures is below the approximately $90,000 repeat internal-failure exposure."
+          "text": "Fund the setup and in-process controls, retain final acceptance testing, and monitor whether total expected quality cost remains below the repeat-loss exposure."
         },
         {
           "id": "b",
@@ -2433,7 +2433,7 @@
         },
         {
           "id": "b",
-          "text": "Reconcile AC to $240,000 for this status date, report CPI of 0.75 and SPI of 0.90, explain the variance and investigate its cause before proposing a response."
+          "text": "Reconcile AC to $240,000, report CPI 0.75 and SPI 0.90, and investigate the variance before proposing a response."
         },
         {
           "id": "c",
@@ -2507,7 +2507,7 @@
         },
         {
           "id": "b",
-          "text": "Reconcile the approval and effective date with the controlled baseline record, update the dashboard's source and variance calculations, restore authorized access, and then report status with any remaining discrepancy disclosed."
+          "text": "Verify the approved baseline and effective date, correct the dashboard source and calculations, restore access, and disclose any remaining discrepancy."
         },
         {
           "id": "c",
@@ -2633,7 +2633,7 @@
         },
         {
           "id": "b",
-          "text": "Verify the rule's applicability with the responsible legal/compliance experts, assess impact on the baselined interface and backlog, work with decision-makers to prioritize a viable response, and continue scanning both signals as launch approaches."
+          "text": "Verify the rule, assess its baseline and backlog impact, and present viable priorities to the authorized decision makers."
         },
         {
           "id": "c",
@@ -2667,11 +2667,11 @@
       "choices": [
         {
           "id": "a",
-          "text": "Reassess the cost and value of supplier-dependent backlog items using the current exchange rate, then bring material funding or priority decisions to the authorized product and finance decision-makers."
+          "text": "Reassess supplier-dependent backlog value using the current rate and route material decisions to product and finance owners."
         },
         {
           "id": "b",
-          "text": "Assess the delivery constraint with the logistics and clinical leads, then prioritize viable kit-dependent and kit-independent pilot work based on the revised delivery outlook."
+          "text": "Assess the delivery constraint and reprioritize kit-dependent and independent pilot work using the revised outlook."
         },
         {
           "id": "c",
@@ -2757,7 +2757,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Keep the changed mapping out of the next rehearsal pending the required joint safety review and any correction; then have both teams agree and record who may propose, review, and authorize future patient-facing mapping changes, including the review trigger and escalation path."
+          "text": "Keep the mapping out pending joint safety review, then record who may propose, review, and authorize future changes."
         },
         {
           "id": "b",
@@ -2795,7 +2795,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Acknowledge the dismissive response, invite the operator and technical lead to examine the failure mode without blame, run the feasible simulation, and use its results to decide whether the design needs a controlled change."
+          "text": "Address the dismissive response, examine the failure without blame, run the simulation, and use its evidence for the design decision."
         },
         {
           "id": "b",
@@ -2878,7 +2878,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Prepare the pilot evidence, proposed reusable check, conditions for use, and measured result for the PMO to incorporate into the shared playbook and communicate to affected projects."
+          "text": "Submit the pilot evidence, reusable check, conditions, and measured result to the PMO for governed playbook adoption and communication."
         },
         {
           "id": "b",
@@ -3182,7 +3182,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Record “provider interface may change before approval” as a potential event, work with both teams and the provider to examine assumptions, probability, impact, owner, and possible responses, then update the register and integrated plan as evidence develops."
+          "text": "Record the possible interface change as a risk, assess it with both teams and the provider, assign ownership, and update the integrated plan."
         },
         {
           "id": "b",
@@ -3224,7 +3224,7 @@
         },
         {
           "id": "b",
-          "text": "Assess how the new structure affects stakeholders, decision rights, access controls, and delivery assumptions; clarify the interim authority with the sponsor/governance body, then communicate an updated route for requests while preserving current controls."
+          "text": "Assess the merger's effect on authority and access controls, confirm interim governance, and communicate the request route while preserving current controls."
         },
         {
           "id": "c",
@@ -3300,7 +3300,7 @@
         },
         {
           "id": "b",
-          "text": "Validate the upload failure evidence with applicants and the business owner, prioritize the feature against the project benefit, and add a measure such as completed-submission rate to test whether the next increment improves outcomes."
+          "text": "Validate the upload evidence, prioritize the resume feature against the stated benefit, and measure whether completed submissions improve."
         },
         {
           "id": "c",
@@ -3376,7 +3376,7 @@
         },
         {
           "id": "b",
-          "text": "Confirm the precise control and affected data flows with compliance, assess the release and cost consequences, prevent noncompliant use, and submit the necessary change for the designated governance decision before updating baselines or implementation plans."
+          "text": "Confirm the control and data flows, prevent noncompliant use, assess impacts, and route the change to governance."
         },
         {
           "id": "c",
@@ -3454,7 +3454,7 @@
         },
         {
           "id": "b",
-          "text": "The schedule was leveled to respect an actual resource limit; because both packages were on the critical path and no capacity alternative existed, resolving the over-allocation extended the forecast."
+          "text": "Leveling respected the actual resource limit; with no capacity alternative, resolving the critical-path conflict extended the forecast."
         },
         {
           "id": "c",
@@ -3620,7 +3620,7 @@
         },
         {
           "id": "b",
-          "text": "Agree on the concise gate forecast and threshold-triggered notification, confirm receipt and concerns, and reassess engagement if the vice president's interest or influence changes."
+          "text": "Agree a concise gate forecast and threshold notice, confirm receipt, and reassess engagement if stakeholder conditions change."
         },
         {
           "id": "c",
@@ -3704,7 +3704,7 @@
         },
         {
           "id": "c",
-          "text": "Paraphrase the concern as a possible overnight-support gap, ask the manager to confirm or correct that understanding, and explore the operational evidence before proposing a response."
+          "text": "Paraphrase the possible overnight-support gap, confirm the interpretation, and examine evidence before proposing a response."
         },
         {
           "id": "d",
@@ -3796,7 +3796,7 @@
         },
         {
           "id": "d",
-          "text": "Acknowledge the situation, clarify work availability and confidentiality boundaries with the developer, then collaborate on a handoff or replanning option that protects the iteration goal."
+          "text": "Clarify availability and confidentiality, then agree a handoff or replanning option that protects the iteration goal."
         }
       ]
     },
@@ -3874,7 +3874,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Engage the supervisor and representative technicians to understand concerns and shape pilot evidence, while preserving the director's formal decision authority and making roles transparent."
+          "text": "Engage the supervisor and representative technicians to shape pilot evidence while keeping formal decision authority transparent."
         },
         {
           "id": "b",
@@ -3914,7 +3914,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Meet privately with both, establish respectful ground rules, let each describe facts and impact, clarify the misunderstood statement, and help them agree on the test and future handoffs."
+          "text": "Hear each person privately, clarify the misunderstanding, and agree respectful rules for the test and future handoffs."
         },
         {
           "id": "b",
@@ -4004,7 +4004,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Decline the offer, document and disclose it through the required channel, and follow procurement guidance on any recusal or supplier action while protecting the evaluation record."
+          "text": "Decline and disclose the offer, protect the evaluation record, and follow procurement guidance on next steps."
         },
         {
           "id": "b",
@@ -4044,7 +4044,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Co-design lightweight connection and collaboration practices in the overlap, such as rotating problem-solving pairs and optional informal time, then inspect whether help-seeking and team sentiment improve."
+          "text": "Co-design lightweight connection practices during the overlap, then monitor help-seeking and team sentiment."
         },
         {
           "id": "b",
@@ -4530,7 +4530,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Refine the highest-value candidate capabilities enough to expose acceptance evidence, dependencies, compliance constraints, and feasible size, then use that evidence with authorized stakeholders to agree the release boundary and exclusions."
+          "text": "Refine high-value capabilities to expose acceptance, dependencies, constraints, and size, then agree the release boundary."
         },
         {
           "id": "b",
@@ -4615,7 +4615,7 @@
         },
         {
           "id": "b",
-          "text": "Decompose migration until its work packages can be credibly estimated, owned, monitored, and accepted; stop decomposing training where those conditions are already met."
+          "text": "Decompose migration until work is estimable, ownable, monitorable, and acceptable; stop where training already meets those conditions."
         },
         {
           "id": "c",
@@ -4836,7 +4836,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Facilitate an iteration objective and feasible work selection using capacity, dependencies, and value; escalate or resolve the access decision and make release implications transparent."
+          "text": "Set a feasible iteration objective using capacity, dependencies, and value, then resolve the access decision and show release impacts."
         },
         {
           "id": "b",
@@ -4878,7 +4878,7 @@
         },
         {
           "id": "b",
-          "text": "Assess the integrated schedule and approve only if consuming three of the activity's four float days is acceptable and communicated to affected owners."
+          "text": "Assess the integrated schedule and approve only if using three float days is acceptable and communicated."
         },
         {
           "id": "c",
@@ -4942,7 +4942,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Stop pulling new work, swarm on making review-ready items smaller and clearer, and set or refine a WIP policy around the constrained review step while measuring flow."
+          "text": "Stop pulling new work, improve review readiness, and set a WIP policy around the constrained security-review step."
         },
         {
           "id": "b",
@@ -5125,7 +5125,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Compare whole-life cost, schedule, capability, data/compliance risk, strategic control, support, exit options, and delivery uncertainty with relevant experts, then document the recommended sourcing approach."
+          "text": "Compare lifecycle cost, schedule, capability, compliance risk, strategic control, support, and exit options before recommending a source."
         },
         {
           "id": "b",
@@ -5163,7 +5163,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Facilitate customer validation against all acceptance criteria, document the defect's agreed disposition, and obtain authorized acceptance before releasing resources and completing closure."
+          "text": "Complete customer validation, document the defect disposition, and obtain authorized acceptance before closure."
         },
         {
           "id": "b",
@@ -5201,7 +5201,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Forecast a planning range of 8-9 iterations from the observed 32-38 point throughput, while disclosing backlog-change and throughput assumptions rather than treating the range as a commitment."
+          "text": "Forecast 8–9 iterations from observed throughput and disclose that backlog size and future throughput may change."
         },
         {
           "id": "b",
@@ -5239,7 +5239,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Retain the mandatory finish-to-start constraint, analyze compliant recovery alternatives on the controlling path, and update the forecast and risks."
+          "text": "Keep the mandatory dependency, analyze compliant recovery options on the controlling path, and update forecast and risks."
         },
         {
           "id": "b",
@@ -5277,7 +5277,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "VAC = -$120,000, a forecast overrun of 20% of BAC, so the threshold is exceeded and the assumptions and response require governance attention."
+          "text": "Report VAC of −$120,000 and a 20% overrun, then escalate the assumptions and response."
         },
         {
           "id": "b",
@@ -5347,7 +5347,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Have the team and product stakeholders revise the shared completion criteria to include required integration evidence, apply it consistently, and address existing unfinished quality work transparently."
+          "text": "Revise the shared completion criteria to require integration evidence, apply them consistently, and expose unfinished quality work."
         },
         {
           "id": "b",
@@ -5385,7 +5385,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Use the prior rollout as analogous evidence, adjust for known differences with experts, state the resulting range and uncertainty, and plan refinement as scope develops."
+          "text": "Use the prior rollout as analogous evidence, adjust for known differences, state a range, and refine it as scope develops."
         },
         {
           "id": "b",
@@ -5461,7 +5461,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Gather evidence to validate and prioritize the candidate causes, then select and measure a corrective experiment tied to the confirmed cause."
+          "text": "Validate and prioritize candidate causes, then select and measure a corrective experiment tied to the confirmed cause."
         },
         {
           "id": "b",
@@ -5499,7 +5499,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Analyze the overlap's recoverable time, interface stability, rework cost, quality and safety risk, then seek the required approval before revising schedule logic."
+          "text": "Assess recoverable time, stability, rework, quality, and safety, then obtain approval before changing schedule logic."
         },
         {
           "id": "b",
@@ -5537,7 +5537,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "$30,000, while recognizing aggregation assumptions and that the final reserve decision follows governance."
+          "text": "$30,000, used as an analytical input while governance determines the final reserve."
         },
         {
           "id": "b",
@@ -5611,7 +5611,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Deliver the smallest safe, usable capability that tests self-service label generation, define completion and support-call measures, and use results to decide what to build next."
+          "text": "Deliver the smallest safe capability that tests self-service labels, measure outcomes, and use the results to choose what comes next."
         },
         {
           "id": "b",
@@ -5649,7 +5649,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Issue a request for proposals with outcome requirements, constraints, weighted evaluation criteria, response instructions, and a governed clarification and negotiation process."
+          "text": "Issue an RFP with outcome requirements, constraints, weighted criteria, instructions, and a governed clarification process."
         },
         {
           "id": "b",
@@ -5805,7 +5805,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Reconcile the workshop note against the approved scope boundary and traceability evidence, document the ambiguity, and route any requested addition through the authorized scope/change decision process with impact analysis."
+          "text": "Compare the note with approved scope evidence, document the ambiguity, and route any addition through authorized change control."
         },
         {
           "id": "b",
@@ -5843,7 +5843,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Record and prioritize the realized issue, coordinate the owner and security lead to assess and activate the authorized fallback, communicate impact, and continue monitoring residual effects."
+          "text": "Record the issue, coordinate authorized fallback activation, communicate the impact, and monitor residual effects."
         },
         {
           "id": "b",
@@ -5881,7 +5881,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Integrate validation evidence, traceability, reviewer engagement, and gate-readiness criteria into iteration planning and the release plan while preserving iterative learning."
+          "text": "Build validation evidence, traceability, reviewer engagement, and gate-readiness criteria into iteration and release planning."
         },
         {
           "id": "b",
@@ -5919,7 +5919,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Follow the quality response plan: contain as required, investigate the special-cause signal, and avoid indiscriminate process adjustment until evidence identifies the cause."
+          "text": "Contain as required, investigate the special-cause signal, and adjust only after evidence identifies the cause."
         },
         {
           "id": "b",
@@ -5957,7 +5957,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Analyze each party's authority, interest, impact, and current versus desired engagement, then prioritize the accessibility council and transportation director for decision-focused engagement."
+          "text": "Prioritize the accessibility council and transportation director using their authority, interest, impact, and desired engagement."
         },
         {
           "id": "b",
@@ -5965,7 +5965,7 @@
         },
         {
           "id": "c",
-          "text": "Validate the vendor's installation constraints and decision dependencies, then tailor an engagement action that surfaces crew conflicts before the contracted work window."
+          "text": "Validate the vendor's constraints and tailor engagement to surface crew conflicts before the contracted window."
         },
         {
           "id": "d",
@@ -6154,7 +6154,7 @@
         },
         {
           "id": "b",
-          "text": "Agree criteria covering procurement integrity, error disparity, benefit, and reversibility, then route a bounded next step through the decision owner."
+          "text": "Agree criteria for integrity, disparity, benefit, and reversibility, then route a bounded step through the decision owner."
         },
         {
           "id": "c",
@@ -6194,7 +6194,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Convene the authorized decision meeting, have the architect explain the evidence and operational consequences, acknowledge prior credibility concerns, and require the board to record a decision or identified evidence gap without offering inducements."
+          "text": "Convene the authorized board, present the technical and operational evidence, address credibility concerns, and record its decision without inducements."
         },
         {
           "id": "b",
@@ -6551,7 +6551,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Meet privately, establish why the result was withheld, explain the decision impact, require immediate correction through the defined reporting path, agree on future disclosure expectations, and monitor compliance."
+          "text": "Meet privately, establish why the result was withheld, correct the report through the defined path, and monitor future disclosure."
         },
         {
           "id": "b",
@@ -6589,7 +6589,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Validate the team's evidence and feasible options, present the delivery impact and trade-offs to the committee, seek the authorized decision, and report the rationale and resulting constraints back to the team."
+          "text": "Present the team's verified evidence, impacts, and feasible options to the committee, then communicate its authorized decision back to the team."
         },
         {
           "id": "b",
@@ -6627,7 +6627,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Facilitate a discussion of the underlying cost, continuity, staffing, and patient-safety interests; develop feasible rollout options with agreed evaluation criteria; then take any unresolved risk trade-off to the safety committee with both stakeholders' concerns documented."
+          "text": "Define shared cost, continuity, staffing, and safety criteria; compare rollout options; and route unresolved risk trade-offs to the safety committee."
         },
         {
           "id": "b",
@@ -6665,7 +6665,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Calmly pause, restate the discussion agreement, give the group a short break, and speak privately with the engineer to understand the concern before resuming a safe, structured discussion."
+          "text": "Pause, restate the working agreement, and privately understand the concern before resuming the discussion."
         },
         {
           "id": "b",
@@ -6703,7 +6703,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Confirm the notice's classification and authorized recipients, hold a controlled briefing in which recipients restate their required actions and questions, then record approved interpretations and owners in the restricted repository."
+          "text": "Confirm authorized recipients, conduct a controlled briefing with understanding checks, and record approved interpretations in the restricted repository."
         },
         {
           "id": "b",
@@ -6741,7 +6741,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Meet with the estimator to understand and address the trust concern and secure visible sponsorship for transparent assumption ownership; involve the analyst in coached model work while retaining qualified review."
+          "text": "Address the estimator's trust concern and clarify assumption ownership, while involving the analyst through coached work and qualified review."
         },
         {
           "id": "b",
@@ -6779,7 +6779,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Co-create a progression from rehearsed presentation of one section to leading a later review, provide specific feedback after each step, and let the analyst help set the pace."
+          "text": "Agree a graduated presentation plan, provide specific feedback after each step, and let the analyst help set the pace."
         },
         {
           "id": "b",
@@ -6817,7 +6817,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Offer pre-read material, quiet idea generation, round-robin and written channels, and explicit confirmation of decisions; then ask the whole team which practices improve participation."
+          "text": "Offer pre-reads, quiet preparation, round-robin and written channels, then confirm decisions with the team."
         },
         {
           "id": "b",
@@ -6855,7 +6855,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Ask for a recent example and the impact, paraphrase the concern to confirm understanding, then jointly inspect the report workflow before deciding a remedy."
+          "text": "Confirm the concern with a recent example, then inspect the report workflow together before choosing a remedy."
         },
         {
           "id": "b",
@@ -6893,7 +6893,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Acknowledge the evidence, restore team ownership of task selection and coordination within agreed goals, replace individual reporting with visible work information, and inspect the effect in the next iterations."
+          "text": "Restore team ownership and visible work coordination, then inspect the effect in later iterations."
         },
         {
           "id": "b",
@@ -6931,7 +6931,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Evaluate schedule and cost impact and compare resequencing, contracting, and timely internal qualification, then negotiate the preferred feasible option with the resource owners."
+          "text": "Compare the feasible resource options and their schedule and cost effects before negotiating with the resource owners."
         },
         {
           "id": "b",
@@ -6969,7 +6969,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Protect the relevant records, document the allegation factually, and use the confidential compliance channel so authorized investigators can assess it while limiting disclosure."
+          "text": "Preserve the records, document the allegation, and report it through the confidential compliance channel."
         },
         {
           "id": "b",
@@ -7007,7 +7007,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Address the disrespectful behavior privately and through the working agreement, acknowledge the meeting impact, introduce structured ways to surface assumptions and dissent, and monitor participation and estimate quality."
+          "text": "Address the behavior, add structured ways to surface dissent, and monitor participation and estimate quality."
         },
         {
           "id": "b",
@@ -7045,7 +7045,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Consolidate the approved decision and conditions into the affected baselines and subsidiary plans, assign owners for procurement, quality, and transition updates, communicate the effective configuration, and verify readiness and traceability before relocation work proceeds."
+          "text": "Integrate the approved conditions into affected plans, assign update owners, communicate the configuration, and verify readiness before relocation."
         },
         {
           "id": "b",
@@ -7083,7 +7083,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Assess the external technology change's security, power, cost, and backlog effects with the relevant experts, then give the authorized decision maker prioritized options."
+          "text": "Assess the sensor change's security, power, cost, and backlog effects, then present prioritized options to the authorized decision maker."
         },
         {
           "id": "b",
@@ -7121,7 +7121,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Make decision and priority changes visible, agree on a small set of near-term commitments with the team, deliver or transparently renegotiate them, and invite feedback on consistency."
+          "text": "Make priorities visible, agree near-term commitments, follow through transparently, and invite feedback."
         },
         {
           "id": "b",
@@ -7159,7 +7159,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Facilitate agreement on one accountable submission owner, the responsible review and preparation roles, required consultations, and recipients to inform; record and communicate the assignments before the next cycle."
+          "text": "Agree one accountable submission owner and clear preparation, review, consultation, and communication roles before the next cycle."
         },
         {
           "id": "b",
@@ -7197,7 +7197,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Coordinate an integrated impact analysis covering customer value, compatibility, cost, contract, risk, and release timing, then route the affected decisions to the product and change authorities defined for each track."
+          "text": "Analyze value, compatibility, cost, contract, risk, and timing, then route decisions to the authorized product and change owners."
         },
         {
           "id": "b",
@@ -7275,7 +7275,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Add automated accessibility and other required checks to the delivery pipeline, retain auditable evidence, and stop or route exceptions according to the agreed release policy."
+          "text": "Add required checks to the delivery pipeline, retain evidence, and stop or route exceptions under the release policy."
         },
         {
           "id": "b",
@@ -7319,7 +7319,7 @@
         },
         {
           "id": "b",
-          "text": "Reassess probability, impact, and response effectiveness using the new dependency evidence; update the risk record and owner; and take response options to the architecture board if exposure exceeds tolerance."
+          "text": "Reassess exposure and response effectiveness, update the risk record, and route options if tolerance is exceeded."
         },
         {
           "id": "c",
@@ -7355,7 +7355,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Facilitate agreement on measurable acceptance and outcome thresholds, surface the tradeoff and decision authority, and document the aligned expectation before the rollout decision."
+          "text": "Agree measurable acceptance and outcome thresholds, clarify authority, and document alignment before rollout."
         },
         {
           "id": "b",
@@ -7445,7 +7445,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Verify the provider change and deadline, assess affected components and obligations, time-box the evidence needed to estimate response options, and give the product decision maker the impact information needed to reprioritize the backlog."
+          "text": "Verify the provider change, assess affected components and obligations, estimate response options, and support authorized backlog reprioritization."
         },
         {
           "id": "b",
@@ -7485,7 +7485,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Assess the new rule's scope, resource, cost, risk, and dependency impacts; update response options and the forecast; and route required changes through the authorized governance process."
+          "text": "Assess the rule's integrated impacts, update options and forecast, and route changes through authorized governance."
         },
         {
           "id": "b",
@@ -7617,7 +7617,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Work with the affected managers to confirm their information and accessibility needs, clarify the readiness criteria and accountable actions, use feedback to verify shared understanding, and monitor whether preparation improves."
+          "text": "Clarify readiness criteria and accountable actions with the affected managers, verify shared understanding, and monitor preparation."
         },
         {
           "id": "b",
@@ -7657,7 +7657,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Define data-owner and decision roles, preserve the mandatory escalation timing, establish thresholds and evidence for privacy decisions, and tailor review frequency using the prior lessons and current risk."
+          "text": "Define decision roles, escalation timing, privacy thresholds, required evidence, and a risk-based review frequency."
         },
         {
           "id": "b",
@@ -7697,7 +7697,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Document the impact and requested exception, use the expedited board path, and make the sponsor's priority and the board's decision rights visible in the recommendation."
+          "text": "Document the impact and exception, use the expedited board path, and clarify sponsor priority and board authority."
         },
         {
           "id": "b",
@@ -7737,7 +7737,7 @@
       "choices": [
         {
           "id": "a",
-          "text": "Analyze feasible project-level resequencing, then escalate the unresolved resource-and-benefit tradeoff to program governance with schedule, risk, and benefit impacts for both projects."
+          "text": "Analyze project-level resequencing, then escalate the remaining resource and benefit trade-off with impact evidence."
         },
         {
           "id": "b",
@@ -7781,7 +7781,7 @@
         },
         {
           "id": "b",
-          "text": "Document the changed external assumption, assess timing and exposure with procurement and technical stakeholders, define monitoring triggers and feasible supplier-response options, then present the analysis to the procurement authority."
+          "text": "Assess the changed trade assumption, define monitoring triggers and supplier options, and present the analysis to the procurement authority."
         },
         {
           "id": "c",
