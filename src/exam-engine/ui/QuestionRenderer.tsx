@@ -109,6 +109,11 @@ const TYPE_LABELS: Record<string, string> = {
   hotspot: "Hotspot",
 };
 
+export function learnerTableCaption(caption: string) {
+  const plain = caption.replace(/\*\*/g, "").trim();
+  return /^text equivalent for\b/i.test(plain) ? "Exhibit data" : plain;
+}
+
 export function QuestionRenderer(props: {
   question: Question;
   scenario?: Scenario;
@@ -127,6 +132,7 @@ export function QuestionRenderer(props: {
   const domainLabel = DOMAIN_LABELS[question.domain] ?? question.domain;
   const difficultyLabel = question.difficulty ? DIFFICULTY_LABELS[question.difficulty] ?? question.difficulty : null;
   const typeLabel = TYPE_LABELS[question.type] ?? question.type;
+  const tableCaption = question.media?.table ? learnerTableCaption(question.media.table.caption) : null;
 
   return (
     <Wrap>
@@ -148,9 +154,9 @@ export function QuestionRenderer(props: {
       )}
 
       {question.media?.table && (
-        <TableExhibit role="region" aria-label={question.media.table.caption} tabIndex={0}>
+        <TableExhibit role="region" aria-label={question.media.alt || tableCaption || "Exhibit data"} tabIndex={0}>
           <table>
-            <caption>{question.media.table.caption}</caption>
+            <caption>{tableCaption}</caption>
             <thead><tr>{question.media.table.columns.map((column, index) => <th key={index} scope="col">{column}</th>)}</tr></thead>
             <tbody>
               {question.media.table.rows.map((row, rowIndex) => (

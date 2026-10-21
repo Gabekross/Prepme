@@ -567,7 +567,7 @@
       "imageUrl": "/images/questions/set-a-2026-review/prc089-probability-range.svg",
       "alt": "Simulation confidence: P50 completion August 24, target August 30, P80 completion September 6. Sponsor requires at least 80% confidence; delay consequence is $120k per week.",
       "table": {
-        "caption": "Text equivalent for pma-prc-089",
+        "caption": "Milestone confidence data",
         "columns": [
           "Marker",
           "Date or value"
@@ -1020,7 +1020,7 @@
       "imageUrl": "/images/questions/set-a-2026-review/prc039-three-point-range.svg",
       "alt": "Duration estimates are optimistic 6 days, most likely 10 days, and pessimistic 20 days. The dependent supplier inspection is fixed at day 10.",
       "table": {
-        "caption": "Text equivalent for pma-prc-039",
+        "caption": "Three-point duration data",
         "columns": [
           "Point",
           "Day"
@@ -2468,7 +2468,7 @@
       "imageUrl": "/images/questions/set-a-2026-review/prc003-cost-dashboard.svg",
       "alt": "Dashboard: PV $200k, EV $180k, posted AC $210k, plus a $30k unposted supplier invoice for completed work incurred before the status date.",
       "table": {
-        "caption": "Text equivalent for pma-prc-003",
+        "caption": "Status-date performance data",
         "columns": [
           "Measure",
           "Value"
@@ -3531,7 +3531,7 @@
       "imageUrl": "/images/questions/set-a-2026-review/prc047-decision-tree.svg",
       "alt": "Option A has a 60 percent chance of a $200k net benefit and a 40 percent chance of a $50k net loss. Option B has a certain $80k net benefit.",
       "table": {
-        "caption": "Text equivalent for pma-prc-047",
+        "caption": "Decision-tree outcome data",
         "columns": [
           "Option",
           "Outcome",
@@ -4688,7 +4688,7 @@
       "imageUrl": "/images/questions/set-a-2026-review/prc002-network.svg",
       "alt": "Activity-on-node network: A, 3 days, branches to B, 7 days, and C, 2 days. Both B and C must finish before D, 4 days, can start. D leads to the end milestone.",
       "table": {
-        "caption": "Text equivalent for pma-prc-002",
+        "caption": "Activity network data",
         "columns": [
           "Activity",
           "Duration",
@@ -4767,7 +4767,7 @@
       "imageUrl": "/images/questions/set-a-2026-review/prc006-eac-data-view.svg",
       "alt": "Forecast inputs: BAC $400k, EV $100k, and AC $120k. The completed-work overrun was one-time, and remaining fixed-price work stays at its original budget.",
       "table": {
-        "caption": "Text equivalent for pma-prc-006",
+        "caption": "Forecast input data",
         "columns": [
           "Measure",
           "Value"
@@ -4913,7 +4913,7 @@
       "imageUrl": "/images/questions/set-a-2026-review/prc011-schedule-float.svg",
       "alt": "Activity timing: early start day 5, early finish day 10, late start day 9, late finish day 14, and requested delay 3 days.",
       "table": {
-        "caption": "Text equivalent for pma-prc-011",
+        "caption": "Activity schedule data",
         "columns": [
           "Early start",
           "Early finish",
@@ -5057,7 +5057,7 @@
       "imageUrl": "/images/questions/set-a-2026-review/prc015-crashing-options.svg",
       "alt": "Crash options: X can be shortened by at most 5 days at $4k per day; Y can be shortened by at most 8 days at $1k per day. Required recovery is 10 days.",
       "table": {
-        "caption": "Text equivalent for pma-prc-015",
+        "caption": "Schedule-crashing options",
         "columns": [
           "Activity",
           "Maximum crash days",
@@ -5316,7 +5316,7 @@
       "imageUrl": "/images/questions/set-a-2026-review/prc025-vac-forecast.svg",
       "alt": "BAC is $600k, EAC is $720k, and governance requires escalation when forecast overrun is greater than 15 percent of BAC.",
       "table": {
-        "caption": "Text equivalent for pma-prc-025",
+        "caption": "Variance-at-completion data",
         "columns": [
           "Measure",
           "Value"
@@ -5576,7 +5576,7 @@
       "imageUrl": "/images/questions/set-a-2026-review/prc033-probability-impact.svg",
       "alt": "Three independent threats: 20 percent probability of a $50k loss, 40 percent probability of a $25k loss, and 10 percent probability of a $100k loss.",
       "table": {
-        "caption": "Text equivalent for pma-prc-033",
+        "caption": "Threat probability and impact data",
         "columns": [
           "Threat",
           "Probability",
@@ -5726,7 +5726,7 @@
       "imageUrl": "/images/questions/set-a-2026-review/prc036-layered-budget.svg",
       "alt": "Work estimates are $900k, contingency reserve is $60k inside the cost baseline, and management reserve is $90k outside the cost baseline.",
       "table": {
-        "caption": "Text equivalent for pma-prc-036",
+        "caption": "Budget and reserve data",
         "columns": [
           "Budget layer",
           "Amount",
@@ -6516,7 +6516,7 @@
       "imageUrl": "/images/questions/set-a-2026-review/r7-stakeholder-response.svg",
       "alt": "Grouped bar chart of median response days: Operations 5 before and 2 after; Accessibility group 4 before and 9 after; General community 6 before and 5 after. Each period is 8 weeks with at least 30 responses per group.",
       "table": {
-        "caption": "Text equivalent for R7",
+        "caption": "Stakeholder response-time data",
         "columns": [
           "Stakeholder group",
           "Before median days",

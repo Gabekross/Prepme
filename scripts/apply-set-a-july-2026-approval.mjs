@@ -7,6 +7,20 @@ const questions = JSON.parse(readFileSync(fixturePath, "utf8"));
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
 const byId = new Map(questions.map((question) => [question.id, question]));
 const visualByQuestion = new Map(manifest.assets.map((asset) => [asset.question, asset]));
+const visualCaptions = new Map(Object.entries({
+  R7: "Stakeholder response-time data",
+  "pma-prc-002": "Activity network data",
+  "pma-prc-003": "Status-date performance data",
+  "pma-prc-006": "Forecast input data",
+  "pma-prc-011": "Activity schedule data",
+  "pma-prc-015": "Schedule-crashing options",
+  "pma-prc-025": "Variance-at-completion data",
+  "pma-prc-033": "Threat probability and impact data",
+  "pma-prc-036": "Budget and reserve data",
+  "pma-prc-039": "Three-point duration data",
+  "pma-prc-047": "Decision-tree outcome data",
+  "pma-prc-089": "Milestone confidence data",
+}));
 
 const choice = (id, text) => ({ id, text });
 const reviewMetadata = {
@@ -25,7 +39,7 @@ function mediaFor(questionId) {
     imageUrl: `${manifest.assetDirectory}${asset.file}`,
     alt: asset.alt,
     table: {
-      caption: `Text equivalent for ${questionId}`,
+      caption: visualCaptions.get(questionId) ?? "Exhibit data",
       columns: asset.columns.map(String),
       rows: asset.rows.map((row) => row.map((cell) => String(cell))),
     },
