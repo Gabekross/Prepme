@@ -259,8 +259,10 @@ export function MCQMulti(props: {
     (question.answerKey?.correctChoiceIds ?? []).every((id: string) => chosen.has(id)) &&
     [...chosen].every((id: string) => correct.has(id));
 
-  const keyedSelectionCount = question.answerKey.correctChoiceIds.length;
-  const minSel = question.payload.minSelections ?? keyedSelectionCount;
+  // Active-exam payloads intentionally omit answer keys. Prefer the authored
+  // bounds and only use a key count on trusted review/admin surfaces.
+  const keyedSelectionCount = question.answerKey?.correctChoiceIds?.length;
+  const minSel = question.payload.minSelections ?? keyedSelectionCount ?? 1;
   // Legacy question records may predate explicit selection bounds. The answer
   // key still tells us the exact number the learner is expected to select, so
   // use it as a defensive limit rather than permitting unlimited selections.
@@ -301,7 +303,9 @@ export function MCQMulti(props: {
             key={c.id}
             $selected={selected}
             $state={state}
-            $disabled={showCorrect}
+            $disabled={
+              showCorrect || (!!maxSel && chosen.size >= maxSel && !selected)
+            }
           >
             <NativeCheckbox
               type="checkbox"
