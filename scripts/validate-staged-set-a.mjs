@@ -110,6 +110,9 @@ for (const [index, q] of questions.entries()) {
       if (!Array.isArray(correct) || !correct.length || new Set(correct).size !== correct.length || correct.some((choiceId) => !choiceIds.has(choiceId))) {
         problem(id, "Invalid multi-response key");
       }
+      if (!Number.isInteger(payload.minSelections) || !Number.isInteger(payload.maxSelections)) {
+        problem(id, "Multi-response questions require explicit integer selection bounds");
+      }
       if (payload.minSelections != null && payload.maxSelections != null && payload.minSelections > payload.maxSelections) {
         problem(id, "Selection bounds are reversed");
       }
@@ -121,6 +124,10 @@ for (const [index, q] of questions.entries()) {
       if (Array.isArray(correct) && ((payload.minSelections != null && correct.length < payload.minSelections)
         || (payload.maxSelections != null && correct.length > payload.maxSelections))) {
         problem(id, "Correct-choice count conflicts with selection bounds");
+      }
+      if (Array.isArray(correct) && correct.length
+        && (payload.minSelections !== correct.length || payload.maxSelections !== correct.length)) {
+        problem(id, "Selection bounds must require exactly the keyed number of answers");
       }
     } else if (!choiceIds.has(answerKey.correctChoiceId)) {
       problem(id, "Correct choice id does not exist");

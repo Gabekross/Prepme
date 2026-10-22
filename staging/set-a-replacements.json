@@ -2601,7 +2601,9 @@
           "id": "f",
           "text": "Release the team after sending the runbook; let operations assign the availability-risk owner during its first service review."
         }
-      ]
+      ],
+      "minSelections": 3,
+      "maxSelections": 3
     },
     "answerKey": {
       "correctChoiceIds": [
@@ -2685,7 +2687,9 @@
           "id": "e",
           "text": "Keep the backlog fixed because factors beyond team control cannot affect work already prioritized."
         }
-      ]
+      ],
+      "minSelections": 2,
+      "maxSelections": 2
     },
     "answerKey": {
       "correctChoiceIds": [
@@ -2730,7 +2734,9 @@
           "id": "e",
           "text": "Tell the team to work around the reservation without involving the infrastructure manager, because escalation would weaken team ownership."
         }
-      ]
+      ],
+      "minSelections": 2,
+      "maxSelections": 2
     },
     "answerKey": {
       "correctChoiceIds": [
@@ -2851,7 +2857,9 @@
           "id": "e",
           "text": "Let each field inspector choose whether to review the weekly email; the signed regulator report is the only communication that must be tracked."
         }
-      ]
+      ],
+      "minSelections": 2,
+      "maxSelections": 2
     },
     "answerKey": {
       "correctChoiceIds": [

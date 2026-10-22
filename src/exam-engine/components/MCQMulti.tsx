@@ -259,8 +259,13 @@ export function MCQMulti(props: {
     (question.answerKey?.correctChoiceIds ?? []).every((id: string) => chosen.has(id)) &&
     [...chosen].every((id: string) => correct.has(id));
 
-  const minSel = question.payload.minSelections ?? 1;
-  const maxSel = question.payload.maxSelections;
+  const keyedSelectionCount = question.answerKey.correctChoiceIds.length;
+  const minSel = question.payload.minSelections ?? keyedSelectionCount;
+  // Legacy question records may predate explicit selection bounds. The answer
+  // key still tells us the exact number the learner is expected to select, so
+  // use it as a defensive limit rather than permitting unlimited selections.
+  const maxSel =
+    question.payload.maxSelections ?? keyedSelectionCount;
 
   if (!choices.length) {
     return (
@@ -301,7 +306,9 @@ export function MCQMulti(props: {
             <NativeCheckbox
               type="checkbox"
               checked={selected}
-              disabled={showCorrect}
+              disabled={
+                showCorrect || (!!maxSel && chosen.size >= maxSel && !selected)
+              }
               onChange={() => toggle(c.id)}
             />
             <CheckboxBadge $state={state} $selected={selected}>
