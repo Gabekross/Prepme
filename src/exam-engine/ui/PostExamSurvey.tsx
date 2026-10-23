@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { submitFeedback } from "@/lib/feedback";
+import { cleanFeedbackText, feedbackCharacterHelp } from "@/lib/feedbackText";
 
 const Card=styled.section`margin-top:20px;background:${p=>p.theme.cardBg};border:1px solid ${p=>p.theme.cardBorder};border-radius:18px;padding:clamp(18px,4vw,28px);min-width:0;box-sizing:border-box;h2{margin:0 0 6px;font-size:20px}p{color:${p=>p.theme.muted};line-height:1.5}`;
 const Question=styled.fieldset`border:0;padding:0;margin:18px 0;min-width:0;legend{font-weight:700;margin-bottom:8px}`;
@@ -24,7 +25,8 @@ export function PostExamSurvey({attemptId,bankSlug,setId}:{attemptId:string;bank
   async function send(){setBusy(true);setError("");try{await submitFeedback({kind:"post_exam",message:message.trim()||undefined,overallRating:overall,questionQualityRating:quality,explanationHelpfulnessRating:explanations,pagePath:window.location.pathname,attemptId,bankSlug,setId,allowContact});localStorage.setItem(key,"1");setHidden(true)}catch(e){setError(e instanceof Error?e.message:"Could not send survey.")}finally{setBusy(false)}}
   return <Card aria-labelledby="survey-title"><h2 id="survey-title">Help us improve this exam</h2><p>Optional · About one minute. Your results are already saved.</p>
     <Rating label="Overall exam experience" value={overall} onChange={setOverall}/><Rating label="Question quality" value={quality} onChange={setQuality}/><Rating label="Helpfulness of explanations" value={explanations} onChange={setExplanations}/>
-    <label htmlFor="survey-comment"><strong>Anything else? (optional)</strong></label><Textarea id="survey-comment" maxLength={4000} value={message} onChange={e=>setMessage(e.target.value)} />
+    <label htmlFor="survey-comment"><strong>Anything else? (optional)</strong></label><Textarea id="survey-comment" maxLength={4000} value={message} onChange={e=>setMessage(cleanFeedbackText(e.target.value))} aria-describedby="survey-character-help" />
+    <p id="survey-character-help" style={{fontSize:12,marginTop:5}}>{feedbackCharacterHelp}</p>
     <label style={{display:"flex",gap:8,marginTop:12}}><input type="checkbox" checked={allowContact} onChange={e=>setAllowContact(e.target.checked)}/> You may contact me about this feedback.</label>
     <Actions><Button disabled={busy||!overall||!quality||!explanations} onClick={send}>{busy?"Sending…":"Send survey"}</Button><button type="button" onClick={()=>{localStorage.setItem(key,"1");setHidden(true)}} style={{border:0,background:"transparent",color:"inherit",textDecoration:"underline",cursor:"pointer"}}>Not now</button>{error&&<ErrorText role="alert">{error}</ErrorText>}</Actions>
   </Card>

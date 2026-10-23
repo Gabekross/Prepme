@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminRequest } from "@/src/admin/verifyAdminRequest";
+import { hasUnsupportedFeedbackCharacters } from "@/lib/feedbackText";
 
 const statuses = new Set(["new", "reviewing", "planned", "resolved", "closed"]);
 const priorities = new Set(["low", "normal", "high", "urgent"]);
@@ -21,7 +22,8 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const verified = await verifyAdminRequest(req); if (!verified.ok) return verified.response;
   const body = await req.json().catch(() => null); const id = typeof body?.id === "string" ? body.id : "";
-  if (!id || !statuses.has(body.status) || !priorities.has(body.priority) || (body.adminNotes != null && typeof body.adminNotes !== "string")) {
+  if (!id || !statuses.has(body.status) || !priorities.has(body.priority) || (body.adminNotes != null && typeof body.adminNotes !== "string") ||
+    (typeof body?.adminNotes === "string" && hasUnsupportedFeedbackCharacters(body.adminNotes))) {
     return NextResponse.json({ error: "Invalid update." }, { status: 400 });
   }
   const now = new Date().toISOString();

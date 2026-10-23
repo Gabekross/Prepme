@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin, supabaseFromToken } from "@/lib/supabase/server";
+import { hasUnsupportedFeedbackCharacters } from "@/lib/feedbackText";
 
 const kinds = new Set(["general", "technical", "complaint", "accessibility", "suggestion", "post_exam"]);
 const rating = (value: unknown) => Number.isInteger(value) && Number(value) >= 1 && Number(value) <= 5;
@@ -17,6 +18,9 @@ export async function POST(req: NextRequest) {
   const message = text(body?.message, 4000);
   const pagePath = text(body?.pagePath, 500);
   if (!kinds.has(kind) || !pagePath.startsWith("/")) return NextResponse.json({ error: "Invalid feedback details." }, { status: 400 });
+  if (message && hasUnsupportedFeedbackCharacters(message)) {
+    return NextResponse.json({ error: "Feedback can contain letters, numbers, spaces, and normal sentence punctuation only." }, { status: 400 });
+  }
   if (kind === "post_exam") {
     if (!rating(body.overallRating) || !rating(body.questionQualityRating) || !rating(body.explanationHelpfulnessRating)) {
       return NextResponse.json({ error: "Please rate all three areas." }, { status: 400 });
