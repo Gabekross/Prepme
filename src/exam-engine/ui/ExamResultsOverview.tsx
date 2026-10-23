@@ -3,6 +3,7 @@ import React from "react";
 import styled from "styled-components";
 import type { AttemptResult, Question } from "../core/types";
 import { resultsSummary } from "../core/resultsSummary";
+import { PostExamSurvey } from "./PostExamSurvey";
 
 const Page = styled.section`
   max-width: 1100px; margin: 0 auto; min-width: 0; color: ${p => p.theme.text};
@@ -55,6 +56,7 @@ export function ExamResultsOverview(props: {
   result: AttemptResult; questions: Question[]; passThreshold: number; setLabel: string;
   saved: boolean; timeMs: number; onReview: (missed: boolean) => void;
   onReport: () => void; onRetake: () => void; onPractice: (domain: string) => void;
+  attemptId?: string; bankSlug?: string; setId?: string;
 }) {
   const s = resultsSummary(props.result, props.questions);
   const minutes = Math.floor(props.timeMs / 60000);
@@ -83,6 +85,7 @@ export function ExamResultsOverview(props: {
         : <><strong>Start with {s.weakest ? labels[s.weakest] : "your missed questions"}</strong><Muted>Review the explanations, then try a focused practice session.</Muted>
           {s.weakest && <Button onClick={() => props.onPractice(s.weakest!)}>Practice this domain</Button>}</>}
       </Card></Columns>
+    {props.saved && props.attemptId && props.bankSlug && <PostExamSurvey attemptId={props.attemptId} bankSlug={props.bankSlug} setId={props.setId} />}
     <Footer>{props.saved && <TextButton onClick={props.onReport}>Detailed report</TextButton>}<TextButton onClick={props.onRetake}>Take another simulation</TextButton></Footer>
   </Page>;
 }

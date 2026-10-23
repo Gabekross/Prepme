@@ -568,6 +568,17 @@ export default function AdminDashboardClient() {
         </RefreshBtn>
       </Header>
 
+      <Section>
+        <SectionTitle>Customer feedback</SectionTitle>
+        <StatsGrid>
+          <StatCardLink href="/admin/feedback" $accent="#8b5cf6">
+            <StatValue $accent="#8b5cf6" $small>Inbox</StatValue>
+            <StatLabel>Feedback &amp; surveys</StatLabel>
+            <StatSub>Review complaints, suggestions, and exam ratings</StatSub>
+          </StatCardLink>
+        </StatsGrid>
+      </Section>
+
       {/* ── Users & Growth ──────────────────────────────────────────── */}
       <Section>
         <SectionTitle>Users &amp; Growth</SectionTitle>

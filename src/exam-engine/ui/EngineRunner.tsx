@@ -2187,6 +2187,7 @@ export function EngineRunner(props: {
     return <ExamResultsOverview result={result} questions={Array.from(allQsMap.values())}
       passThreshold={passThreshold} setLabel={(setId ?? "set_a").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
       saved={!!userId && !!reviewQuestions}
+      attemptId={engine.attempt.id} bankSlug={bankSlug ?? "pmp"} setId={setId ?? undefined}
       timeMs={Object.values(engine.attempt.timeSpentMsByQuestionId ?? {}).reduce((sum, ms) => sum + ms, 0)}
       onReview={(missed) => {
         if (userId) router.push(`/dashboard/results/${engine.attempt!.id}/review${missed ? "?filter=missed" : ""}`);

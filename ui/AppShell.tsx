@@ -8,6 +8,7 @@ import { useAppTheme } from "@/ui/ThemeClient";
 import { usePathname } from "next/navigation";
 import { LocalAttemptStorage } from "@/src/exam-engine/core/storage";
 import { supabaseBrowser } from "@/lib/supabase/browser";
+import { FeedbackDialog } from "@/ui/FeedbackDialog";
 
 const Shell = styled.div`
   min-height: 100vh;
@@ -370,6 +371,13 @@ const MenuDivider = styled.div`
   margin: 4px 0;
 `;
 
+const FeedbackTab = styled.button`
+  position: fixed; right: 14px; bottom: 14px; z-index: 90; border: 1px solid ${(p) => p.theme.cardBorder};
+  border-radius: 999px; padding: 8px 13px; background: ${(p) => p.theme.cardBg}; color: ${(p) => p.theme.text};
+  box-shadow: ${(p) => p.theme.shadow}; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+  @media(max-width: 480px) { right: 10px; bottom: 10px; }
+`;
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, signOut: authSignOut } = useAuth();
   const signedIn = !!user;
@@ -381,6 +389,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const inSession = inPractice || inExam;
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackAttemptId, setFeedbackAttemptId] = useState<string | undefined>();
   const [cookieAccepted, setCookieAccepted] = useState(true); // true = no flash on SSR
 
   useEffect(() => {
@@ -390,6 +400,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   function acceptCookies() {
     localStorage.setItem("cookie_consent", "1");
     setCookieAccepted(true);
+  }
+
+  async function openFeedback() {
+    setFeedbackAttemptId(undefined);
+    if (inSession && bankSlug) {
+      const ns = inExam && setId ? `${bankSlug}__exam__${setId}` : `${bankSlug}__${sessionMode}`;
+      const attempt = await new LocalAttemptStorage(ns).loadLatestAttempt();
+      setFeedbackAttemptId(attempt?.id);
+    }
+    setMenuOpen(false);
+    setFeedbackOpen(true);
   }
 
   const bankSlugMatch = pathname.match(/^\/bank\/([^/]+)\/(practice|exam)/);
@@ -533,6 +554,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         {themeName === "dark" ? "☀︎ Switch to Light Mode" : "☾ Switch to Dark Mode"}
                       </MenuAction>
 
+                      {signedIn && <MenuAction onClick={() => void openFeedback()}>Send feedback</MenuAction>}
+
                       <MenuDivider />
                       <MenuSectionLabel>Session</MenuSectionLabel>
 
@@ -561,6 +584,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </Topbar>
 
       <Main>{children}</Main>
+
+      {signedIn && !inSession && <FeedbackTab onClick={() => void openFeedback()}>Feedback</FeedbackTab>}
+      {signedIn && <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} pagePath={pathname}
+        attemptId={feedbackAttemptId} bankSlug={bankSlug} setId={setId} />}
 
       {!cookieAccepted && (
         <CookieBanner role="region" aria-label="Cookie notice">
